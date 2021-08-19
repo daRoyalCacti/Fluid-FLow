@@ -50,6 +50,8 @@ struct big_vec {
     [[nodiscard]] constexpr inline bool has_2front(const unsigned i, const unsigned j, const unsigned k) const {return b->has_2front(i,j,k);}
     [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const {return b->has_2back(i,j,k);}
 
+    [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const { return b->is_boundary(i,j,k); }
+
 
     [[nodiscard]] T& operator()(const unsigned i, const unsigned j, const unsigned k) { return v(get_index(i,j,k) ); }
     [[nodiscard]] const T& operator()(const unsigned i, const unsigned j, const unsigned k) const { return v( get_index(i,j,k) ); }
@@ -103,6 +105,8 @@ struct big_vec<N, M, P, vec3> {
     [[nodiscard]] constexpr inline bool has_2up(const unsigned i, const unsigned j, const unsigned k) const {return xv.has_2up(i,j,k);}
     [[nodiscard]] constexpr inline bool has_2front(const unsigned i, const unsigned j, const unsigned k) const {return xv.has_2front(i,j,k);}
     [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const {return xv.has_2back(i,j,k);}
+
+    [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const { return xv.is_boundary(i,j,k); }
 
     //not ideal, should make it so () can return a reference
     void add_elm(const unsigned i, const unsigned j, const unsigned k, const vec3 elm) {

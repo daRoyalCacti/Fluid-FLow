@@ -50,6 +50,13 @@ struct boundary_points {
     [[nodiscard]] constexpr inline bool has_front(const unsigned i, const unsigned j, const unsigned k) const {return v[get_index(i,j,k)].has_front;}
     [[nodiscard]] constexpr inline bool has_back(const unsigned i, const unsigned j, const unsigned k) const {return v[get_index(i,j,k)].has_back;}
 
+    [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const {
+        const auto end_x = !has_left(i,j,k) || !has_right(i,j,k);
+        const auto end_y = !has_down(i,j,k) || !has_up(i,j,k);
+        const auto end_z = !has_front(i,j,k) || !has_back(i,j,k);
+        return end_x || end_y || end_z;
+    }
+
 
     [[nodiscard]] constexpr inline bool has_2left(const unsigned i, const unsigned j, const unsigned k) const {
         if (i-1 < 0) return false;

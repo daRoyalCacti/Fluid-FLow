@@ -170,10 +170,7 @@ void make_A(big_matrix<N,M,P> &A,  const big_vec<N,M,P,vec3> &v, const double dt
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-                const auto end_x = !v.has_left(i,j,k) || !v.has_right(i,j,k);
-                const auto end_y = !v.has_down(i,j,k) || !v.has_up(i,j,k);
-                const auto end_z = !v.has_front(i,j,k) || !v.has_back(i,j,k);
-                if (end_x || end_y || end_z) {
+                if (v.is_boundary(i,j,k)) {
                     A.add_elm(i,j,k,  i,j,k,  1);
                 } else {
                     A.add_elm(i,j,k,  i,j,k,  1/dt + 1/Rdxdx + 1/Rdydy + 1/Rdzdz );

@@ -14,10 +14,7 @@ void make_b(big_vec<N,M,P,vec3> &b, const double Re, const double dt, const big_
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-                const auto end_x = !v_n.has_left(i,j,k) || !v_n.has_right(i,j,k);
-                const auto end_y = !v_n.has_down(i,j,k) || !v_n.has_up(i,j,k);
-                const auto end_z = !v_n.has_front(i,j,k) || !v_n.has_back(i,j,k);
-                if (end_x || end_y || end_z) {
+                if (v_n.is_boundary(i,j,k)) {
                     b.add_elm(i,j,k,  bc(i,j,k));
                 } else {
                     b.add_elm(i, j, k,
@@ -40,10 +37,7 @@ void make_b_first(big_vec<N,M,P,vec3> &b, const double Re, const double dt, cons
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-                const auto end_x = !v_n.has_left(i,j,k) || !v_n.has_right(i,j,k);
-                const auto end_y = !v_n.has_down(i,j,k) || !v_n.has_up(i,j,k);
-                const auto end_z = !v_n.has_front(i,j,k) || !v_n.has_back(i,j,k);
-                if (end_x || end_y || end_z) {
+                if (v_n.is_boundary(i,j,k)) {
                     b.add_elm(i,j,k,  bc(i,j,k));
                 } else {
                     b.add_elm(i, j, k,
