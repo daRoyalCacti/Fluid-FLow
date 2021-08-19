@@ -1,0 +1,8 @@
+cmake-build-debug/
+cmake-build-release/
+.idea/
+DEBUG/Attempts_at_flow/
+DEBUG/plotting_data_old 
+DEBUG/pressure_data/
+DEBUG/velocity_data/
+DEBUG/rigid_body_videos 
