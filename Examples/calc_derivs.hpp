@@ -6,8 +6,36 @@
 #define CODE_CALC_DERIVS_HPP
 
 #include "../MyMath/calc.hpp"
+#include "../MyMath/boundary.hpp"
+
+
+namespace CD {
+    template <unsigned N, unsigned M, unsigned P>
+    void create_boundary_points(boundary_points<N,M,P> &bound) {
+        for (unsigned i = 0; i <= N; i++) {
+            for (unsigned k = 0; k <= P; k++) {
+                bound(i,0,k).has_down = false;
+                bound(i,M,k).has_up = false;
+            }
+        }
+        for (unsigned i = 0; i <= N; i++) {
+            for (unsigned j = 0; j <= M; j++) {
+                bound(i,j,0).has_front = false;
+                bound(i,j,P).has_back = false;
+            }
+        }
+        for (unsigned j = 0; j <= M; j++) {
+            for (unsigned k = 0; k <= P; k++) {
+                bound(0,j,k).has_left = false;
+                bound(N,j,k).has_right = false;
+            }
+        }
+    }
+}
 
 void calc_derivs_ex() {
+    using namespace CD;
+
     constexpr unsigned nx = 10;
     constexpr unsigned ny = 16;
     constexpr unsigned nz = 12;
@@ -24,9 +52,12 @@ void calc_derivs_ex() {
 
     std::cout << "testing to see if derivatives correct\n";
 
+    boundary_points<nx-1,ny-1,nz-1> bound;
+    create_boundary_points(bound);
+
 
     double xv[nx][ny][nz], yv[nx][ny][nz], zv[nx][ny][nz];
-    big_vec<nx-1, ny-1, nz-1, vec3> v(dx, dy, dz);
+    big_vec<nx-1, ny-1, nz-1, vec3> v(dx, dy, dz, &bound);
 
     for (unsigned i = 0; i < nx; i++) {
         for (unsigned j = 0; j < ny; j++) {
@@ -59,8 +90,8 @@ void calc_derivs_ex() {
                                                  pow(cos(y),2) *cos(z)* pow(sin(x),2) *sin(z) + pow(cos(x),2) *cos(z) *pow(sin(y),2) *sin(z) - cos(z) *pow(sin(x),2)* pow(sin(y),2) *sin(z));
                     const auto calc_deriv = advection(v, i, j, k);
                     if ((calc_deriv - true_deriv).length_squared() > tol) {
-                        std::cout << "advection failed at i = " << i << " j = " << j << " k = " << k << "\n";
-                        std::cout << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+                        std::cerr << "advection failed at i = " << i << " j = " << j << " k = " << k << "\n";
+                        std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
                     }
                 }
 
@@ -72,8 +103,8 @@ void calc_derivs_ex() {
                     const auto true_deriv = vec3(-3*cos(x)*sin(y)*sin(z), -3*cos(y)*sin(x)*sin(z), -3*cos(z)*sin(x)*sin(y));
                     const auto calc_deriv = laplacian(v, i, j, k);
                     if ((calc_deriv - true_deriv).length_squared() > tol) {
-                        std::cout << "lapacian failed at i = " << i << " j = " << j << " k = " << k << "\n";
-                        std::cout << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+                        std::cerr << "lapacian failed at i = " << i << " j = " << j << " k = " << k << "\n";
+                        std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
                     }
                 }
 
@@ -85,8 +116,8 @@ void calc_derivs_ex() {
                     const auto true_deriv =-3*sin(x)*sin(y)*sin(z);
                     const auto calc_deriv = divergence(v, i, j, k);
                     if (abs(calc_deriv - true_deriv) > tol) {
-                        std::cout << "Divergence failed at i = " << i << " j = " << j << " k = " << k << "\n";
-                        std::cout << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+                        std::cerr << "Divergence failed at i = " << i << " j = " << j << " k = " << k << "\n";
+                        std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
                     }
                 }
 
@@ -101,8 +132,8 @@ void calc_derivs_ex() {
                                            pow(sin(x),2)* pow(sin(y),2) *pow(sin(z),2);
                     const auto calc_deriv = divergence_advection(v, i, j, k);
                     if (abs(calc_deriv - true_deriv) > tol) {
-                        std::cout << "Divergence of advection failed at i = " << i << " j = " << j << " k = " << k << "\n";
-                        std::cout << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+                        std::cerr << "Divergence of advection failed at i = " << i << " j = " << j << " k = " << k << "\n";
+                        std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
                     }
                 }
 
@@ -114,8 +145,8 @@ void calc_derivs_ex() {
                     const auto true_deriv =9 * sin(x) * sin(y) * sin(z);
                     const auto calc_deriv = divergence_laplacian(v, i, j, k);
                     if (abs(calc_deriv - true_deriv) > tol) {
-                        std::cout << "Divergence of laplacian failed at i = " << i << " j = " << j << " k = " << k << "\n";
-                        std::cout << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+                        std::cerr << "Divergence of laplacian failed at i = " << i << " j = " << j << " k = " << k << "\n";
+                        std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
                     }
                 }
 
