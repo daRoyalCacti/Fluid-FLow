@@ -6,6 +6,7 @@
 #define CODE_BOUNDARY_HPP
 
 #include <vector>
+#include <unordered_map>
 
 /*
 template <class T>
@@ -108,6 +109,53 @@ private:
         return i + (N+1)*j + (N+1)*(M+1)*k;
     }
 
+};
+
+template <unsigned N, unsigned M, unsigned P>
+struct boundary_normals {
+    std::unordered_map<unsigned, vec3> m;   //takes a square index and returns the normal vector
+
+    boundary_normals() = delete;
+    boundary_normals(size_t num_points) {
+        m.reserve(num_points);
+    }
+
+    void add_point(const unsigned i, const unsigned j, const unsigned k, const vec3& normal) {
+        m.insert({get_index(i,j,k), normal});
+    }
+
+    [[nodiscard]] bool contains(const unsigned i, const unsigned j, const unsigned k) const {
+        return m.contains(get_index(i,j,k));
+    }
+
+    vec3 normal(const unsigned i, const unsigned j, const unsigned k) const {
+        return m.at(get_index(i,j,k));
+    }
+
+private:
+    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const {
+#ifndef NDEBUG
+        if (i < 0) {
+        std::cerr << "trying to access i < 0\n";
+    }
+    if (i > N) {
+        std::cerr << "trying to access i > N\n";
+    }
+    if (j < 0) {
+        std::cerr << "trying to access j < 0\n";
+    }
+    if (j > M) {
+        std::cerr << "trying to access j > M\n";
+    }
+    if (k < 0) {
+        std::cerr << "trying to access k < 0\n";
+    }
+    if (k > P) {
+        std::cerr << "trying to access k > P\n";
+    }
+#endif
+        return i + (N+1)*j + (N+1)*(M+1)*k;
+    }
 };
 
 #endif //CODE_BOUNDARY_HPP

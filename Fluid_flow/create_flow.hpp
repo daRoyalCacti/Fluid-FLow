@@ -88,24 +88,68 @@ void v_IC(big_vec<N,M,P, vec3> &v) {
     }
 }
 
+//num is the number of boundary points
 template <unsigned N, unsigned M, unsigned P>
-void create_boundary_points(boundary_points<N,M,P> &bound) {
+void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) {
+    num = 0;
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
             bound(i,0,k).has_down = false;
             bound(i,M,k).has_up = false;
+            ++num;
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             bound(i,j,0).has_front = false;
             bound(i,j,P).has_back = false;
+            ++num;
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
             bound(0,j,k).has_left = false;
             bound(N,j,k).has_right = false;
+            ++num;
+        }
+    }
+}
+
+
+template <unsigned N, unsigned M, unsigned P>
+void create_boundary_normals(boundary_normals<N,M,P> &bound) {
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned k = 0; k <= P; k++) {
+            bound.add_point(i,0,k, vec3(0,1,0));
+            bound.add_point(i,M,k, vec3(0,-1,0));
+        }
+    }
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned j = 0; j <= M; j++) {
+            bound.add_point(i,j,0, vec3(0,0,1));
+            bound.add_point(i,j,P, vec3(0,0,-1));
+        }
+    }
+    for (unsigned j = 0; j <= M; j++) {
+        for (unsigned k = 0; k <= P; k++) {
+            bound.add_point(0,j,k,vec3(1,0,0));
+            bound.add_point(N,j,k,vec3(-1,0,0));
+        }
+    }
+}
+
+
+template <unsigned N, unsigned M, unsigned P>
+void DEBUG_check_normal_for_all_boundary_points(const boundary_points<N,M,P> &point, const boundary_normals<N,M,P> &norm) {
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned j = 0; j <=M; j++) {
+            for (unsigned k = 0; k<=P; k++) {
+                if (point.is_boundary(i,j,k)) {
+                    if (!norm.contains(i,j,k)) {
+                        std::cerr << "Boundary at i=" << i << " j=" << j << " k=" << k << "does not have a normal\n";
+                    }
+                }
+            }
         }
     }
 }
@@ -125,7 +169,6 @@ void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) {
     }
 
     output.close();
-
 }
 
 void solve_flow() {
@@ -133,9 +176,17 @@ void solve_flow() {
 
     std::cout << "Creating boundary";
     auto start = std::chrono::high_resolution_clock::now();
-
+    unsigned no_boundary_points = 0;
     boundary_points<N,M,P> bound;
-    create_boundary_points(bound);
+    create_boundary_points(bound, no_boundary_points);
+
+    boundary_normals<N,M,P> norms(no_boundary_points);
+    create_boundary_normals(norms);
+
+#ifndef NDEBUG
+    DEBUG_check_normal_for_all_boundary_points(bound, norms);
+#endif
+
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> dur = end - start;
