@@ -26,7 +26,7 @@ namespace flow {
     constexpr unsigned M = 128;
     constexpr unsigned P = 128;
 
-    //size of gride
+    //size of grid
     constexpr double dx = Wx / static_cast<double>(N+1);
     constexpr double dy = Wy / static_cast<double>(M+1);
     constexpr double dz = Wz / static_cast<double>(P+1);
@@ -38,28 +38,28 @@ namespace flow {
 }
 
 
-template <unsigned N_, unsigned M_, unsigned P_>
-void set_BC(big_vec<N_,M_,P_, vec3> &v, const double t) {
-    for (unsigned i = 0; i <= N_; i++) {
-        for (unsigned j = 0; j <= M_; j++) {
+template <unsigned N, unsigned M, unsigned P>
+void set_BC(big_vec<N,M,P, vec3> &v, const double t) {
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned j = 0; j <= M; j++) {
             v.add_elm(i,j,0, 0,0,0);
-            v.add_elm(i,j,P_, 0,0,0);
+            v.add_elm(i,j,P, 0,0,0);
         }
     }
-    for (unsigned j = 0; j <= M_; j++) {
-        for (unsigned k = 0; k <= P_; k++) {
+    for (unsigned j = 0; j <= M; j++) {
+        for (unsigned k = 0; k <= P; k++) {
             v.add_elm(0,j,k, 0,0,0);
-            v.add_elm(N_,j,k, 0,0,0);
+            v.add_elm(N,j,k, 0,0,0);
         }
     }
-    for (unsigned i = 0; i <= N_; i++) {
-        for (unsigned k = 0; k <= P_; k++) {
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned k = 0; k <= P; k++) {
             if (t < 0.2) {
                 v.add_elm(i, 0, k, 0.1 * sin(0.1 * t), 0, 0);    //making the floor move
             } else {
                 v.add_elm(i, 0, k, 0.1 * sin(0.1 * 0.2), 0, 0);
             }
-            v.add_elm(i,M_,k, 0,0,0);
+            v.add_elm(i,M,k, 0,0,0);
         }
     }
 
@@ -252,6 +252,7 @@ void solve_flow() {
     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &bound);
     big_vec<N,M,P,double> p(dx, dy, dz, &bound);
     big_vec<N,M,P,vec3> bc(dx, dy, dz, &bound);
+    big_vec<N,M,P,double> p_bc(dx, dy, dz, &bound);
     big_vec<N,M,P,double> p_c(dx, dy, dz, &bound);    //pressure correction vector
 
 
@@ -313,8 +314,8 @@ void solve_flow() {
     std::cout << "Creating s";
     start = std::chrono::high_resolution_clock::now();
     //then create the s matrix
-
-    make_s_first(s, Re, dt, v_n, p, norms);
+    enforce_PBC(p_bc, norms);
+    make_s_first(s, Re, dt, v_n, p, p_bc);
 
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
@@ -377,8 +378,8 @@ void solve_flow() {
         std::cout << "\tMaking s" << std::flush;
         start = std::chrono::high_resolution_clock::now();
         //first make the s matrix
-
-        make_s(s, Re, dt, v_n, v_n1, p, norms);
+        enforce_PBC(p_bc, norms);
+        make_s(s, Re, dt, v_n, v_n1, p, p_bc);
 
         //make_s_first(s, Re, dt, v_n);
         end = std::chrono::high_resolution_clock::now();
