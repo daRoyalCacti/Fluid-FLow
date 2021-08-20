@@ -8,7 +8,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 #set(CMAKE_CUDA_HOST_COMPILER "/opt/cuda/bin/nvcc")
 #set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -ccbin /opt/cuda/bin/nvcc")
 
-add_executable(Code main.cpp MyMath/vec3.hpp MyMath/ops.hpp Rigid_body/body.hpp Examples/Rigid_body_ex.hpp MyMath/finite_difference.hpp Examples/derivatives.hpp MyMath/big_vec.hpp Examples/big_vec_derivs.h MyMath/calc.hpp Examples/calc_derivs.hpp MyMath/big_matrix.hpp Fluid_flow/make_vecs.hpp Fluid_flow/make_mats.hpp Fluid_flow/create_flow.hpp Fluid_flow/solver.hpp MyMath/boundary.hpp)
+add_executable(Code main.cpp MyMath/vec3.hpp MyMath/ops.hpp Rigid_body/body.hpp Examples/Rigid_body_ex.hpp MyMath/finite_difference.hpp Examples/derivatives.hpp MyMath/big_vec.hpp Examples/big_vec_derivs.h MyMath/calc.hpp Examples/calc_derivs.hpp MyMath/big_matrix.hpp Fluid_flow/make_vecs.hpp Fluid_flow/make_mats.hpp Fluid_flow/create_flow.hpp Fluid_flow/solver.hpp MyMath/boundary.hpp Fluid_flow/flow_env.hpp)
 
 
 set_target_properties(Code PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -32,6 +32,6 @@ set(warning_flags -Werror -Wpedantic -Wall -Wextra -Wfloat-equal -Wundef -Wcast-
 add_compile_options("$<$<CONFIG:Debug>: ${warning_flags}")
 add_compile_options("$<$<CONFIG:Release>: ${warning_flags} -Ofast -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -march=native -mfma")
 
-add_definitions(-DVIENNACL_WITH_OPENCL -DGPU_LIN_ALG)
+add_definitions(-DVIENNACL_WITH_OPENCL)
 
 
