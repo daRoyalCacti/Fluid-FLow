@@ -13,15 +13,12 @@
 
 //p to store dx,dy,dz and BC
 template <unsigned N, unsigned M, unsigned P>
-#ifdef pressure_BC
 //p contains all boundary info
 //need normal infor
 // - if points are on boundary, Q is set differenctly
 // - which boundary matters depends on the direction of the normal vector
 void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary_normals<N,M,P> &norms) {
-#else
-void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p) {
-#endif
+
     const auto dxdx = p.dx*p.dx;
     const auto dydy = p.dy*p.dy;
     const auto dzdz = p.dz*p.dz;
@@ -33,7 +30,6 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p) {
             for (unsigned k = 0; k <= P; k++) {
                 double diag = 0.0;
 
-#ifdef pressure_BC
                 if (p.is_boundary(i,j,k)) {
                     const auto norm = norms.normal(i,j,k);
                     //picking the direction
@@ -71,7 +67,6 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p) {
                     }
 
                 } else {
-#endif
 
 
                     //x axis checks
@@ -135,9 +130,9 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p) {
                     }
 
                     Q.add_elm(i, j, k, i, j, k, diag);
-#ifdef pressure_BC
+
                 }
-#endif
+
 
             }
         }

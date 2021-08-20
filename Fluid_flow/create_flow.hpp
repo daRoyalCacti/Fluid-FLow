@@ -5,11 +5,6 @@
 #ifndef CODE_CREATE_FLOW_HPP
 #define CODE_CREATE_FLOW_HPP
 
-//#define VIENNACL_WITH_CUDA
-//#define GPU_LIN_ALG
-#define testing_gpu
-#define use_pc  //use pressure correction
-#define pressure_BC //gradient of pressure cannot point along boundary normal
 
 #include <fstream>
 #include <chrono>
@@ -257,9 +252,7 @@ void solve_flow() {
     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &bound);
     big_vec<N,M,P,double> p(dx, dy, dz, &bound);
     big_vec<N,M,P,vec3> bc(dx, dy, dz, &bound);
-#ifdef use_pc
     big_vec<N,M,P,double> p_c(dx, dy, dz, &bound);    //pressure correction vector
-#endif
 
 
     big_vec<N,M,P,vec3> b(dx, dy, dz, &bound);
@@ -280,24 +273,7 @@ void solve_flow() {
 
     std::cout << "Default constructing solvers";
     start = std::chrono::high_resolution_clock::now();
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
 
-#else
-    solver A_solver(A);
-    solver Q_solver(Q);
-#endif
-#else
-    //Eigen::BiCGSTAB<Eigen::SparseMatrix<double,Eigen::RowMajor>, Eigen::IncompleteLUT<double> > A_solver;
-    //Eigen::BiCGSTAB<Eigen::SparseMatrix<double,Eigen::RowMajor>, Eigen::IncompleteLUT<double>  > Q_solver;
-    Eigen::LeastSquaresConjugateGradient<Eigen::SparseMatrix<double,Eigen::RowMajor> > A_solver;
-    Eigen::LeastSquaresConjugateGradient<Eigen::SparseMatrix<double,Eigen::RowMajor>  > Q_solver;
-    //A_solver.setTolerance(0.001);
-    //Q_solver.setTolerance(0.001);
-
-    //A_solver.setMaxIterations(200);
-    //Q_solver.setMaxIterations(200);
-#endif
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
     std::cout << "\t" << dur.count() << "s\n";
@@ -315,28 +291,12 @@ void solve_flow() {
 
     std::cout << "Creating Q";
     start = std::chrono::high_resolution_clock::now();
-#ifdef pressure_BC
+
     make_Q(Q, p, norms);
-#else
-    make_Q(Q, p);
-#endif
+
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
     std::cout << "\t" << dur.count() << "s\n";
-
-    //setting the solvers
-#ifdef GPU_LIN_ALG
-
-#else
-    std::cout << "Setting the solvers";
-    start = std::chrono::high_resolution_clock::now();
-    A_solver.compute(A.m);
-    Q_solver.compute(Q.m);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-#endif
-
 
     std::cout << "Setting IC";
     start = std::chrono::high_resolution_clock::now();
@@ -353,11 +313,9 @@ void solve_flow() {
     std::cout << "Creating s";
     start = std::chrono::high_resolution_clock::now();
     //then create the s matrix
-#ifdef pressure_BC
+
     make_s_first(s, Re, dt, v_n, p, norms);
-#else
-    make_s_first(s, Re, dt, v_n, p);
-#endif
+
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
     std::cout << "\t" << dur.count() << "s\n";
@@ -365,37 +323,10 @@ void solve_flow() {
     std::cout << "Solving for p";
     start = std::chrono::high_resolution_clock::now();
     //solve for p for the first timestep
-    //p.v = Q_solver.solve(s.v);
-#ifdef GPU_LIN_ALG
-    #ifdef testing_gpu
-        #ifdef use_pc
-            solve(Q, s, p_c);
-            #ifdef pressure_BC
-                enforce_PBC(p_c, norms);
-            #endif
-            p += p_c;
-        #else
-            solve(Q, s, p);
-            #ifdef pressure_BC
-                enforce_PBC(p, norms);
-            #endif
-        #endif
-    #else
-        #ifdef use_pc
-            Q_solver.solve(s,p_c);
-            p += p_c;
-        #else
-            Q_solver.solve(s,p);
-        #endif
-    #endif
-#else
-    #ifdef use_pc
-        p_c.v = Q_solver.solve(s.v);
-        p += p_c;
-    #else
-        p.v = Q_solver.solve(s.v);
-    #endif
-#endif
+    solve(Q, s, p_c);
+    enforce_PBC(p_c, norms);
+    p += p_c;
+
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
     std::cout << "\t" << dur.count() << "s\n";
@@ -413,21 +344,11 @@ void solve_flow() {
     std::cout << "Solving for v";
     start = std::chrono::high_resolution_clock::now();
     //and solve for v at the first timestep
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
+
     solve(A, b.xv, v_n.xv);
     solve(A, b.yv, v_n.yv);
     solve(A, b.zv, v_n.zv);
-#else
-    A_solver.solve(b.xv, v_n.xv);
-    A_solver.solve(b.yv, v_n.yv);
-    A_solver.solve(b.zv, v_n.zv);
-#endif
-#else
-    v_n.xv.v = A_solver.solve(b.xv.v);
-    v_n.yv.v = A_solver.solve(b.yv.v);
-    v_n.zv.v = A_solver.solve(b.zv.v);
-#endif
+
     end = std::chrono::high_resolution_clock::now();
     dur = end - start;
     std::cout << "\t" << dur.count() << "s\n";
@@ -456,11 +377,9 @@ void solve_flow() {
         std::cout << "\tMaking s" << std::flush;
         start = std::chrono::high_resolution_clock::now();
         //first make the s matrix
-#ifdef pressure_BC
+
         make_s(s, Re, dt, v_n, v_n1, p, norms);
-#else
-        make_s(s, Re, dt, v_n, v_n1, p);
-#endif
+
         //make_s_first(s, Re, dt, v_n);
         end = std::chrono::high_resolution_clock::now();
         dur = end - start;
@@ -469,32 +388,11 @@ void solve_flow() {
         std::cout << "\tSolving for p" << std::flush;
         start = std::chrono::high_resolution_clock::now();
         //solve for p for the next timestep
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
-#ifdef use_pc
+
         solve(Q, s, p_c);
         enforce_PBC(p_c, norms);
         p += p_c;
-#else
-        solve(Q, s, p);
-        enforce_PBC(p, norms);
-#endif
-#else
-        #ifdef use_pc
-            Q_solver.solve(s,p_c);
-            p += p_c;
-        #else
-            Q_solver.solve(s,p);
-        #endif
-#endif
-#else
-        #ifdef use_pc
-        p_c.v = Q_solver.solve(s.v);
-        p += p_c;
-    #else
-        p.v = Q_solver.solve(s.v);
-    #endif
-#endif
+
         end = std::chrono::high_resolution_clock::now();
         dur = end - start;
         std::cout << "\t" << dur.count() << "s\n" << std::flush;
@@ -521,15 +419,8 @@ void solve_flow() {
         //solve for v for the next time step
         std::cout << "\tSolving for vx" << std::flush;
         start = std::chrono::high_resolution_clock::now();
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
         solve(A, b.xv, v_n.xv);
-#else
-        A_solver.solve(b.xv, v_n.xv);
-#endif
-#else
-        v_n.xv.v = A_solver.solve(b.xv.v);
-#endif
+
         end = std::chrono::high_resolution_clock::now();
         dur = end - start;
         std::cout << "\t" << dur.count() << "s\n";
@@ -537,30 +428,16 @@ void solve_flow() {
 
         std::cout << "\tSolving for vy" << std::flush;
         start = std::chrono::high_resolution_clock::now();
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
         solve(A, b.yv, v_n.yv);
-#else
-        A_solver.solve(b.yv, v_n.yv);
-#endif
-#else
-        v_n.yv.v = A_solver.solve(b.yv.v);
-#endif
+
         end = std::chrono::high_resolution_clock::now();
         dur = end - start;
         std::cout << "\t" << dur.count() << "s\n";
 
         std::cout << "\tSolving for vz" << std::flush;
         start = std::chrono::high_resolution_clock::now();
-#ifdef GPU_LIN_ALG
-#ifdef testing_gpu
         solve(A, b.zv, v_n.zv);
-#else
-        A_solver.solve(b.zv, v_n.zv);
-#endif
-#else
-        v_n.zv.v = A_solver.solve(b.zv.v);
-#endif
+
         end = std::chrono::high_resolution_clock::now();
         dur = end - start;
         std::cout << "\t" << dur.count() << "s\n";
@@ -598,12 +475,6 @@ void solve_flow() {
         const std::chrono::duration<double> dur_loop = end_loop - start_loop;
         std::cout << "Timestep took : " << dur_loop.count() << "s\n";
     }
-
-    //write_vec(v_n, "../DEBUG/plotting_raw_data/end.txt");
-
-
-
-
 
 
 }
