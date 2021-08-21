@@ -14,7 +14,7 @@
 //nx,ny,nz denote the derivative. e.g. <1,1,0> corresponds to d^2/dxdy
 //i,j,k corresponds to where the derivative is to take place
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned k) {
+auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned k) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( !( (nx==1) && (ny==1) && (nz==1) ), "d^3/dxdydz is not currently supported" );
@@ -360,32 +360,32 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
 
 //H(v_{i,j,k})
 template <unsigned N, unsigned M, unsigned P>
-vec3 advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) {
+vec3 advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
     const auto s_v = v(i,j,k);  //small v
     return s_v.x() * smart_deriv<1,0,0>(v, i,j,k) + s_v.y() * smart_deriv<0,1,0>(v, i,j,k) + s_v.z() * smart_deriv<0,0,1>(v, i,j,k) ;
 }
 
 //L(v_{i,j,k})
 template <typename T>
-auto laplacian(const T& v, const unsigned i, const unsigned j, const unsigned k) {
+auto laplacian(const T& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
     return smart_deriv<2,0,0>(v, i,j,k) + smart_deriv<0,2,0>(v, i,j,k) +smart_deriv<0,0,2>(v, i,j,k);
 }
 
 //TODO : Test
 template <unsigned N, unsigned M, unsigned P>
-vec3 gradient(const big_vec<N,M,P, double>& v, const unsigned i, const unsigned j, const unsigned k) {
+vec3 gradient(const big_vec<N,M,P, double>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
     return vec3(smart_deriv<1,0,0>(v, i, j, k), smart_deriv<0,1,0>(v, i, j, k), smart_deriv<0,0,1>(v, i, j, k));
 }
 
 //D(v_{i,j,k})
 template <unsigned N, unsigned M, unsigned P>
-double divergence(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) {
+double divergence(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept  {
     return smart_deriv<1,0,0>(v.xv, i, j, k) + smart_deriv<0,1,0>(v.yv, i, j, k) + smart_deriv<0,0,1>(v.zv, i, j, k);
 }
 
 //D(H(v_{i,j,k}))
 template <unsigned N, unsigned M, unsigned P>
-double divergence_advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) {
+double divergence_advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
     const auto s_v = v(i,j,k);  //small vec
 
     const auto vx_x = smart_deriv<1,0,0>(v.xv,i,j,k);
@@ -434,7 +434,7 @@ double divergence_advection(const big_vec<N,M,P, vec3>& v, const unsigned i, con
 
 //D(L(v_{i,j,k}))
 template <unsigned N, unsigned M, unsigned P>
-double divergence_laplacian(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) {
+double divergence_laplacian(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
     const auto vxxx = smart_deriv<3,0,0>(v.xv,i,j,k);
     const auto vxyy = smart_deriv<1,2,0>(v.xv,i,j,k);
     const auto vxzz = smart_deriv<1,0,2>(v.xv,i,j,k);

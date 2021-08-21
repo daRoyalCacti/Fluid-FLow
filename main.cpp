@@ -11,7 +11,9 @@ int main() {
     //big_veg_derivs_ex();
     //calc_derivs_ex();
 
-    solve_flow();
+    constexpr output_settings o{};
+
+    solve_flow<1000, 128, 128, 128>(o);
 
 
 

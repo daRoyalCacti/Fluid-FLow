@@ -7,7 +7,7 @@
 
 
 template <unsigned N, unsigned M, unsigned P>
-void set_BC(big_vec<N,M,P, vec3> &v, const double t) {
+void set_BC(big_vec<N,M,P, vec3> &v, const double t) noexcept {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             v.add_elm(i,j,0, 0,0,0);
@@ -34,7 +34,7 @@ void set_BC(big_vec<N,M,P, vec3> &v, const double t) {
 }
 
 template <unsigned N, unsigned M, unsigned P>
-void enforce_PBC(big_vec<N,M,P, double> &p, const boundary_normals<N,M,P> &norms) {
+void enforce_PBC(big_vec<N,M,P, double> &p, const boundary_normals<N,M,P> &norms) noexcept {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
@@ -98,7 +98,7 @@ void enforce_PBC(big_vec<N,M,P, double> &p, const boundary_normals<N,M,P> &norms
 }
 
 template <unsigned N, unsigned M, unsigned P>
-void v_IC(big_vec<N,M,P, vec3> &v) {
+void v_IC(big_vec<N,M,P, vec3> &v) noexcept {
     //just leave it as 0
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
@@ -112,7 +112,7 @@ void v_IC(big_vec<N,M,P, vec3> &v) {
 
 //num is the number of boundary points
 template <unsigned N, unsigned M, unsigned P>
-void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) {
+void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) noexcept {
     num = 0;
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
@@ -139,7 +139,7 @@ void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) {
 
 
 template <unsigned N, unsigned M, unsigned P>
-void create_boundary_normals(boundary_normals<N,M,P> &bound) {
+void create_boundary_normals(boundary_normals<N,M,P> &bound) noexcept {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
             bound.add_point(i,0,k, vec3(0,1,0));
@@ -162,7 +162,7 @@ void create_boundary_normals(boundary_normals<N,M,P> &bound) {
 
 
 template <unsigned N, unsigned M, unsigned P>
-void DEBUG_check_normal_for_all_boundary_points(const boundary_points<N,M,P> &point, const boundary_normals<N,M,P> &norm) {
+void DEBUG_check_normal_for_all_boundary_points(const boundary_points<N,M,P> &point, const boundary_normals<N,M,P> &norm) noexcept {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <=M; j++) {
             for (unsigned k = 0; k<=P; k++) {

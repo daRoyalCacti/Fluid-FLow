@@ -17,7 +17,7 @@ template <unsigned N, unsigned M, unsigned P>
 //need normal infor
 // - if points are on boundary, Q is set differenctly
 // - which boundary matters depends on the direction of the normal vector
-void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary_normals<N,M,P> &norms) {
+void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary_normals<N,M,P> &norms) noexcept {
 
     const auto dxdx = p.dx*p.dx;
     const auto dydy = p.dy*p.dy;
@@ -142,7 +142,7 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary
 
 
 template <unsigned N, unsigned M, unsigned P>
-void make_A(big_matrix<N,M,P> &A,  const big_vec<N,M,P,vec3> &v, const double dt, const double Re) {
+void make_A(big_matrix<N,M,P> &A,  const big_vec<N,M,P,vec3> &v, const double dt, const double Re) noexcept {
     const auto Rdxdx = Re*v.dx*v.dx;
     const auto Rdydy = Re*v.dy*v.dy;
     const auto Rdzdz = Re*v.dz*v.dz;

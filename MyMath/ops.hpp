@@ -17,7 +17,7 @@ vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, double theta)
 //const line struct
 // - used to precompute some values
 // - and for computing the distance a point is from a line
-struct c_line {
+struct c_line final {
     const vec3 x1;
     const vec3 x2;
     const vec3 x2_l_x1;
@@ -25,11 +25,11 @@ struct c_line {
     const double dist_denom_inv = 0;    //distance function will return NaN's if this isn't set
 
     c_line() = default;
-    constexpr c_line(const vec3& x1_, const vec3& x2_) : x1(x1_), x2(x2_), x2_l_x1(x2-x1), dist_denom_inv(1/(x2_-x1_).length()) {}
+    constexpr c_line(const vec3& x1_, const vec3& x2_) noexcept : x1(x1_), x2(x2_), x2_l_x1(x2-x1), dist_denom_inv(1/(x2_-x1_).length()) {}
 
     //the distance a point x0 is from the line
     //https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-    [[nodiscard]] constexpr double distance(const vec3& x0) const {
+    [[nodiscard]] constexpr double distance(const vec3& x0) const noexcept {
         const auto num = quadruple(x2_l_x1, x1-x0);
         return abs(num) * dist_denom_inv;
     }
@@ -37,14 +37,14 @@ struct c_line {
 
 
 
-vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v) {
+vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v) noexcept {
     const Eigen::Vector4d v_E = Eigen::Vector4d(v.x(), v.y(), v.z(), 1);
     const Eigen::Vector4d R = M*v_E;
     return vec3(R.x(), R.y(), R.z());
 }
 
 //http://paulbourke.net/geometry/rotate/
-vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double theta) {
+vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double theta) noexcept {
     const auto x1 = orig.x();
     const auto y1 = orig.y();
     const auto z1 = orig.z();

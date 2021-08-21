@@ -12,7 +12,7 @@ struct big_matrix{
     Eigen::SparseMatrix<double,Eigen::RowMajor> m;
 
     big_matrix() = delete;
-    big_matrix(const unsigned no_data) {
+    big_matrix(const unsigned no_data) noexcept {
         m.resize((N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1));
         m.reserve(Eigen::VectorXi::Constant((N+1)*(M+1)*(P+1),no_data));
         //m.reserve( 8 * (N+1)*(M+1)*(P+1) ); //the amount of room to reserve --- overestimated
@@ -21,7 +21,7 @@ struct big_matrix{
 
     void add_elm(const unsigned i, const unsigned j, const unsigned k,
                  const unsigned x, const unsigned y, const unsigned z,
-                 const double elm) {
+                 const double elm) noexcept {
         const auto row = get_index(i,j,k);
         const auto col = get_index(x,y,z);
 
@@ -29,7 +29,7 @@ struct big_matrix{
     }
 
 private:
-    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const {
+    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
         return i + (N+1)*j + (N+1)*(M+1)*k;
     }
 

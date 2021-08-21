@@ -12,7 +12,7 @@
 
 
 template <unsigned axis, typename T>
-inline constexpr auto central_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( data(x+1,y,z) - data(x-1,y,z) ) / (2*dx);
@@ -24,7 +24,7 @@ inline constexpr auto central_difference_1st(const T& data, const size_t x, cons
 }
 
 template <unsigned axis, typename T>
-inline constexpr auto forward_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( -data(x+2,y,z) + 4*data(x+1,y,z) - 3*data(x,y,z)) / (2*dx);
@@ -37,7 +37,7 @@ inline constexpr auto forward_difference_1st(const T& data, const size_t x, cons
 
 
 template <unsigned axis, typename T>
-inline constexpr auto backward_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_difference_1st(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( 3*data(x,y,z) - 4*data(x-1,y,z) + data(x-2,y,z) ) / (2*dx);
@@ -50,7 +50,7 @@ inline constexpr auto backward_difference_1st(const T& data, const size_t x, con
 
 
 template <unsigned axis, typename T>
-inline constexpr auto central_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( data(x+1,y,z) - 2* data(x,y,z) + data(x-1,y,z) ) / (dx*dx);
@@ -63,7 +63,7 @@ inline constexpr auto central_difference_2nd(const T& data, const size_t x, cons
 
 
 template <unsigned axis, typename T>
-inline constexpr auto forward_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return (-data(x+3,y,z)+4*data(x+2,y,z) - 5*data(x+1,y,z)+2*data(x,y,z)) / (dx*dx);
@@ -76,7 +76,7 @@ inline constexpr auto forward_difference_2nd(const T& data, const size_t x, cons
 
 
 template <unsigned axis, typename T>
-inline constexpr auto backward_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_difference_2nd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( 2*data(x,y,z) -5*data(x-1,y,z)+4*data(x-2,y,z) - data(x-3,y,z) ) / (dx*dx);
@@ -88,7 +88,7 @@ inline constexpr auto backward_difference_2nd(const T& data, const size_t x, con
 }
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -104,7 +104,7 @@ inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t x
 }
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto forward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -124,7 +124,7 @@ inline constexpr auto forward_difference_2nd_mixed(const T& data, const size_t x
 
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -145,7 +145,7 @@ inline constexpr auto backward_difference_2nd_mixed(const T& data, const size_t 
 
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_forward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_forward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -167,7 +167,7 @@ inline constexpr auto central_forward_difference_2nd_mixed(const T& data, const 
 
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -189,7 +189,7 @@ inline constexpr auto central_backward_difference_2nd_mixed(const T& data, const
 
 
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto forward_backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_backward_difference_2nd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -218,7 +218,7 @@ inline constexpr auto forward_backward_difference_2nd_mixed(const T& data, const
 
 
 template <unsigned axis, typename T>
-inline constexpr auto central_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return ( data(x+2,y,z) - 2*data(x+1,y,z) + 2*data(x-1,y,z) - data(x-2,y,z)) / (2*dx*dx*dx);
@@ -231,7 +231,7 @@ inline constexpr auto central_difference_3rd(const T& data, const size_t x, cons
 
 
 template <unsigned axis, typename T>
-inline constexpr auto forward_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return (-3*data(x+4,y,z)+14*data(x+3,y,z) - 24*data(x+2,y,z)+ 18*data(x+1,y,z) - 5*data(x,y,z)) / (2*dx*dx*dx);
@@ -244,7 +244,7 @@ inline constexpr auto forward_difference_3rd(const T& data, const size_t x, cons
 
 
 template <unsigned axis, typename T>
-inline constexpr auto backward_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_difference_3rd(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
         return (5*data(x,y,z) - 18*data(x-1,y,z) + 24*data(x-2,y,z) - 14*data(x-3,y,z) + 3*data(x-4,y,z)) / (2*dx*dx*dx);
@@ -257,7 +257,7 @@ inline constexpr auto backward_difference_3rd(const T& data, const size_t x, con
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -280,7 +280,7 @@ inline constexpr auto central_difference_3rd_mixed(const T& data, const size_t x
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -316,7 +316,7 @@ inline constexpr auto forward_difference_3rd_mixed(const T& data, const size_t x
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
@@ -352,7 +352,7 @@ inline constexpr auto backward_difference_3rd_mixed(const T& data, const size_t 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -380,7 +380,7 @@ inline constexpr auto central_forward_difference_3rd_mixed(const T& data, const 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto central_backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto central_backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -408,7 +408,7 @@ inline constexpr auto central_backward_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto forward_central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -437,7 +437,7 @@ inline constexpr auto forward_central_difference_3rd_mixed(const T& data, const 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto forward_backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto forward_backward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -472,7 +472,7 @@ inline constexpr auto forward_backward_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto backward_central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_central_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");
@@ -500,7 +500,7 @@ inline constexpr auto backward_central_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
-inline constexpr auto backward_forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz) {
+inline constexpr auto backward_forward_difference_3rd_mixed(const T& data, const size_t x, const size_t y, const size_t z, const double dx, const double dy, const double dz)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
     static_assert(axis1 != axis2, "Cannot have the axes the same");

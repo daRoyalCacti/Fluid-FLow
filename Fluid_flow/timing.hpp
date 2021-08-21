@@ -7,7 +7,7 @@
 
 #include <chrono>
 
-struct flow_timer{
+struct flow_timer final {
     std::chrono::time_point<std::chrono::high_resolution_clock> start{};
     std::chrono::time_point<std::chrono::high_resolution_clock> end{};
     double s_create_time{};
@@ -19,22 +19,22 @@ struct flow_timer{
     std::ofstream output;
 
     flow_timer() = delete;
-    explicit flow_timer(const char* output_loc) {
+    explicit flow_timer(const char* output_loc) noexcept {
         output.open(output_loc);
     }
 
-    ~flow_timer() {
+    ~flow_timer() noexcept {
         output.close();
     }
 
-    void save_s_create_time() { s_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_b_create_time() {b_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_p_solve_time() {p_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vx_solve_time() {vx_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vy_solve_time() {vy_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vz_solve_time() {vz_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_s_create_time() noexcept { s_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_b_create_time() noexcept {b_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_p_solve_time() noexcept {p_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_vx_solve_time() noexcept {vx_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_vy_solve_time() noexcept {vy_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_vz_solve_time() noexcept {vz_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
 
-    void write_times(const double t) {
+    void write_times(const double t) noexcept {
         output << t << " " << s_create_time << " " << p_solve_time << " " << b_create_time << " " << vx_solve_time
              << " " << vy_solve_time << " " << vz_solve_time << " " << total_time() << "\n";
         output.flush();

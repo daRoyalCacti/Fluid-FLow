@@ -10,6 +10,7 @@
 #include <chrono>
 #include <string>
 #include <ctime>
+#include <ratio>
 
 #include "make_mats.hpp"
 #include "make_vecs.hpp"
@@ -19,38 +20,29 @@
 #include "flow_env.hpp"
 #include "timing.hpp"
 
-namespace flow {
-    //width of the box
-    constexpr double Wx = 3;
-    constexpr double Wy = 4;
-    constexpr double Wz = 5;
 
-    //data points -1 along side of box
-    constexpr unsigned N = 128;
-    constexpr unsigned M = 128;
-    constexpr unsigned P = 128;
+struct output_settings {
+    std::string_view vel_file_loc = "../DEBUG/velocity_data/";
+    std::string_view pres_file_loc = "../DEBUG/pressure_data/";
+    std::string_view time_file_name = "../DEBUG/times.txt";
 
+      //only used if write_all_times is false
+    std::string_view final_vel_name = "../DEBUG/vel_final.txt";
+    std::string_view final_pres_name = "../DEBUG/vel_final.txt";
+};
+
+//for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
+//Wx,Wy,Wz represent the width of the box
+template<unsigned no_timesteps, unsigned N, unsigned M, unsigned P, bool write_all_times = true>
+void solve_flow(const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
     //size of grid
-    constexpr double dx = Wx / static_cast<double>(N+1);
-    constexpr double dy = Wy / static_cast<double>(M+1);
-    constexpr double dz = Wz / static_cast<double>(P+1);
+    double dx = Wx / static_cast<double>(N+1);
+    double dy = Wy / static_cast<double>(M+1);
+    double dz = Wz / static_cast<double>(P+1);
 
-    //other consts
-    constexpr double Re = 150; //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
-    constexpr double dt = 0.001;
-    constexpr double max_t = 1;
+    double dt = max_t / (double)no_timesteps;
 
-    constexpr std::string_view vel_file_loc = "../DEBUG/velocity_data/";
-    constexpr std::string_view pres_file_loc = "../DEBUG/pressure_data/";
-    constexpr std::string_view time_file_name = "../DEBUG/times.txt";
-}
-
-
-
-
-void solve_flow() {
-    using namespace flow;
-    flow_timer timer(time_file_name.data() );
+    flow_timer timer(os.time_file_name.data() );
 
 
     unsigned no_boundary_points = 0;
@@ -90,8 +82,10 @@ void solve_flow() {
 
     //first set IC
     v_IC(v_n);
-    write_vec(v_n, (std::string(vel_file_loc) + "0000.txt").data());
-    write_vec(p, (std::string(pres_file_loc) + "0000.txt").data());
+    if constexpr (write_all_times) {
+        write_vec(v_n, (std::string(os.vel_file_loc) + "0000.txt").data());
+        write_vec(p, (std::string(os.pres_file_loc) + "0000.txt").data());
+    }
     v_n1 = v_n;
 
     //then create the s matrix
@@ -117,13 +111,15 @@ void solve_flow() {
     //enforcing BC
     set_BC(v_n, 0);
 
-    write_vec(v_n, (std::string(vel_file_loc) + "0001.txt").data());
-    write_vec(p, (std::string(pres_file_loc) + "0001.txt").data());
+    if constexpr (write_all_times) {
+        write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
+        write_vec(p, (std::string(os.pres_file_loc) + "0001.txt").data());
+    }
 
 
     unsigned counter = 1;
 
-    for (double t = dt; t < flow::max_t; t+=dt) {
+    for (double t = dt; t < max_t; t+=dt) {
         const auto start_loop = std::chrono::high_resolution_clock::now();
         const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
         char time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
@@ -132,7 +128,7 @@ void solve_flow() {
         } else {
             std::cerr << "Timing error\n";
         }
-        //std::cout << "t: " << t-dt << " / " << max_t << " at " << std::ctime(&start_time) << std::flush;
+\
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
@@ -189,24 +185,38 @@ void solve_flow() {
 
         ++counter;
         std::string file_name;
-        if (counter < 10) {
-            file_name = "000" + std::to_string(counter);
-        } else if (counter < 100) {
-            file_name = "00" + std::to_string(counter);
-        } else if (counter < 1000) {
-            file_name = "0" + std::to_string(counter);
-        } else {
-            file_name = std::to_string(counter);
-        }
+        if constexpr (write_all_times) {
+            if (counter < 10) {
+                file_name = "000" + std::to_string(counter);
+            } else if (counter < 100) {
+                file_name = "00" + std::to_string(counter);
+            } else if (counter < 1000) {
+                file_name = "0" + std::to_string(counter);
+            } else {
+                file_name = std::to_string(counter);
+            }
 
-        write_vec(v_n, (std::string(vel_file_loc) + file_name + ".txt").c_str() );
-        write_vec(p, (std::string(pres_file_loc) + file_name + ".txt").c_str() );
+
+            write_vec(v_n, (std::string(os.vel_file_loc) + file_name + ".txt").data());
+            write_vec(p, (std::string(os.pres_file_loc) + file_name + ".txt").data());
+        }
 
         const auto end_loop = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> dur_loop = end_loop - start_loop;
-        std::cout << "\ttimestep took : " << dur_loop.count() << "s\n";
+        std::cout << "\ttimestep took : " << dur_loop.count() << "s";
+
+        if constexpr (write_all_times) {
+            std::cout << "\tfile written : " << file_name << "\n";
+        } else {
+            std::cout << "\n";
+        }
 
         timer.write_times(t);
+    }
+
+    if constexpr (!write_all_times) {
+        write_vec(v_n, os.final_vel_name.data());
+        write_vec(p, os.final_pres_name.data());
     }
 
 

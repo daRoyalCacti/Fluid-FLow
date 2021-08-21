@@ -49,7 +49,7 @@ struct solver {
 
 //solves Ax=b for x
 template <unsigned N, unsigned M, unsigned P>
-void solve(const big_matrix<N,M,P> &A, const big_vec<N,M,P,double> &b, big_vec<N,M,P,double> &x) {
+void solve(const big_matrix<N,M,P> &A, const big_vec<N,M,P,double> &b, big_vec<N,M,P,double> &x) noexcept {
     viennacl::compressed_matrix<double>  vcl_sparse_matrix( (N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1) );
     //viennacl::coordinate_matrix<double>  vcl_sparse_matrix( (N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1) );
     viennacl::vector<double> vcl_rhs( (N+1)*(M+1)*(P+1) );
