@@ -9,6 +9,7 @@
 #include <fstream>
 #include <chrono>
 #include <string>
+#include <ctime>
 
 #include "make_mats.hpp"
 #include "make_vecs.hpp"
@@ -16,6 +17,7 @@
 #include "solver.hpp"
 #include "../MyMath/boundary.hpp"
 #include "flow_env.hpp"
+#include "timing.hpp"
 
 namespace flow {
     //width of the box
@@ -40,6 +42,7 @@ namespace flow {
 
     constexpr std::string_view vel_file_loc = "../DEBUG/velocity_data/";
     constexpr std::string_view pres_file_loc = "../DEBUG/pressure_data/";
+    constexpr std::string_view time_file_name = "../DEBUG/times.txt";
 }
 
 
@@ -63,9 +66,9 @@ void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) {
 
 void solve_flow() {
     using namespace flow;
+    flow_timer timer(time_file_name.data() );
 
-    std::cout << "Creating boundary";
-    auto start = std::chrono::high_resolution_clock::now();
+
     unsigned no_boundary_points = 0;
     boundary_points<N,M,P> bound;
     create_boundary_points(bound, no_boundary_points);
@@ -78,127 +81,57 @@ void solve_flow() {
 #endif
 
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
-    std::cout << "Default constructing vectors";
-    start = std::chrono::high_resolution_clock::now();
-    big_vec<N,M,P,vec3> v_n(dx, dy, dz, &bound);
-    big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &bound);
-    big_vec<N,M,P,double> p(dx, dy, dz, &bound);
-    big_vec<N,M,P,vec3> bc(dx, dy, dz, &bound);
-    big_vec<N,M,P,double> p_bc(dx, dy, dz, &bound);
+    big_vec<N,M,P,vec3> v_n(dx, dy, dz, &bound);    //velocity at hte current time-step
+    big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &bound);   //velocity at the previous time-step
+    big_vec<N,M,P,double> p(dx, dy, dz, &bound);    //pressure vector
+    big_vec<N,M,P,vec3> bc(dx, dy, dz, &bound);     //boundary conditions (used to set b)
+    big_vec<N,M,P,double> p_bc(dx, dy, dz, &bound); //pressure boundary conditions (used to set s)
     big_vec<N,M,P,double> p_c(dx, dy, dz, &bound);    //pressure correction vector
 
 
     big_vec<N,M,P,vec3> b(dx, dy, dz, &bound);
     big_vec<N,M,P,double> s(dx, dy, dz, &bound);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
 
 
-
-    std::cout << "Default constructing matrices";
-    start = std::chrono::high_resolution_clock::now();
     big_matrix<N,M,P> Q(16);
     big_matrix<N,M,P> A(7);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
-    std::cout << "Default constructing solvers";
-    start = std::chrono::high_resolution_clock::now();
-
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
-
 
 
     //initially creating matrices
-    std::cout << "Creating A";
-    start = std::chrono::high_resolution_clock::now();
     make_A(A, v_n, dt, Re);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
 
-    std::cout << "Creating Q";
-    start = std::chrono::high_resolution_clock::now();
-
+    //making Q
     make_Q(Q, p, norms);
 
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
 
-    std::cout << "Setting IC";
-    start = std::chrono::high_resolution_clock::now();
     //first set IC
     v_IC(v_n);
     write_vec(v_n, (std::string(vel_file_loc) + "0000.txt").data());
     write_vec(p, (std::string(pres_file_loc) + "0000.txt").data());
     v_n1 = v_n;
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
 
-
-    std::cout << "Creating s";
-    start = std::chrono::high_resolution_clock::now();
     //then create the s matrix
     enforce_PBC(p_bc, norms);
     make_s_first(s, Re, dt, v_n, p, p_bc);
 
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
-    std::cout << "Solving for p";
-    start = std::chrono::high_resolution_clock::now();
     //solve for p for the first timestep
     solve(Q, s, p_c);
     enforce_PBC(p_c, norms);
     p += p_c;
 
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
     //setting BC vector
     set_BC(bc, 0);
-    std::cout << "Making b";
-    start = std::chrono::high_resolution_clock::now();
     //then make b
     make_b_first(b, Re, dt, v_n, p, bc);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
 
-    std::cout << "Solving for v";
-    start = std::chrono::high_resolution_clock::now();
     //and solve for v at the first timestep
 
     solve(A, b.xv, v_n.xv);
     solve(A, b.yv, v_n.yv);
     solve(A, b.zv, v_n.zv);
 
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
-
-    std::cout << "Enforcing BC";
-    start = std::chrono::high_resolution_clock::now();
     //enforcing BC
     set_BC(v_n, 0);
-    end = std::chrono::high_resolution_clock::now();
-    dur = end - start;
-    std::cout << "\t" << dur.count() << "s\n";
-
 
     write_vec(v_n, (std::string(vel_file_loc) + "0001.txt").data());
     write_vec(p, (std::string(pres_file_loc) + "0001.txt").data());
@@ -209,84 +142,66 @@ void solve_flow() {
     for (double t = dt; t < flow::max_t; t+=dt) {
         const auto start_loop = std::chrono::high_resolution_clock::now();
         const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
-        std::cout << "t: " << t-dt << " / " << max_t << " at " << std::ctime(&start_time) << std::flush;
+        char time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
+        if (std::strftime(time_human, sizeof(time_human), "%T", std::localtime(&start_time))) {
+            std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
+        } else {
+            std::cerr << "Timing error\n";
+        }
+        //std::cout << "t: " << t-dt << " / " << max_t << " at " << std::ctime(&start_time) << std::flush;
 
-        std::cout << "\tMaking s" << std::flush;
-        start = std::chrono::high_resolution_clock::now();
+        timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
         enforce_PBC(p_bc, norms);
         make_s(s, Re, dt, v_n, v_n1, p, p_bc);
 
-        //make_s_first(s, Re, dt, v_n);
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n" << std::flush;
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_s_create_time();
 
-        std::cout << "\tSolving for p" << std::flush;
-        start = std::chrono::high_resolution_clock::now();
+
+        timer.set_start(std::chrono::high_resolution_clock::now());
         //solve for p for the next timestep
-
         solve(Q, s, p_c);
         enforce_PBC(p_c, norms);
         p += p_c;
-
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n" << std::flush;
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_p_solve_time();
 
         //setting BC vector
         set_BC(bc, t);
-        std::cout << "\tMaking b";
-        start = std::chrono::high_resolution_clock::now();
+
+        timer.set_start(std::chrono::high_resolution_clock::now());
         //then make b
         make_b(b, Re, dt, v_n, v_n1, p, bc);
-        //make_b_first(b, Re, dt, v_n, p);
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_b_create_time();
 
-        std::cout << "\tShuffling variables";
-        start = std::chrono::high_resolution_clock::now();
+
         //shuffling of variables
         v_n1 = v_n;
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
+
 
         //solve for v for the next time step
-        std::cout << "\tSolving for vx" << std::flush;
-        start = std::chrono::high_resolution_clock::now();
+        timer.set_start(std::chrono::high_resolution_clock::now());
         solve(A, b.xv, v_n.xv);
-
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_vx_solve_time();
 
 
-        std::cout << "\tSolving for vy" << std::flush;
-        start = std::chrono::high_resolution_clock::now();
+        timer.set_start(std::chrono::high_resolution_clock::now());
         solve(A, b.yv, v_n.yv);
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_vy_solve_time();
 
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
-
-        std::cout << "\tSolving for vz" << std::flush;
-        start = std::chrono::high_resolution_clock::now();
+        timer.set_start(std::chrono::high_resolution_clock::now());
         solve(A, b.zv, v_n.zv);
-
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_vz_solve_time();
 
 
-        std::cout << "\tEnforcing BC";
-        start = std::chrono::high_resolution_clock::now();
         //enforcing BC
         set_BC(v_n, t);
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
+
 
         ++counter;
         std::string file_name;
@@ -300,17 +215,14 @@ void solve_flow() {
             file_name = std::to_string(counter);
         }
 
-        std::cout << "\tWriting result " << file_name;
-        start = std::chrono::high_resolution_clock::now();
         write_vec(v_n, (std::string(vel_file_loc) + file_name + ".txt").c_str() );
         write_vec(p, (std::string(pres_file_loc) + file_name + ".txt").c_str() );
-        end = std::chrono::high_resolution_clock::now();
-        dur = end - start;
-        std::cout << "\t" << dur.count() << "s\n";
 
         const auto end_loop = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> dur_loop = end_loop - start_loop;
-        std::cout << "Timestep took : " << dur_loop.count() << "s\n";
+        std::cout << "\ttimestep took : " << dur_loop.count() << "s\n";
+
+        timer.write_times(t);
     }
 
 
