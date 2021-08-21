@@ -48,22 +48,6 @@ namespace flow {
 
 
 
-template<unsigned N, unsigned M, unsigned P, typename T>
-void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) {
-    std::ofstream output(file_loc);
-    if (output.is_open()) {
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                output << i * v.dx << " " << j * v.dy << " " << v(i, j, P / 2) << "\n";
-            }
-        }
-    } else {
-        std::cerr << "failed to open file\n";
-    }
-
-    output.close();
-}
-
 void solve_flow() {
     using namespace flow;
     flow_timer timer(time_file_name.data() );
