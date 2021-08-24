@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "../MyMath/vec3.hpp"
+#include "triangle.hpp"
 
 struct mesh final{
     std::vector<vec3> vertices;
@@ -15,14 +16,14 @@ struct mesh final{
     const std::vector<double> mass;
 
     mesh() = delete;
-    mesh(const std::vector<vec3> &vertices_, const std::vector<double> &mass_) noexcept : vertices(vertices_), indices{}, mass(mass_) {
+    mesh(const std::vector<vec3> &vertices_, const std::vector<double> &mass_) noexcept : vertices(vertices_), indices{}, mass(mass_), velocities{}  {
 #ifndef NDEBUG
         if (vertices_.size() != mass_.size()) {
             std::cerr << "vertices and mass must be the same size\n";
         }
 #endif
     }
-    mesh(const std::vector<vec3> &vertices_, const std::vector<unsigned> &indices_, const std::vector<double> &mass_) noexcept : vertices(vertices_), indices(indices_), mass(mass_) {
+    mesh(const std::vector<vec3> &vertices_, const std::vector<unsigned> &indices_, const std::vector<double> &mass_) noexcept : vertices(vertices_), indices(indices_), mass(mass_), velocities{} {
 #ifndef NDEBUG
         if (vertices_.size() != mass_.size()) {
             std::cerr << "vertices and mass must be the same size\n";
