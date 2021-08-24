@@ -58,6 +58,26 @@ struct big_vec final {
 
 private:
     [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+#ifndef NDEBUG
+        if (i < 0) {
+            std::cerr << "trying to access i < 0\n";
+        }
+        if (i > N) {
+            std::cerr << "trying to access i > N\n";
+        }
+        if (j < 0) {
+            std::cerr << "trying to access j < 0\n";
+        }
+        if (j > M) {
+            std::cerr << "trying to access j > M\n";
+        }
+        if (k < 0) {
+            std::cerr << "trying to access k < 0\n";
+        }
+        if (k > P) {
+            std::cerr << "trying to access k > P\n";
+        }
+#endif
         return i + (N+1)*j + (N+1)*(M+1)*k;
     }
 };
@@ -129,6 +149,26 @@ struct big_vec<N, M, P, vec3> final {
 
 private:
     [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+#ifndef NDEBUG
+        if (i < 0) {
+            std::cerr << "trying to access i < 0\n";
+        }
+        if (i > N) {
+            std::cerr << "trying to access i > N\n";
+        }
+        if (j < 0) {
+            std::cerr << "trying to access j < 0\n";
+        }
+        if (j > M) {
+            std::cerr << "trying to access j > M\n";
+        }
+        if (k < 0) {
+            std::cerr << "trying to access k < 0\n";
+        }
+        if (k > P) {
+            std::cerr << "trying to access k > P\n";
+        }
+#endif
         return i + (N+1)*j + (N+1)*(M+1)*k;
     }
 };
