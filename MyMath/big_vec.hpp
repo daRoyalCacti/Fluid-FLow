@@ -14,19 +14,22 @@
 #include "boundary.hpp"
 
 template <unsigned N, unsigned M, unsigned P, typename T>
-struct big_vec final {
+struct big_vec{};
+
+template <unsigned N, unsigned M, unsigned P>
+struct big_vec<N,M,P, double> final {
     //Eigen::Matrix<vec3, (N+1)*(M+1)*(P+1), 1> v;
-    Eigen::Matrix<T, Eigen::Dynamic, 1> v;
-    const double dx, dy, dz;
+    Eigen::Matrix<double, Eigen::Dynamic, 1> v;
+    double dx, dy, dz;
     const boundary_points<N,M,P>* b;
 
 
 
-    big_vec() = delete;
+    big_vec() : dx{}, dy{}, dz{}, b{}, v{} {}
     big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept  : dx(dx_), dy(dy_), dz(dz_), b(b_) {
         v.resize( (N+1)*(M+1)*(P+1) );
         for (unsigned i = 0; i < (N+1)*(M+1)*(P+1); i++) {
-            v(i) = T{};   //ensuring nothing strange
+            v(i) = double{};   //ensuring nothing strange
         }
     }
 
@@ -53,8 +56,8 @@ struct big_vec final {
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_boundary(i,j,k); }
 
 
-    [[nodiscard]] T& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
-    [[nodiscard]] const T& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v( get_index(i,j,k) ); }
+    [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
+    [[nodiscard]] const double& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v( get_index(i,j,k) ); }
 
 private:
     [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
@@ -88,11 +91,11 @@ struct big_vec<N, M, P, vec3> final {
     //Eigen::Matrix<, Eigen::Dynamic, 1> v;
 
     big_vec<N,M,P,double> xv, yv, zv;
-    const double dx, dy, dz;
+    double dx, dy, dz;
     //const boundary_points<N,M,P>* b;
 
 
-    big_vec() = delete;
+    big_vec() : dx{}, dy{}, dz{}, xv{}, yv{}, zv{} {}
     big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept : dx(dx_), dy(dy_), dz(dz_),
         xv(dx_, dy_, dz_, b_),
         yv(dx_, dy_, dz_, b_),

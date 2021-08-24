@@ -6,6 +6,7 @@
 #define CODE_BIG_MATRIX_HPP
 
 #include <Eigen/Sparse>
+#include <iostream>
 
 template <unsigned N, unsigned M, unsigned P>
 struct big_matrix{

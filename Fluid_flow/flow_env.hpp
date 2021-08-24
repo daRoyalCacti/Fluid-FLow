@@ -7,9 +7,13 @@
 
 #include "../Rigid_body/mesh.hpp"
 #include "../MyMath/big_vec.hpp"
+#include "../Rigid_body/triangle.hpp"
+#include "../Rigid_body/body.hpp"
 
+/*
 template <unsigned N, unsigned M, unsigned P>
 void set_BC(big_vec<N,M,P, vec3> &v, const double t) noexcept {
+    //setting the walls
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             v.add_elm(i,j,0, 0,0,0);
@@ -29,12 +33,15 @@ void set_BC(big_vec<N,M,P, vec3> &v, const double t) noexcept {
             } else {
                 v.add_elm(i, 0, k, 0.1 * sin(0.1 * 0.2), 0, 0);
             }
+            //v.add_elm(i, 0, k, 0, 0, 0);
             v.add_elm(i,M,k, 0,0,0);
         }
     }
 
 }
+*/
 
+/*
 template <unsigned N, unsigned M, unsigned P>
 void enforce_PBC(big_vec<N,M,P, double> &p, const boundary_normals<N,M,P> &norms) noexcept {
     for (unsigned i = 0; i <= N; i++) {
@@ -98,6 +105,7 @@ void enforce_PBC(big_vec<N,M,P, double> &p, const boundary_normals<N,M,P> &norms
         }
     }
 }
+ */
 
 template <unsigned N, unsigned M, unsigned P>
 void v_IC(big_vec<N,M,P, vec3> &v) noexcept {
@@ -113,7 +121,7 @@ void v_IC(big_vec<N,M,P, vec3> &v) noexcept {
 }
 
 //num is the number of boundary points
-template <unsigned N, unsigned M, unsigned P>
+/*template <unsigned N, unsigned M, unsigned P>
 void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) noexcept {
     num = 0;
     for (unsigned i = 0; i <= N; i++) {
@@ -137,9 +145,10 @@ void create_boundary_points(boundary_points<N,M,P> &bound, unsigned &num) noexce
             ++num;
         }
     }
-}
+}*/
 
 
+/*
 template <unsigned N, unsigned M, unsigned P>
 void create_boundary_normals(boundary_normals<N,M,P> &bound) noexcept {
     for (unsigned i = 0; i <= N; i++) {
@@ -161,8 +170,10 @@ void create_boundary_normals(boundary_normals<N,M,P> &bound) noexcept {
         }
     }
 }
+ */
 
 
+/*
 template <unsigned N, unsigned M, unsigned P>
 void DEBUG_check_normal_for_all_boundary_points(const boundary_points<N,M,P> &point, const boundary_normals<N,M,P> &norm) noexcept {
     for (unsigned i = 0; i <= N; i++) {
@@ -177,5 +188,6 @@ void DEBUG_check_normal_for_all_boundary_points(const boundary_points<N,M,P> &po
         }
     }
 }
+ */
 
 #endif //CODE_FLOW_ENV_HPP

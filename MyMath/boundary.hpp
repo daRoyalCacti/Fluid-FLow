@@ -113,10 +113,10 @@ private:
 
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_normals final {
-    std::unordered_map<unsigned, vec3> m;   //takes a square index and returns the normal vector
+    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns the normal vector
 
-    boundary_normals() = delete;
-    boundary_normals(size_t num_points) noexcept {
+    boundary_normals() = default;
+    explicit boundary_normals(size_t num_points) noexcept {
         m.reserve(num_points);
     }
 
@@ -128,7 +128,7 @@ struct boundary_normals final {
         return m.contains(get_index(i,j,k));
     }
 
-    vec3 normal(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+    [[nodiscard]] vec3 normal(const unsigned i, const unsigned j, const unsigned k) const noexcept {
         return m.at(get_index(i,j,k));
     }
 

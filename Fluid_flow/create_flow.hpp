@@ -19,6 +19,7 @@
 #include "../MyMath/boundary.hpp"
 #include "flow_env.hpp"
 #include "timing.hpp"
+#include "boundary_conditions.hpp"
 
 
 struct output_settings {
@@ -44,29 +45,20 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
     flow_timer timer(os.time_file_name.data() );
 
-
-    unsigned no_boundary_points = 0;
-    boundary_points<N,M,P> bound;
-    create_boundary_points(bound, no_boundary_points);
-
-    boundary_normals<N,M,P> norms(no_boundary_points);
-    create_boundary_normals(norms);
-
-#ifndef NDEBUG
-    DEBUG_check_normal_for_all_boundary_points(bound, norms);
-#endif
+    boundary_conditions<N,M,P> BC(dx, dy, dz);
 
 
-    big_vec<N,M,P,vec3> v_n(dx, dy, dz, &bound);    //velocity at hte current time-step
-    big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &bound);   //velocity at the previous time-step
-    big_vec<N,M,P,double> p(dx, dy, dz, &bound);    //pressure vector
-    big_vec<N,M,P,vec3> bc(dx, dy, dz, &bound);     //boundary conditions (used to set b)
-    big_vec<N,M,P,double> p_bc(dx, dy, dz, &bound); //pressure boundary conditions (used to set s)
-    big_vec<N,M,P,double> p_c(dx, dy, dz, &bound);    //pressure correction vector
+    big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step
+    big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
+    big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
+    //big_vec<N,M,P,vec3> bc(dx, dy, dz, &BC.bound);     //boundary conditions (used to set b)
+    //big_vec<N,M,P,double> p_bc(dx, dy, dz, &BC.bound); //pressure boundary conditions (used to set s)
+    big_vec<N,M,P,double> p_c(dx, dy, dz, &BC.bound);    //pressure correction vector
 
 
-    big_vec<N,M,P,vec3> b(dx, dy, dz, &bound);
-    big_vec<N,M,P,double> s(dx, dy, dz, &bound);
+
+    big_vec<N,M,P,vec3> b(dx, dy, dz, &BC.bound);
+    big_vec<N,M,P,double> s(dx, dy, dz, &BC.bound);
 
 
     big_matrix<N,M,P> Q(16);
@@ -77,8 +69,7 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
     make_A(A, v_n, dt, Re);
 
     //making Q
-    make_Q(Q, p, norms);
-
+    make_Q(Q, p, BC.norms);
 
     //first set IC
     v_IC(v_n);
@@ -89,18 +80,23 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
     v_n1 = v_n;
 
     //then create the s matrix
-    enforce_PBC(p_bc, norms);
-    make_s_first(s, Re, dt, v_n, p, p_bc);
+    BC.update_pressure_BC();
+    //enforce_PBC(p_bc, BC.norms);
+
+    make_s_first(s, Re, dt, v_n, p, BC.p_bc);
 
     //solve for p for the first timestep
     solve(Q, s, p_c);
-    enforce_PBC(p_c, norms);
+    //enforce_PBC(p_c, BC.norms);
+
+    BC.enforce_pressure_BC(p_c);
     p += p_c;
 
     //setting BC vector
-    set_BC(bc, 0);
+    //set_BC(bc, 0);
+    BC.update_velocity_BC();
     //then make b
-    make_b_first(b, Re, dt, v_n, p, bc);
+    make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
 
     //and solve for v at the first timestep
 
@@ -109,7 +105,8 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
     solve(A, b.zv, v_n.zv);
 
     //enforcing BC
-    set_BC(v_n, 0);
+    //set_BC(v_n, 0);
+    BC.enforce_velocity_BC(v_n);
 
     if constexpr (write_all_times) {
         write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
@@ -132,8 +129,9 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
-        enforce_PBC(p_bc, norms);
-        make_s(s, Re, dt, v_n, v_n1, p, p_bc);
+        //enforce_PBC(p_bc, BC.norms);
+        BC.update_pressure_BC();
+        make_s(s, Re, dt, v_n, v_n1, p, BC.p_bc);
 
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_s_create_time();
@@ -142,17 +140,19 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //solve for p for the next timestep
         solve(Q, s, p_c);
-        enforce_PBC(p_c, norms);
+        //enforce_PBC(p_c, BC.norms);
+        BC.enforce_pressure_BC(p_c);
         p += p_c;
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_p_solve_time();
 
         //setting BC vector
-        set_BC(bc, t);
+        //set_BC(bc, t);
+        BC.update_velocity_BC();
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //then make b
-        make_b(b, Re, dt, v_n, v_n1, p, bc);
+        make_b(b, Re, dt, v_n, v_n1, p, BC.vel_bc);
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_b_create_time();
 
@@ -180,7 +180,8 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
 
         //enforcing BC
-        set_BC(v_n, t);
+        //set_BC(v_n, t);
+        BC.enforce_velocity_BC(v_n);
 
 
         ++counter;
