@@ -17,9 +17,7 @@
 #include "mesh.hpp"
 
 struct body {
-    //std::shared_ptr<std::vector<vec3>> pos;    //the position of every particle
-    mesh model;
-    //const std::vector<double> mass;    //the mass of every particle
+    mesh model; //positions and velocities global
 
     vec3 pos_cm;  //the position of the center of mass
     vec3 vel_cm{};  //the velocity of the center of mass
@@ -68,12 +66,12 @@ struct body {
 
         //finding the torque
         const vec3 t = std::inner_product(model.vertices.begin(), model.vertices.end(), forces.begin(), vec3{}, std::plus<>(),
-                                          [&cm = pos_cm](const vec3 &r, const vec3 &F){return cross( (r-cm), F);});
+                                          [&](const vec3 &r, const vec3 &F){return cross( (r-pos_cm), F);});
 
         //moment of inertia
         const c_line r_axis(pos_cm, t);
         const double I = std::inner_product(model.mass.begin(), model.mass.end(), model.vertices.begin(), 0.0, std::plus<>(),
-                                            [&l = r_axis](const double &m, const vec3 &r){return m * l.distance(r)*l.distance(r);});
+                                            [&](const double &m, const vec3 &r){return m * r_axis.distance(r)*r_axis.distance(r);});
 
         //angular acceleration
         const vec3 alpha = t/I;
@@ -84,8 +82,14 @@ struct body {
 
         //updating all positions
         std::transform(model.vertices.begin(), model.vertices.end(), model.vertices.begin(),
-                       [d = vel_cm*dt, theta = rot_angle_vec, cm = pos_cm_old](const vec3& x)
-                       {return rotate(cm, theta, x, theta.length()) + d;});
+                       [&](const vec3& x)
+                       {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + vel_cm*dt;}); //rotating about the old center of mass, then moving forward
+
+        //updating all velocities
+        std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
+                       [&](const vec3& x)
+                       {return vel_cm + cross( (x-pos_cm),w_cm);}); //velocity of cm plus rotational velocity (v=r x w)
+                                                //https://en.wikipedia.org/wiki/Angular_velocity
     }
 
 
