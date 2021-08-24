@@ -8,12 +8,6 @@
 #include "vec3.hpp"
 #include <Eigen/Dense>
 
-//cannot multiply by vec3 so this instead multiplies by the vector (v, 1)
-vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v);   //not the reverse is not defined
-
-//rotates point about an axis defined by orig and dir (using the right hand rule)
-vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, double theta);
-
 //const line struct
 // - used to precompute some values
 // - and for computing the distance a point is from a line
@@ -36,7 +30,7 @@ struct c_line final {
 };
 
 
-
+//cannot multiply by vec3 so this instead multiplies by the vector (v, 1)
 vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v) noexcept {
     const Eigen::Vector4d v_E = Eigen::Vector4d(v.x(), v.y(), v.z(), 1);
     const Eigen::Vector4d R = M*v_E;
@@ -44,6 +38,7 @@ vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v) noexcept {
 }
 
 //http://paulbourke.net/geometry/rotate/
+//rotates point about an axis defined by orig and dir (using the right hand rule)
 vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double theta) noexcept {
     const auto x1 = orig.x();
     const auto y1 = orig.y();

@@ -5,6 +5,8 @@
 #ifndef CODE_FLOW_ENV_HPP
 #define CODE_FLOW_ENV_HPP
 
+#include "../Rigid_body/mesh.hpp"
+#include "../MyMath/big_vec.hpp"
 
 template <unsigned N, unsigned M, unsigned P>
 void set_BC(big_vec<N,M,P, vec3> &v, const double t) noexcept {

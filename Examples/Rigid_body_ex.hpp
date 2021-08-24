@@ -35,16 +35,12 @@ void Rigid_body_ex() {
         }
     }
 
-
-
-    auto pos_ptr = std::make_shared<std::vector<vec3>>(pos);
-
-    body b(pos_ptr, mass);
+    body b(pos, mass);
 
     unsigned writing_counter = 0;
 
     forces[0] = vec3(0,0,N*N);
-    forces[N-1] = vec3(static_cast<double>(N*N)/10,0,0);
+    //forces[N-1] = vec3(static_cast<double>(N*N)/10,0,0);
     forces[N*N-1] = vec3(0,0,-static_cast<double>(N*N));
 
     for (unsigned i = 0; i < timesteps; i++) {
@@ -69,7 +65,7 @@ void Rigid_body_ex() {
             } else {
                 file_name = std::to_string(writing_counter++);
             }
-            b.debug_write_pos(("../DEBUG/plotting_raw_data/" + file_name + ".txt").c_str());
+            b.debug_write_pos(("../DEBUG/rigid_body_data/" + file_name + ".txt").c_str());
         }
     }
 }

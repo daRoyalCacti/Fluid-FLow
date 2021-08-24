@@ -1,4 +1,4 @@
-All_files = dirPlus('plotting_raw_data');   %https://stackoverflow.com/questions/2652630/how-to-get-all-files-under-a-specific-directory-in-matlab#2654459
+All_files = dirPlus('rigid_body_data');   %https://stackoverflow.com/questions/2652630/how-to-get-all-files-under-a-specific-directory-in-matlab#2654459
 
 data = struct;
 for ii = 1:length(All_files)

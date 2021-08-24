@@ -128,7 +128,7 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
         } else {
             std::cerr << "Timing error\n";
         }
-\
+
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
