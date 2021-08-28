@@ -35,7 +35,7 @@ struct output_settings {
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
 template<unsigned no_timesteps, unsigned N, unsigned M, unsigned P, bool write_all_times = true>
-void solve_flow(const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
+void solve_flow(const body *rb, const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
     //size of grid
     double dx = Wx / static_cast<double>(N+1);
     double dy = Wy / static_cast<double>(M+1);
@@ -45,14 +45,12 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
     flow_timer timer(os.time_file_name.data() );
 
-    boundary_conditions<N,M,P> BC(dx, dy, dz);
+    boundary_conditions<N,M,P> BC(rb, dx, dy, dz);
 
 
     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step
     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
     big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
-    //big_vec<N,M,P,vec3> bc(dx, dy, dz, &BC.bound);     //boundary conditions (used to set b)
-    //big_vec<N,M,P,double> p_bc(dx, dy, dz, &BC.bound); //pressure boundary conditions (used to set s)
     big_vec<N,M,P,double> p_c(dx, dy, dz, &BC.bound);    //pressure correction vector
 
 
@@ -81,7 +79,6 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
     //then create the s matrix
     BC.update_pressure_BC();
-    //enforce_PBC(p_bc, BC.norms);
 
     make_s_first(s, Re, dt, v_n, p, BC.p_bc);
 
@@ -93,19 +90,16 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
     p += p_c;
 
     //setting BC vector
-    //set_BC(bc, 0);
     BC.update_velocity_BC();
     //then make b
     make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
 
     //and solve for v at the first timestep
-
     solve(A, b.xv, v_n.xv);
     solve(A, b.yv, v_n.yv);
     solve(A, b.zv, v_n.zv);
 
     //enforcing BC
-    //set_BC(v_n, 0);
     BC.enforce_velocity_BC(v_n);
 
     if constexpr (write_all_times) {
@@ -129,7 +123,6 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
-        //enforce_PBC(p_bc, BC.norms);
         BC.update_pressure_BC();
         make_s(s, Re, dt, v_n, v_n1, p, BC.p_bc);
 
@@ -140,14 +133,12 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //solve for p for the next timestep
         solve(Q, s, p_c);
-        //enforce_PBC(p_c, BC.norms);
         BC.enforce_pressure_BC(p_c);
         p += p_c;
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_p_solve_time();
 
         //setting BC vector
-        //set_BC(bc, t);
         BC.update_velocity_BC();
 
         timer.set_start(std::chrono::high_resolution_clock::now());
@@ -180,7 +171,6 @@ void solve_flow(const output_settings &os, const double max_t = 1, const double 
 
 
         //enforcing BC
-        //set_BC(v_n, t);
         BC.enforce_velocity_BC(v_n);
 
 

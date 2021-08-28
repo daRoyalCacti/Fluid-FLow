@@ -14,6 +14,7 @@ struct mesh final{
     std::vector<vec3> velocities;
     std::vector<unsigned> indices;
     const std::vector<double> mass;
+    std::vector<vec3> normals;
 
     mesh() = delete;
     mesh(const std::vector<vec3> &vertices_, const std::vector<double> &mass_) noexcept : vertices(vertices_), indices{}, mass(mass_), velocities{}  {
@@ -45,6 +46,25 @@ struct mesh final{
         }
         if (vertices_.size() != vertices_.size()) {
             std::cerr << "verticies and velocities must be the same size\n";
+        }
+#endif
+    }
+
+    mesh(const std::vector<vec3> &vertices_, const std::vector<unsigned> &indices_, const std::vector<double> &mass_,
+         const std::vector<vec3> &velocities_, const std::vector<vec3> &normals_) noexcept :
+    vertices(vertices_), indices(indices_), mass(mass_), velocities(velocities_), normals(normals_) {
+#ifndef NDEBUG
+        if (vertices_.size() != mass_.size()) {
+            std::cerr << "vertices and mass must be the same size\n";
+        }
+        if (indices_.size() < vertices_.size()) {
+            std::cerr << "having less indices that vertices doesn't make sense\n";
+        }
+        if (vertices_.size() != vertices_.size()) {
+            std::cerr << "verticies and velocities must be the same size\n";
+        }
+        if (vertices_.size() != normals.size()) {
+            std::cerr << "vertices and normals must be the same size\n";
         }
 #endif
     }

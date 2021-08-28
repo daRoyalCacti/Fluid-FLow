@@ -6,6 +6,7 @@
 #define CODE_BOUNDARY_CONDITIONS_HPP
 
 #include "../MyMath/boundary.hpp"
+#include "../Rigid_body/body.hpp"
 
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_conditions {
@@ -16,9 +17,11 @@ struct boundary_conditions {
     big_vec<N,M,P,vec3> vel_bc;
     big_vec<N,M,P,double> p_bc;
 
+    const body *b;
 
 
-    boundary_conditions(const double dx, const double dy, const double dz) {
+
+    boundary_conditions(const body *b_, const double dx, const double dy, const double dz) : b(b_) {
         std::cerr << "Remember to change velocity BC back to 0\n";
 
         set_wall_points();
