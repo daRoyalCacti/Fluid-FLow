@@ -45,6 +45,7 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
 
     flow_timer timer(os.time_file_name.data() );
 
+    //boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
 
 

@@ -18,16 +18,21 @@ struct boundary_conditions {
     big_vec<N,M,P,vec3> vel_bc;
     big_vec<N,M,P,double> p_bc;
 
+    //const double Wx, Wy, Wz;
+
     triangle_mesh tm;
 
 
-
+    boundary_conditions() = delete;
+    //boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx_, const double Wy_, const double Wz_) : tm(m), Wx(Wx_), Wy(Wy_), Wz(Wz_) {
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
         std::cerr << "Remember to change velocity BC back to 0\n";
 
         set_wall_points();
         norms = boundary_normals<N,M,P>(num);
         create_wall_normals();
+
+        update_mesh_boundary();
 
         p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
@@ -39,6 +44,7 @@ struct boundary_conditions {
 
     void update_pressure_BC();
     void update_velocity_BC();
+    void update_mesh_boundary();
 
     void enforce_velocity_BC(big_vec<N,M,P,vec3> &v) {
         for (unsigned i = 0; i <= N; i++) {
@@ -72,6 +78,42 @@ private:
     void DEBUG_check_normal_for_all_boundary_points() noexcept;
 };
 
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::update_mesh_boundary() {
+    ray r(vec3{}, vec3(0,0,1));
+    const auto dx = p_bc.dx;
+    const auto dy = p_bc.dy;
+    const auto dz = p_bc.dz;
+    vec3 col1, col2;
+    std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
+    for (unsigned i = 0; i <= N; ++i) {
+        for (unsigned j = 0; j <= M; ++j) {
+            r.orig = vec3(i*dx, j*dy, 0);
+            const bool did_hit = tm.get_collision_points(r, col1, col2);
+            if (did_hit) {
+                const unsigned index_1_x = floor(col1.x()/dx);
+                const unsigned index_1_y = floor(col1.y()/dy);
+                const unsigned index_1_z = floor(col1.z()/dz);
+
+                const unsigned index_2_z = floor(col2.z()/dz);
+#ifndef NDEBUG
+                const unsigned index_2_x = floor(col2.x()/dx);
+                const unsigned index_2_y = floor(col2.y()/dy);
+
+                if (index_2_x != index_1_x) {
+                    std::cerr << "Index 1 not equal to index 2 in ray collision with triangle mesh\n";
+                }
+                if (index_2_y != index_1_y) {
+                    std::cerr << "Index 1 not equal to index 2 in ray collision with triangle mesh\n";
+                }
+#endif
+                for (unsigned k = index_1_z; k<=index_2_z; k++) {
+                    bound(index_1_x,index_1_y,k).has_right = false;
+                }
+            }
+        }
+    }
+}
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_wall_points() {
