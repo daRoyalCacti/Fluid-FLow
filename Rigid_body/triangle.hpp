@@ -78,6 +78,7 @@ bool triangle::hit_time(const ray& r, double& hit_time) const {
     h = cross(r.dir, v1);
     a = dot(v0, h);
 
+
     if (a > -epsilon && a < epsilon)	//ray is parallel to triangle
         return false;
 
@@ -99,7 +100,7 @@ bool triangle::hit_time(const ray& r, double& hit_time) const {
 
 #ifndef NDEBUG
     if (t < 0) {
-        std::cout << "Collision with triangle return negative time\n";
+        std::cerr << "Collision with triangle return negative time\n";
     }
 #endif
 

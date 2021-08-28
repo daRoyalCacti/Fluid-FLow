@@ -38,6 +38,7 @@ struct triangle_mesh {
         double time;
         for (const auto & t : tris) {
             if (t.hit_time(r, time)) {
+
                 if (has_hit) {
 #ifndef NDEBUG
                     if (hit_twice) {

@@ -44,9 +44,11 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     double dt = max_t / (double)no_timesteps;
 
     flow_timer timer(os.time_file_name.data() );
-
-    //boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
+    BC.DEBUG_write_boundary_points();
+
+    std::cerr << "Returning early for testing\n";
+    return;
 
 
     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step

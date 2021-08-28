@@ -18,13 +18,11 @@ struct boundary_conditions {
     big_vec<N,M,P,vec3> vel_bc;
     big_vec<N,M,P,double> p_bc;
 
-    //const double Wx, Wy, Wz;
 
     triangle_mesh tm;
 
 
     boundary_conditions() = delete;
-    //boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx_, const double Wy_, const double Wz_) : tm(m), Wx(Wx_), Wy(Wy_), Wz(Wz_) {
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
         std::cerr << "Remember to change velocity BC back to 0\n";
 
@@ -32,10 +30,11 @@ struct boundary_conditions {
         norms = boundary_normals<N,M,P>(num);
         create_wall_normals();
 
-        update_mesh_boundary();
-
         p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
+
+        //needs to be called after p_bc is set because it uses dx, dy, dz from it
+        update_mesh_boundary();
 
 #ifndef NDEBUG
         DEBUG_check_normal_for_all_boundary_points();
@@ -72,6 +71,21 @@ struct boundary_conditions {
         }
     }
 
+    void DEBUG_write_boundary_points() {
+        std::ofstream output("../DEBUG/boundary_points.txt");
+        if (output.is_open()) {
+            for (unsigned i = 0; i <= N; i++) {
+                for (unsigned j = 0; j <= M; j++) {
+                    output << i * p_bc.dx << " " << j * p_bc.dy << " " << bound.is_boundary(i,j,P/2) << "\n";
+                }
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
 private:
     void set_wall_points();
     void create_wall_normals();
@@ -88,7 +102,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
-            r.orig = vec3(i*dx, j*dy, 0);
+            r.orig = vec3(i*dx + dx/2, j*dy + dy/2, 0); //shoot ray through the middle of a grid point
             const bool did_hit = tm.get_collision_points(r, col1, col2);
             if (did_hit) {
                 const unsigned index_1_x = floor(col1.x()/dx);

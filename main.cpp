@@ -57,13 +57,13 @@ int main() {
     }
 
     for (int i = 0; i < 6; i++) {
-        inds.push_back(6*i);
-        inds.push_back(6*i+1);
-        inds.push_back(6*i+2);
+        inds.push_back(4*i);
+        inds.push_back(4*i+1);
+        inds.push_back(4*i+2);
 
-        inds.push_back(6*i+1);
-        inds.push_back(6*i+2);
-        inds.push_back(6*i+3);
+        inds.push_back(4*i+1);
+        inds.push_back(4*i+2);
+        inds.push_back(4*i+3);
     }
 
     mesh m(pos, inds, mass, vels, norms);
