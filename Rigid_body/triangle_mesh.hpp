@@ -5,6 +5,7 @@
 #ifndef CODE_TRIANGLE_MESH_HPP
 #define CODE_TRIANGLE_MESH_HPP
 
+#include "ray.hpp"
 #include "triangle.hpp"
 
 struct triangle_mesh {
@@ -19,6 +20,38 @@ struct triangle_mesh {
         }
 
     }
+
+    //returns if ray collided with mesh
+    bool get_collision_points(const ray &r, vec3 &col1, vec3 &col2) {
+        bool has_hit = false;
+        bool hit_twice = false;
+        double time;
+        for (const auto & t : tris) {
+            if (t.hit_time(r, time)) {
+                if (has_hit) {
+#ifndef NDEBUG
+                    if (hit_twice) {
+                        std::cerr << "Ray hit triangle mesh more than twice --- this is not implemented\n";
+                    }
+#endif
+                    hit_twice = true;
+                    col2 = r.at(time);
+                } else {
+                    has_hit = true;
+                    col1 = r.at(time);
+                }
+            }
+        }
+
+        //if only hit once
+        // - should rarely happen - only when ray just grazes past a triangle
+        if (has_hit && !hit_twice) {
+            col2 = col1;    //say both collisions happened at the same place
+        }
+
+        return has_hit;
+    }
+
 
 };
 

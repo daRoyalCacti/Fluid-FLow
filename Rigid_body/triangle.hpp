@@ -27,7 +27,7 @@ struct triangle {
      }
 
 
-    bool hit_time(const ray& r, double t_min, double t_max, double& hit_time);
+    bool hit_time(const ray& r, double& hit_time) const;
 
      //call whenever the pointers to the data update
      void update() {
@@ -66,7 +66,7 @@ struct triangle {
 
 };
 
-bool triangle::hit_time(const ray& r, const double t_min, const double t_max, double& hit_time) {
+bool triangle::hit_time(const ray& r, double& hit_time) const {
     //using the Moller-Trumbore intersection algorithm
     //https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 
@@ -97,8 +97,11 @@ bool triangle::hit_time(const ray& r, const double t_min, const double t_max, do
     //computing the time of intersection
     const double t = f * dot(v1, q);
 
-    if (t < t_min || t > t_max || t < epsilon)	//time of intersection falls outside of time range considered
-        return false;
+#ifndef NDEBUG
+    if (t < 0) {
+        std::cout << "Collision with triangle return negative time\n";
+    }
+#endif
 
     hit_time = t;
 
