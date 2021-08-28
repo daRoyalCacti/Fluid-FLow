@@ -45,7 +45,7 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
 
     flow_timer timer(os.time_file_name.data() );
 
-    boundary_conditions<N,M,P> BC(rb, dx, dy, dz);
+    boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
 
 
     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step

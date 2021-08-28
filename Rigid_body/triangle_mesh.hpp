@@ -8,8 +8,18 @@
 #include "ray.hpp"
 #include "triangle.hpp"
 
+template <class T>
+class no_init_alloc
+    : public std::allocator<T>
+    {
+    public:
+        using std::allocator<T>::allocator;
+
+        template <class U, class... Args> void construct(U*, Args&&...) {}
+    };
+
 struct triangle_mesh {
-    std::vector<triangle> tris;
+    std::vector<triangle, no_init_alloc<triangle>> tris;    //custom allocator because vector is filled immediately after resizing it
 
     triangle_mesh() = delete;
     explicit triangle_mesh(const mesh *m) {
