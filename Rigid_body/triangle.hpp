@@ -10,24 +10,33 @@
 
 
 struct triangle {
-    const vec3 vertex0, vertex1, vertex2;	//position of vertex
-    const vec3 v0, v1;	//edges of the triangle
+    const vec3 *vertex0, *vertex1, *vertex2;	//position of vertex
+    vec3 v0, v1;	//edges of the triangle
     //precomputed quantities to find the uv coordinates
     //https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
-    const double d00{}, d01{}, d11{};	//helpful quantities for finding texture coords
+    double d00{}, d01{}, d11{};	//helpful quantities for finding texture coords
 
-    const vec3 normal0, normal1, normal2;	//vertex normals
+    const vec3 *normal0, *normal1, *normal2;	//vertex normals
 
     triangle() = delete;
 
 
-     triangle(const vec3 &vec0, const vec3 &vec1, const vec3 &vec2, const vec3 &n0, const vec3 &n1, const vec3 &n2)
-              : vertex0(vec0), vertex1(vec1), vertex2(vec2), v0(vec1 - vec0), v1(vec2 - vec0),
-              d00(dot(v0, v0)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1))), d01(dot(v0, v1)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1))),
-              d11(dot(v1, v1)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1))), normal0(n0), normal1(n1), normal2(n2) {}
+     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2)
+              : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2) {
+         update();
+     }
 
 
     bool hit_time(const ray& r, double t_min, double t_max, double& hit_time);
+
+     //call whenever the pointers to the data update
+     void update() {
+         v0 = *vertex1 - *vertex0;
+         v1 = *vertex2 - *vertex0;
+         d00 = dot(v0, v0)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1));
+         d01 = dot(v0, v1)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1));
+         d11 = dot(v1, v1)/(dot(v0, v0) * dot(v1, v1) - dot(v0, v1) * dot(v0, v1));
+     }
 
     inline void barycentric_coords(const vec3 &p, double& Bary0, double& Bary1, double &Bary2) const {
         //find the uv coordinates by interpolating using barycentric coordinates
