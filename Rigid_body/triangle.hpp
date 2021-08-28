@@ -41,7 +41,7 @@ struct triangle {
     inline void barycentric_coords(const vec3 &p, double& Bary0, double& Bary1, double &Bary2) const {
         //find the uv coordinates by interpolating using barycentric coordinates
         //https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
-        const vec3 v2 = p - vertex0;
+        const vec3 v2 = p - *vertex0;
         const double d20 = dot(v2, v0);
         const double d21 = dot(v2, v1);
 
@@ -61,7 +61,7 @@ struct triangle {
     void get_normals(const vec3& point) {
         double Bary0, Bary1, Bary2;
         barycentric_coords(point, Bary0, Bary1, Bary2);
-        vec3 temp_norm_res = barycentric_interp(normal0, normal1, normal2, Bary0, Bary1, Bary2);
+        vec3 temp_norm_res = barycentric_interp(*normal0, *normal1, *normal2, Bary0, Bary1, Bary2);
     }
 
 };
@@ -82,7 +82,7 @@ bool triangle::hit_time(const ray& r, const double t_min, const double t_max, do
         return false;
 
     f = 1.0f / a;
-    s = r.orig - vertex0;
+    s = r.orig - *vertex0;
     u = f * dot(s, h);
 
     if (u < 0.0f || u > 1.0f)
