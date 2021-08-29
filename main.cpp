@@ -61,7 +61,7 @@ int main() {
         inds.push_back(4*i+1);
         inds.push_back(4*i+2);
 
-        inds.push_back(4*i+1);
+        inds.push_back(4*i);
         inds.push_back(4*i+2);
         inds.push_back(4*i+3);
     }
