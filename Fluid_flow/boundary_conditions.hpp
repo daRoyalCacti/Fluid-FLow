@@ -5,6 +5,7 @@
 #ifndef CODE_BOUNDARY_CONDITIONS_HPP
 #define CODE_BOUNDARY_CONDITIONS_HPP
 
+
 #include "../MyMath/boundary.hpp"
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
@@ -94,12 +95,14 @@ private:
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
+    bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
+
     ray r(vec3{}, vec3(0,0,1));
     const auto dx = p_bc.dx;
     const auto dy = p_bc.dy;
     const auto dz = p_bc.dz;
     vec3 col1, col2;
-    std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
+    //std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             r.orig = vec3(i*dx + dx/2, j*dy + dy/2, 0); //shoot ray through the middle of a grid point
@@ -121,12 +124,81 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
                     std::cerr << "Index 1 not equal to index 2 in ray collision with triangle mesh\n";
                 }
 #endif
+                //setting the boundary points
+                for (unsigned k = 0; k < index_1_z; k++) {
+                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
+                }
                 for (unsigned k = index_1_z; k<=index_2_z; k++) {
-                    bound(index_1_x,index_1_y,k).has_right = false;
+                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
+                    //bound(index_1_x,index_1_y,k).has_right = false;
+                }
+                for (unsigned k = index_2_z+1; k <=P; k++) {
+                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
+                }
+
+            } else {    //did not hit
+                for (unsigned k = 0; k <= P; k++) {
+                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
                 }
             }
         }
     }
+
+    //setting left and right and such
+    for (unsigned i = 0; i <= N; ++i) {
+        for (unsigned j = 0; j <= M; ++j) {
+            for (unsigned k = 0; k <= P; k++) {
+                //note
+                if (is_boundary[i + (N+1)*j + (N+1)*(M+1)*k]) { //dealing with boundary points
+#ifndef NDEBUG
+                    if (i <= 0) {
+                        std::cerr << "setting BC from mesh: trying to access i < 0\n";
+                    }
+                    if (i >= N) {
+                        std::cerr << "setting BC from mesh: trying to access i > N\n";
+                    }
+                    if (j <= 0) {
+                        std::cerr << "setting BC from mesh: trying to access j < 0\n";
+                    }
+                    if (j >= M) {
+                        std::cerr << "setting BC from mesh: trying to access j > M\n";
+                    }
+                    if (k <= 0) {
+                        std::cerr << "setting BC from mesh: trying to access k < 0\n";
+                    }
+                    if (k >= P) {
+                        std::cerr << "setting BC from mesh: trying to access k > P\n";
+                    }
+#endif
+                    if (is_boundary[i+1 + (N+1)*j + (N+1)*(M+1)*k]) {
+                        bound(i,j,k).has_left = false;
+                    }
+                    if (is_boundary[i-1 + (N+1)*j + (N+1)*(M+1)*k]) {
+                        bound(i,j,k).has_right = false;
+                    }
+                    if (is_boundary[i + (N+1)*(j+1) + (N+1)*(M+1)*k]) {
+                        bound(i,j,k).has_up = false;
+                    }
+                    if (is_boundary[i + (N+1)*(j-1) + (N+1)*(M+1)*k]) {
+                        bound(i,j,k).has_down = false;
+                    }
+                    if (is_boundary[i + (N+1)*j + (N+1)*(M+1)*(k+1)]) {
+                        bound(i,j,k).has_back = false;
+                    }
+                    if (is_boundary[i + (N+1)*j + (N+1)*(M+1)*(k-1)]) {
+                        bound(i,j,k).has_front = false;
+                    }
+
+
+
+
+                }
+            }
+        }
+    }
+
+
+    delete [] is_boundary;
 }
 
 template <unsigned N, unsigned M, unsigned P>
