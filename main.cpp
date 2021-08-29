@@ -26,7 +26,7 @@ int main() {
             for (int k = 0; k < 2; k++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
-                vels.emplace_back(0,1,0);
+                vels.emplace_back(0,(2*i-1),0);
                 norms.emplace_back((2*i-1), 0, 0);
             }
         }
@@ -38,7 +38,7 @@ int main() {
             for (int k = 0; k < 2; k++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
-                vels.emplace_back(0,1,0);
+                vels.emplace_back(-(2*j-1),0,0);
                 norms.emplace_back(0, (2*j-1), 0);
             }
         }
@@ -50,7 +50,7 @@ int main() {
             for (int i = 0; i < 2; i++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
-                vels.emplace_back(0,1,0);
+                vels.emplace_back(0,0,0);
                 norms.emplace_back(0, 0, (2*k-1));
             }
         }
