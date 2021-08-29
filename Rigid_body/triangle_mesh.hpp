@@ -32,7 +32,7 @@ struct triangle_mesh {
     }
 
     //returns if ray collided with mesh
-    bool get_collision_points(const ray &r, vec3 &col1, vec3 &col2) {
+    bool get_collision_points(const ray &r, vec3 &col1, vec3 &col2, vec3 &norm1, vec3 &norm2) {
         bool has_hit = false;
         bool hit_twice = false;
         double time;
@@ -47,9 +47,11 @@ struct triangle_mesh {
 #endif
                     hit_twice = true;
                     col2 = r.at(time);
+                    norm2 = t.get_normal(col2);
                 } else {
                     has_hit = true;
                     col1 = r.at(time);
+                    norm1 = t.get_normal(col1);
                 }
             }
         }

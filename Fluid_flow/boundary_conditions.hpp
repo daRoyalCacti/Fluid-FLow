@@ -102,11 +102,12 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     const auto dy = p_bc.dy;
     const auto dz = p_bc.dz;
     vec3 col1, col2;
+    vec3 norm1, norm2;
     //std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             r.orig = vec3(i*dx + dx/2, j*dy + dy/2, 0); //shoot ray through the middle of a grid point
-            const bool did_hit = tm.get_collision_points(r, col1, col2);
+            const bool did_hit = tm.get_collision_points(r, col1, col2, norm1, norm2);
             if (did_hit) {
                 const unsigned index_1_x = floor(col1.x()/dx);
                 const unsigned index_1_y = floor(col1.y()/dy);
