@@ -7,6 +7,8 @@
 
 #include "ray.hpp"
 #include "triangle.hpp"
+#include <map>
+#include <algorithm>
 
 template <class T>
 class no_init_alloc
@@ -31,39 +33,35 @@ struct triangle_mesh {
 
     }
 
+    struct d_vec3 {
+        vec3 v1, v2;
+    };
+
     //returns if ray collided with mesh
-    bool get_collision_points(const ray &r, vec3 &col1, vec3 &col2, vec3 &norm1, vec3 &norm2) {
-        bool has_hit = false;
-        bool hit_twice = false;
+    std::map<double, d_vec3> get_collision_points(const ray &r) {
+        //this does not work if the ray hits the mesh an odd number of times
+        // - should only happen when a ray just barely grazes past the mesh
+        // - note that hits is stored in order of hit time
+        std::map<double, d_vec3> hits; //stores hit time and hit pos
         double time;
+        unsigned test_counter = 0;
         for (const auto & t : tris) {
             if (t.hit_time(r, time)) {
-
-                if (has_hit) {
-#ifndef NDEBUG
-                    if (hit_twice) {
-                        std::cerr << "Ray hit triangle mesh more than twice --- this is not implemented\n";
-                    }
-#endif
-                    hit_twice = true;
-                    col2 = r.at(time);
-                    norm2 = t.get_normal(col2);
-                } else {
-                    has_hit = true;
-                    col1 = r.at(time);
-                    norm1 = t.get_normal(col1);
+                if (++test_counter > 2) {
+                    std::cerr << "hit more than twice\n";
                 }
+                //time, collision point, normal at collision point
+                hits.insert({ time, d_vec3{r.at(time), t.get_normal(r.at(time))}  });
             }
         }
 
-        //if only hit once
-        // - should rarely happen - only when ray just grazes past a triangle
-        if (has_hit && !hit_twice) {
-            col2 = col1;    //say both collisions happened at the same place
-            norm2 = norm1;
+#ifndef NDEBUG
+        if ( (hits.size() % 2) != 0 ) {
+            std::cerr << "ray hit triangle mesh an odd number of times\n";
         }
+#endif
 
-        return has_hit;
+        return hits;
     }
 
 

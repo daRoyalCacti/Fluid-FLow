@@ -95,56 +95,53 @@ private:
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
-    bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
+    //bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
+    //vector over c array so all elements initialised to 0 = false
+    std::vector<bool> is_boundary;
+    is_boundary.resize((N+1)*(M+1)*(P+1));
 
     ray r(vec3{}, vec3(0,0,1));
     const auto dx = p_bc.dx;
     const auto dy = p_bc.dy;
     const auto dz = p_bc.dz;
-    vec3 col1, col2;
-    vec3 norm1, norm2;
-    //std::cerr << "updated mesh boundary only (incorrectly) sets boundary.has_right\n";
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             r.orig = vec3(i*dx + dx/2, j*dy + dy/2, 0); //shoot ray through the middle of a grid point
-            const bool did_hit = tm.get_collision_points(r, col1, col2, norm1, norm2);
-            if (did_hit) {
-                const unsigned index_1_x = floor(col1.x()/dx);
-                const unsigned index_1_y = floor(col1.y()/dy);
-                const unsigned index_1_z = floor(col1.z()/dz);
+            const auto hits = tm.get_collision_points(r);
+            if (!hits.empty()) { //there was a collision
+                const auto col_first = hits.begin()->second.v1;
+                const unsigned i_x = floor(col_first.x()/dx);
+                const unsigned i_y = floor(col_first.y()/dy);
 
-                const unsigned index_2_z = floor(col2.z()/dz);
-#ifndef NDEBUG
-                const unsigned index_2_x = floor(col2.x()/dx);
-                const unsigned index_2_y = floor(col2.y()/dy);
+                for (auto h = hits.begin(); h != --hits.end(); ++h) {
+                    auto th = h;
+                    const auto col1 = th->second.v1;
+                    const auto norm1 = th->second.v2;
 
-                if (index_2_x != index_1_x) {
-                    std::cerr << "Index 1 not equal to index 2 in ray collision with triangle mesh\n";
-                }
-                if (index_2_y != index_1_y) {
-                    std::cerr << "Index 1 not equal to index 2 in ray collision with triangle mesh\n";
-                }
-#endif
-                //setting the boundary points
-                for (unsigned k = 0; k < index_1_z; k++) {
-                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
-                }
-                for (unsigned k = index_1_z; k<=index_2_z; k++) {
-                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
-                    //bound(index_1_x,index_1_y,k).has_right = false;
-                }
-                for (unsigned k = index_2_z+1; k <=P; k++) {
-                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
+                    ++th;
+                    const auto col2 = th->second.v1;
+                    const auto norm2 = th->second.v2;
+
+                    const auto i_z1 = floor(col1.z()/dz);
+                    const auto i_z2 = floor(col2.z()/dz);
+
+                    //setting boundary points
+                    for (unsigned k = i_z1; k<=i_z2; k++) {
+                        is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
+                    }
+
+                    //setting normals
+                    norms.add_point(i_x, i_y, i_z1, norm1);
+                    norms.add_point(i_x, i_y, i_z2, norm2);
+                    //trivial normal for vectors inside the point cloud
+                    for (unsigned k = i_z1 + 1; k<=i_z2 - 1; k++) {
+                        norms.add_point(i_x, i_y, k, vec3(0));
+                        //bound(index_1_x,index_1_y,k).has_right = false;
+                    }
                 }
 
-                //setting normals
-                norms.add_point(index_1_x, index_1_y, index_1_z, norm1);
-                norms.add_point(index_1_x, index_1_y, index_2_z, norm2);
-                //trivial normal for vectors inside the point cloud
-                for (unsigned k = index_1_z + 1; k<=index_2_z - 1; k++) {
-                    norms.add_point(index_1_x, index_1_y, k, vec3(0));
-                    //bound(index_1_x,index_1_y,k).has_right = false;
-                }
+
+
 
             } else {    //did not hit
                 for (unsigned k = 0; k <= P; k++) {
@@ -208,7 +205,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     }
 
 
-    delete [] is_boundary;
+    //delete [] is_boundary;
 }
 
 template <unsigned N, unsigned M, unsigned P>
