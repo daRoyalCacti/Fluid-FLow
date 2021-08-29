@@ -44,12 +44,12 @@ struct triangle_mesh {
         // - note that hits is stored in order of hit time
         std::map<double, d_vec3> hits; //stores hit time and hit pos
         double time;
-        unsigned test_counter = 0;
+        //unsigned test_counter = 0;
         for (const auto & t : tris) {
             if (t.hit_time(r, time)) {
-                if (++test_counter > 2) {
+                /*if (++test_counter > 2) {
                     std::cerr << "hit more than twice\n";
-                }
+                }*/
                 //time, collision point, normal at collision point
                 hits.insert({ time, d_vec3{r.at(time), t.get_normal(r.at(time))}  });
             }
