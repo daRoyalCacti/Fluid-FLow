@@ -60,6 +60,7 @@ struct triangle_mesh {
         // - should rarely happen - only when ray just grazes past a triangle
         if (has_hit && !hit_twice) {
             col2 = col1;    //say both collisions happened at the same place
+            norm2 = norm1;
         }
 
         return has_hit;
