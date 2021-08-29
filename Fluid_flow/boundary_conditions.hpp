@@ -137,6 +137,15 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
                     is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
                 }
 
+                //setting normals
+                norms.add_point(index_1_x, index_1_y, index_1_z, norm1);
+                norms.add_point(index_1_x, index_1_y, index_2_z, norm2);
+                //trivial normal for vectors inside the point cloud
+                for (unsigned k = index_1_z + 1; k<=index_2_z - 1; k++) {
+                    norms.add_point(index_1_x, index_1_y, k, vec3(0));
+                    //bound(index_1_x,index_1_y,k).has_right = false;
+                }
+
             } else {    //did not hit
                 for (unsigned k = 0; k <= P; k++) {
                     is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
