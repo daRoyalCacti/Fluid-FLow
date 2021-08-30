@@ -37,9 +37,6 @@ struct boundary_conditions {
         //needs to be called after p_bc is set because it uses dx, dy, dz from it
         update_mesh_boundary();
 
-#ifndef NDEBUG
-        //DEBUG_check_normal_for_all_boundary_points();
-#endif
     }
 
     void update_pressure_BC();
@@ -112,7 +109,6 @@ struct boundary_conditions {
 private:
     void set_wall_points();
     void create_wall_normals();
-    void DEBUG_check_normal_for_all_boundary_points() noexcept;
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned j) noexcept;
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
@@ -144,10 +140,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i_x1, j, k, norm1);
             norms.add_point(i_x2, j, k, norm2);
-            //trivial normal for vectors inside the point cloud
-            for (unsigned i = i_x1 + 1; i<=i_x2 - 1; i++) {
-                //norms.add_point(i, j, k, vec3(0));
-            }
 
         }
 
@@ -180,10 +172,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i, i_y1, k, norm1);
             norms.add_point(i, i_y2, k, norm2);
-            //trivial normal for vectors inside the point cloud
-            for (unsigned j = i_y1 + 1; j<=i_y2 - 1; j++) {
-                //norms.add_point(i, j, k, vec3(0));
-            }
 
         }
 
@@ -216,10 +204,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i, j, i_z1, norm1);
             norms.add_point(i, j, i_z2, norm2);
-            //trivial normal for vectors inside the point cloud
-            for (unsigned k = i_z1 + 1; k<=i_z2 - 1; k++) {
-                //norms.add_point(i, j, k, vec3(0));
-            }
 
         }
 
@@ -258,6 +242,18 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
             set_BC_mesh_1dir_x(r, is_boundary, dx, dy, dz, j, k);
         }
     }
+
+    //setting interior normals
+    for (unsigned i = 0; i <= N; ++i) {
+        for (unsigned j = 0; j <= M; ++j) {
+            for (unsigned k = 0; k <= P; ++k) {
+                if (bound.is_boundary(i,j,k) && !norms.contains(i,j,k)) {
+                    norms.add_point(i,j,k, vec3(0));
+                }
+            }
+        }
+    }
+
 
     //setting left and right and such
     for (unsigned i = 0; i <= N; ++i) {
@@ -457,19 +453,5 @@ void boundary_conditions<N,M,P>::create_wall_normals() {
     }
 }
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::DEBUG_check_normal_for_all_boundary_points() noexcept {
-    for (unsigned i = 0; i <= N; i++) {
-        for (unsigned j = 0; j <=M; j++) {
-            for (unsigned k = 0; k<=P; k++) {
-                if (bound.is_boundary(i,j,k)) {
-                    if (!norms.contains(i,j,k)) {
-                        std::cerr << "Boundary at i=" << i << " j=" << j << " k=" << k << "does not have a normal\n";
-                    }
-                }
-            }
-        }
-    }
-}
 
 #endif //CODE_BOUNDARY_CONDITIONS_HPP
