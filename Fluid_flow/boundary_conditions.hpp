@@ -124,10 +124,12 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
             auto th = h;
             const auto col1 = th->second.v1;
             const auto norm1 = th->second.v2;
+            const auto vel1 = th->second.v3;
 
             ++th;
             const auto col2 = th->second.v1;
             const auto norm2 = th->second.v2;
+            const auto vel2 = th->second.v3;
 
             const auto i_x1 = static_cast<unsigned>(floor(col1.x()/dx));
             const auto i_x2 = static_cast<unsigned>(floor(col2.x()/dx));
@@ -140,6 +142,9 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i_x1, j, k, norm1);
             norms.add_point(i_x2, j, k, norm2);
+
+            vel_bc.add_elm(i_x1, j, k, vel1);
+            vel_bc.add_elm(i_x2, j, k, vel2);
 
         }
 
@@ -156,10 +161,12 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
             auto th = h;
             const auto col1 = th->second.v1;
             const auto norm1 = th->second.v2;
+            const auto vel1 = th->second.v3;
 
             ++th;
             const auto col2 = th->second.v1;
             const auto norm2 = th->second.v2;
+            const auto vel2 = th->second.v3;
 
             const auto i_y1 = static_cast<unsigned>(floor(col1.y()/dy));
             const auto i_y2 = static_cast<unsigned>(floor(col2.y()/dy));
@@ -172,6 +179,9 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i, i_y1, k, norm1);
             norms.add_point(i, i_y2, k, norm2);
+
+            vel_bc.add_elm(i, i_y1, k, vel1);
+            vel_bc.add_elm(i, i_y2, k, vel2);
 
         }
 
@@ -188,10 +198,12 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
             auto th = h;
             const auto col1 = th->second.v1;
             const auto norm1 = th->second.v2;
+            const auto vel1 = th->second.v3;
 
             ++th;
             const auto col2 = th->second.v1;
             const auto norm2 = th->second.v2;
+            const auto vel2 = th->second.v3;
 
             const auto i_z1 = static_cast<unsigned>(floor(col1.z()/dz));
             const auto i_z2 = static_cast<unsigned>(floor(col2.z()/dz));
@@ -204,6 +216,9 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
             //setting normals
             norms.add_point(i, j, i_z1, norm1);
             norms.add_point(i, j, i_z2, norm2);
+
+            vel_bc.add_elm(i,j, i_z1, vel1);
+            vel_bc.add_elm(i,j, i_z2, vel2);
 
         }
 
