@@ -92,11 +92,8 @@ struct boundary_conditions {
         if (output.is_open()) {
             for (unsigned i = 0; i <= N; i++) {
                 for (unsigned j = 0; j <= M; j++) {
-                    output << i * p_bc.dx << " " << j * p_bc.dy << " "; //<< bound.is_boundary(i,j,P/2) << "\n";
+                    output << i * p_bc.dx << " " << j * p_bc.dy << " ";
                     if (norms.contains(i,j,P/2)) {
-                        if (i > 2 && i < N-2 && j > 2 && j < M-2) {
-                            std::cerr  <<  norms.normal(i,j,P/2) << "\n";
-                        }
                         output << norms.normal(i,j,P/2);
                     } else {
                         output << vec3(0);
