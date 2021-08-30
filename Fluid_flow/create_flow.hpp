@@ -21,6 +21,7 @@
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
 
+#define DLOG    //detailed logging
 
 struct output_settings {
     std::string_view vel_file_loc = "../DEBUG/velocity_data/";
@@ -44,14 +45,19 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     double dt = max_t / (double)no_timesteps;
 
     flow_timer timer(os.time_file_name.data() );
+#ifdef DLOG
+    std::cout << "setting boundary conditions\n";
+#endif
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
-    BC.DEBUG_write_boundary_points();
-    BC.DEBUG_write_normal_vectors();
+    //BC.DEBUG_write_boundary_points();
+    //BC.DEBUG_write_normal_vectors();
 
-    std::cerr << "Returning early for testing\n";
-    return;
+    //std::cerr << "Returning early for testing\n";
+    //return;
 
-
+#ifdef DLOG
+std::cout << "constructing matrices and vectors\n";
+#endif
     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step
     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
     big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
@@ -66,13 +72,21 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     big_matrix<N,M,P> Q(16);
     big_matrix<N,M,P> A(7);
 
-
+#ifdef DLOG
+    std::cout << "creating A\n";
+#endif
     //initially creating matrices
     make_A(A, v_n, dt, Re);
 
+#ifdef DLOG
+    std::cout << "creating Q\n";
+#endif
     //making Q
     make_Q(Q, p, BC.norms);
 
+#ifdef DLOG
+    std::cout << "setting velocity IC\n";
+#endif
     //first set IC
     v_IC(v_n);
     if constexpr (write_all_times) {
@@ -81,28 +95,52 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     }
     v_n1 = v_n;
 
+#ifdef DLOG
+    std::cout << "updating pressure BC\n";
+#endif
     //then create the s matrix
     BC.update_pressure_BC();
 
+#ifdef DLOG
+    std::cout << "making s\n";
+#endif
     make_s_first(s, Re, dt, v_n, p, BC.p_bc);
 
+#ifdef DLOG
+    std::cout << "Solving pressure\n";
+#endif
     //solve for p for the first timestep
     solve(Q, s, p_c);
     //enforce_PBC(p_c, BC.norms);
 
+#ifdef DLOG
+    std::cout << "Enforcing pressure boundary conditions\n";
+#endif
     BC.enforce_pressure_BC(p_c);
     p += p_c;
 
+#ifdef DLOG
+    std::cout << "Updating velocity BC\n";
+#endif
     //setting BC vector
     BC.update_velocity_BC();
+#ifdef DLOG
+    std::cout << "making b\n";
+#endif
     //then make b
     make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
 
+#ifdef DLOG
+    std::cout << "solving for v\n";
+#endif
     //and solve for v at the first timestep
     solve(A, b.xv, v_n.xv);
     solve(A, b.yv, v_n.yv);
     solve(A, b.zv, v_n.zv);
 
+#ifdef DLOG
+    std::cout << "enforcing pressure BC\n";
+#endif
     //enforcing BC
     BC.enforce_velocity_BC(v_n);
 

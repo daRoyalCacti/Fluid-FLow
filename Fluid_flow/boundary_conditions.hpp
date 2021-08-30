@@ -258,18 +258,6 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         }
     }
 
-    //setting interior normals
-    for (unsigned i = 0; i <= N; ++i) {
-        for (unsigned j = 0; j <= M; ++j) {
-            for (unsigned k = 0; k <= P; ++k) {
-                if (bound.is_boundary(i,j,k) && !norms.contains(i,j,k)) {
-                    norms.add_point(i,j,k, vec3(0));
-                }
-            }
-        }
-    }
-
-
     //setting left and right and such
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
@@ -324,6 +312,18 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     }
 
 
+    //setting interior normals
+    for (unsigned i = 0; i <= N; ++i) {
+        for (unsigned j = 0; j <= M; ++j) {
+            for (unsigned k = 0; k <= P; ++k) {
+                if (bound.is_boundary(i,j,k) && !norms.contains(i,j,k)) {
+                    norms.add_point(i,j,k, vec3(1,0,0));    //want to be (0,0,0) not just for testing
+                }
+            }
+        }
+    }
+
+
     //delete [] is_boundary;
 }
 
@@ -360,6 +360,11 @@ void boundary_conditions<N,M,P>::update_pressure_BC() {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
                 if (p_bc.is_boundary(i,j,k)) {
+#ifndef NDEBUG
+                    if (!norms.contains(i,j,k)) {
+                        std::cerr << "norms does not contain (" << i << ", " << j << ", " << k << ")\n";
+                    }
+#endif
 
                     const auto norm = norms.normal(i,j,k);
 

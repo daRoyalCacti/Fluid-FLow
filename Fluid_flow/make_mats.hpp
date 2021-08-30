@@ -31,6 +31,11 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary
                 double diag = 0.0;
 
                 if (p.is_boundary(i,j,k)) {
+#ifndef NDEBUG
+                    if (!norms.contains(i,j,k)) {
+                        std::cerr << "norms does not contain (" << i << ", " << j << ", " << k << ")\n";
+                    }
+#endif
                     const auto norm = norms.normal(i,j,k);
                     //picking the direction
                     unsigned big_dir = 0;
