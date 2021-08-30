@@ -38,7 +38,7 @@ struct boundary_conditions {
         update_mesh_boundary();
 
 #ifndef NDEBUG
-        DEBUG_check_normal_for_all_boundary_points();
+        //DEBUG_check_normal_for_all_boundary_points();
 #endif
     }
 
@@ -94,6 +94,9 @@ struct boundary_conditions {
                 for (unsigned j = 0; j <= M; j++) {
                     output << i * p_bc.dx << " " << j * p_bc.dy << " "; //<< bound.is_boundary(i,j,P/2) << "\n";
                     if (norms.contains(i,j,P/2)) {
+                        if (i > 2 && i < N-2 && j > 2 && j < M-2) {
+                            std::cerr  <<  norms.normal(i,j,P/2) << "\n";
+                        }
                         output << norms.normal(i,j,P/2);
                     } else {
                         output << vec3(0);
@@ -113,8 +116,118 @@ private:
     void set_wall_points();
     void create_wall_normals();
     void DEBUG_check_normal_for_all_boundary_points() noexcept;
-
+    void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned j) noexcept;
+    void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned k) noexcept;
+    void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
 };
+
+
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned j, const unsigned k) noexcept {
+    const auto hits = tm.get_collision_points(r);
+    if (!hits.empty()) { //there was a collision
+
+        for (auto h = hits.begin(); h != --hits.end(); ++h) {
+            auto th = h;
+            const auto col1 = th->second.v1;
+            const auto norm1 = th->second.v2;
+
+            ++th;
+            const auto col2 = th->second.v1;
+            const auto norm2 = th->second.v2;
+
+            const auto i_x1 = static_cast<unsigned>(floor(col1.x()/dx));
+            const auto i_x2 = static_cast<unsigned>(floor(col2.x()/dx));
+
+            //setting boundary points
+            for (unsigned i = i_x1; i<=i_x2; i++) {
+                is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
+            }
+
+            //setting normals
+            norms.add_point(i_x1, j, k, norm1);
+            norms.add_point(i_x2, j, k, norm2);
+            //trivial normal for vectors inside the point cloud
+            for (unsigned i = i_x1 + 1; i<=i_x2 - 1; i++) {
+                //norms.add_point(i, j, k, vec3(0));
+            }
+
+        }
+
+    }
+}
+
+
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned i, const unsigned k) noexcept {
+    const auto hits = tm.get_collision_points(r);
+    if (!hits.empty()) { //there was a collision
+
+        for (auto h = hits.begin(); h != --hits.end(); ++h) {
+            auto th = h;
+            const auto col1 = th->second.v1;
+            const auto norm1 = th->second.v2;
+
+            ++th;
+            const auto col2 = th->second.v1;
+            const auto norm2 = th->second.v2;
+
+            const auto i_y1 = static_cast<unsigned>(floor(col1.y()/dy));
+            const auto i_y2 = static_cast<unsigned>(floor(col2.y()/dy));
+
+            //setting boundary points
+            for (unsigned j = i_y1; j<=i_y2; j++) {
+                is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
+            }
+
+            //setting normals
+            norms.add_point(i, i_y1, k, norm1);
+            norms.add_point(i, i_y2, k, norm2);
+            //trivial normal for vectors inside the point cloud
+            for (unsigned j = i_y1 + 1; j<=i_y2 - 1; j++) {
+                //norms.add_point(i, j, k, vec3(0));
+            }
+
+        }
+
+    }
+}
+
+
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned i, const unsigned j) noexcept {
+    const auto hits = tm.get_collision_points(r);
+    if (!hits.empty()) { //there was a collision
+
+        for (auto h = hits.begin(); h != --hits.end(); ++h) {
+            auto th = h;
+            const auto col1 = th->second.v1;
+            const auto norm1 = th->second.v2;
+
+            ++th;
+            const auto col2 = th->second.v1;
+            const auto norm2 = th->second.v2;
+
+            const auto i_z1 = static_cast<unsigned>(floor(col1.z()/dz));
+            const auto i_z2 = static_cast<unsigned>(floor(col2.z()/dz));
+
+            //setting boundary points
+            for (unsigned k = i_z1; k<=i_z2; k++) {
+                is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
+            }
+
+            //setting normals
+            norms.add_point(i, j, i_z1, norm1);
+            norms.add_point(i, j, i_z2, norm2);
+            //trivial normal for vectors inside the point cloud
+            for (unsigned k = i_z1 + 1; k<=i_z2 - 1; k++) {
+                //norms.add_point(i, j, k, vec3(0));
+            }
+
+        }
+
+    }
+}
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
@@ -123,54 +236,29 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     std::vector<bool> is_boundary;
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
-    ray r(vec3{}, vec3(0,0,1));
+    //ray r(vec3{}, vec3(0,0,1));
     const auto dx = p_bc.dx;
     const auto dy = p_bc.dy;
     const auto dz = p_bc.dz;
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
-            r.orig = vec3(i*dx + dx/2, j*dy + dy/2, 0); //shoot ray through the middle of a grid point
-            const auto hits = tm.get_collision_points(r);
-            if (!hits.empty()) { //there was a collision
-                const auto col_first = hits.begin()->second.v1;
-                const unsigned i_x = floor(col_first.x()/dx);
-                const unsigned i_y = floor(col_first.y()/dy);
+            const ray r(vec3(i*dx + dx/2, j*dy + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_z(r, is_boundary, dx, dy, dz, i, j);
 
-                for (auto h = hits.begin(); h != --hits.end(); ++h) {
-                    auto th = h;
-                    const auto col1 = th->second.v1;
-                    const auto norm1 = th->second.v2;
+        }
+    }
 
-                    ++th;
-                    const auto col2 = th->second.v1;
-                    const auto norm2 = th->second.v2;
+    for (unsigned i = 0; i <= N; ++i) {
+        for (unsigned k = 0; k <= P; ++k) {
+            const ray r(vec3(i*dx + dx/2, 0, k*dz + dz/2), vec3(0,1,0) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_y(r, is_boundary, dx, dy, dz, i, k);
+        }
+    }
 
-                    const auto i_z1 = floor(col1.z()/dz);
-                    const auto i_z2 = floor(col2.z()/dz);
-
-                    //setting boundary points
-                    for (unsigned k = i_z1; k<=i_z2; k++) {
-                        is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = true;
-                    }
-
-                    //setting normals
-                    norms.add_point(i_x, i_y, i_z1, norm1);
-                    norms.add_point(i_x, i_y, i_z2, norm2);
-                    //trivial normal for vectors inside the point cloud
-                    for (unsigned k = i_z1 + 1; k<=i_z2 - 1; k++) {
-                        norms.add_point(i_x, i_y, k, vec3(0));
-                        //bound(index_1_x,index_1_y,k).has_right = false;
-                    }
-                }
-
-
-
-
-            } else {    //did not hit
-                for (unsigned k = 0; k <= P; k++) {
-                    is_boundary[i + (N+1)*j + (N+1)*(M+1)*k] = false;
-                }
-            }
+    for (unsigned j = 0; j <= M; ++j) {
+        for (unsigned k = 0; k <= P; ++k) {
+            const ray r(vec3(0, j*dy + dy/2, k*dz + dz/2), vec3(1,0,0) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_x(r, is_boundary, dx, dy, dz, j, k);
         }
     }
 
