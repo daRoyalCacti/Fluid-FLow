@@ -76,6 +76,10 @@ struct mesh final{
     const vec3& get_normal_index( const unsigned i) const noexcept {
         return normals[indices[i]];
     }
+
+    const vec3& get_velocity_index( const unsigned i) const noexcept {
+        return velocities[indices[i]];
+    }
 };
 
 #endif //CODE_MESH_HPP

@@ -11,6 +11,7 @@
 
 struct triangle {
     const vec3 *vertex0, *vertex1, *vertex2;	//position of vertex
+    const vec3 *vel0, *vel1, *vel2;  //velocity at every vertex
     vec3 v0, v1;	//edges of the triangle
     //precomputed quantities to find the uv coordinates
     //https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
@@ -21,8 +22,8 @@ struct triangle {
     triangle() = delete;
 
 
-     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2)
-              : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2) {
+     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2, const vec3 *v0, const vec3 *v1, const vec3 *v2)
+              : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2), vel0(v0), vel1(v1), vel2(v2) {
          update();
      }
 
