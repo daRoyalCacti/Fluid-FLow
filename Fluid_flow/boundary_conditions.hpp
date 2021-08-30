@@ -87,10 +87,33 @@ struct boundary_conditions {
         output.close();
     }
 
+    void DEBUG_write_normal_vectors() {
+        std::ofstream output("../DEBUG/normal_vectors.txt");
+        if (output.is_open()) {
+            for (unsigned i = 0; i <= N; i++) {
+                for (unsigned j = 0; j <= M; j++) {
+                    output << i * p_bc.dx << " " << j * p_bc.dy << " "; //<< bound.is_boundary(i,j,P/2) << "\n";
+                    if (norms.contains(i,j,P/2)) {
+                        output << norms.normal(i,j,P/2);
+                    } else {
+                        output << vec3(0);
+                    }
+                    output << "\n";
+                }
+
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
 private:
     void set_wall_points();
     void create_wall_normals();
     void DEBUG_check_normal_for_all_boundary_points() noexcept;
+
 };
 
 template <unsigned N, unsigned M, unsigned P>

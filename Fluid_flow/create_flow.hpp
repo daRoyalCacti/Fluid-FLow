@@ -46,6 +46,7 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     flow_timer timer(os.time_file_name.data() );
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
     BC.DEBUG_write_boundary_points();
+    BC.DEBUG_write_normal_vectors();
 
     std::cerr << "Returning early for testing\n";
     return;

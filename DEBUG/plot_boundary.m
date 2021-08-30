@@ -1,5 +1,6 @@
 %plots the flow for a give time
-function [vx, vy, vz] = plot_boundary(file_loc)
+function plot_boundary()
+    file_loc = "boundary_points.txt";
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
