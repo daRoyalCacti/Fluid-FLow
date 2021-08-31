@@ -41,6 +41,18 @@ struct body {
 
 
 
+    auto update_pos(const std::vector<vec3> &pressure, const double dt, const double dx, const double dy, const double dz) {
+        std::vector<vec3> forces;
+        forces.resize(pressure.size());
+        //P = F/A  =>  F = PA
+        for (size_t i = 0; i < pressure.size(); i++) {
+            forces[i] = pressure[i]*dx*dy*dz;
+        }
+
+        return update_pos(forces, dt);
+    }
+
+
 
     //finds the positions of all the particles undergoing forces <forces> after time dt
     void update_pos(const std::vector<vec3> &forces, const double dt) {
