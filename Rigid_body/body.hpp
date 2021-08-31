@@ -40,24 +40,13 @@ struct body {
             pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
 
 
-            //boundary_normals<N,M,P> norms
-    auto update_pos(const std::vector<vec3> &pressure, const double dt, const double dx, const double dy, const double dz) {
-        std::vector<vec3> forces;
-        forces.resize(pressure.size());
-        //P = F/A  =>  F = PA
-        for (size_t i = 0; i < pressure.size(); i++) {
-            forces[i] = pressure[i]*dx*dy*dz;
-        }
-
-        return update_pos(forces, dt);
-    }
-
 
 
     //finds the positions of all the particles undergoing forces <forces> after time dt
-    void update_pos(const std::vector<vec3> &forces, const double dt) {
+    // - points are the positions where the foces are applied
+    void update_pos(const std::vector<vec3> &forces, const std::vector<vec3> & points, const double dt) {
 #ifndef DEBUG
-        if (forces.size() != model.vertices.size()) {
+        if (forces.size() != points.size()) {
             std::cerr << "Need forces for every vertex\n";
         }
 #endif
@@ -70,14 +59,9 @@ struct body {
         const auto pos_cm_old = pos_cm;
         pos_cm += vel_cm*dt;
 
-        vec3 test{};
-        for (unsigned i = 0; i < forces.size(); i++) {
-            test += cross(model.vertices[i] - pos_cm, forces[i]);
-            //std::cout << test << "\t" << (*pos)[i] << "\t" << pos_cm << "\t" << (*pos)[i] - pos_cm << "\t" << forces[i] << "\n";
-        }
 
         //finding the torque
-        const vec3 t = std::inner_product(model.vertices.begin(), model.vertices.end(), forces.begin(), vec3{}, std::plus<>(),
+        const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
                                           [&](const vec3 &r, const vec3 &F){return cross( (r-pos_cm), F);});
 
         //moment of inertia

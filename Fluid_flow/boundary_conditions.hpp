@@ -13,7 +13,7 @@
 
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_conditions {
-    unsigned num = 0;   //number of boundary points
+    size_t no_inside_mesh = 0;
     boundary_points<N,M,P> bound;
     boundary_normals<N,M,P> norms;
 
@@ -29,7 +29,7 @@ struct boundary_conditions {
         std::cerr << "Remember to change velocity BC back to 0\n";
 
         set_wall_points();
-        norms = boundary_normals<N,M,P>(num);
+        norms = boundary_normals<N,M,P>(no_wall_points());
         create_wall_normals();
 
         p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
@@ -38,6 +38,10 @@ struct boundary_conditions {
         //needs to be called after p_bc is set because it uses dx, dy, dz from it
         update_mesh_boundary();
 
+    }
+
+    static unsigned no_wall_points() {
+        return 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1);
     }
 
     void update_pressure_BC();
@@ -241,7 +245,6 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         for (unsigned j = 0; j <= M; ++j) {
             const ray r(vec3(i*dx + dx/2, j*dy + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
             set_BC_mesh_1dir_z(r, is_boundary, dx, dy, dz, i, j);
-
         }
     }
 
@@ -312,12 +315,13 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         }
     }
 
-
+    no_inside_mesh = 0;
     //setting interior normals
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             for (unsigned k = 0; k <= P; ++k) {
                 if (bound.is_boundary(i,j,k) && !norms.contains(i,j,k)) {
+                    ++no_inside_mesh;
                     norms.add_point(i,j,k, vec3(0,0,0));
                 }
             }
@@ -330,27 +334,29 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_wall_points() {
+    //bottom and top
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
             bound(i,0,k).has_down = false;
             bound(i,M,k).has_up = false;
-            ++num;
         }
     }
+    //front and back
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             bound(i,j,0).has_front = false;
             bound(i,j,P).has_back = false;
-            ++num;
         }
     }
+    //top and bottom
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
             bound(0,j,k).has_left = false;
             bound(N,j,k).has_right = false;
-            ++num;
         }
     }
+    //std::cout << num << "\n";
+    //std::cout << 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1) << "\n";
 }
 
 

@@ -20,6 +20,7 @@
 #include "flow_env.hpp"
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
+#include "update_mesh.hpp"
 
 #define DLOG    //detailed logging
 
@@ -36,7 +37,7 @@ struct output_settings {
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
 template<unsigned no_timesteps, unsigned N, unsigned M, unsigned P, bool write_all_times = true>
-void solve_flow(const body *rb, const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
+void solve_flow(body *rb, const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
     //size of grid
     double dx = Wx / static_cast<double>(N+1);
     double dy = Wy / static_cast<double>(M+1);
@@ -51,6 +52,9 @@ void solve_flow(const body *rb, const output_settings &os, const double max_t = 
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
     //BC.DEBUG_write_boundary_points();
     //BC.DEBUG_write_normal_vectors();
+
+    std::cerr << "calling update mesh at the wrong time\n";
+    update_mesh(BC, rb, dt);
 
     //std::cerr << "Returning early for testing\n";
     //return;
