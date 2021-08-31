@@ -52,7 +52,7 @@ void Rigid_body_ex() {
             forces[0] = vec3(0,0,0);
             forces[N-1] = vec3(0,0,0);
         }*/
-        b.update_pos(forces, dt);
+        b.update_pos_c(forces, b.model.vertices, dt);
 
         if (i % static_cast<unsigned >(0.1/dt) == 0) {
             std::string file_name;
