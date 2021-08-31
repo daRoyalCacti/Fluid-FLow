@@ -9,6 +9,7 @@
 #include "../MyMath/boundary.hpp"
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
+#include <cmath>
 
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_conditions {
@@ -317,7 +318,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         for (unsigned j = 0; j <= M; ++j) {
             for (unsigned k = 0; k <= P; ++k) {
                 if (bound.is_boundary(i,j,k) && !norms.contains(i,j,k)) {
-                    norms.add_point(i,j,k, vec3(1,0,0));    //want to be (0,0,0) not just for testing
+                    norms.add_point(i,j,k, vec3(0,0,0));
                 }
             }
         }
@@ -368,6 +369,12 @@ void boundary_conditions<N,M,P>::update_pressure_BC() {
 
                     const auto norm = norms.normal(i,j,k);
 
+                    //this occurs when inside a boundary
+                    if (norm.x() == 0 && norm.y() == 0 && norm.z() == 0) {
+                        p_bc(i,j,k) = 0;
+                        continue;   //rest of the code will only error
+                    }
+
                     const auto nx = norm.x();
                     const auto ny = norm.y();
                     const auto nz = norm.z();
@@ -390,18 +397,48 @@ void boundary_conditions<N,M,P>::update_pressure_BC() {
                     if (big_dir == 0) { //x direction biggest
                         if (!p_bc.has_left(i,j,k)) {   //forward difference
                             p_bc(i,j,k) = ny/nx* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dx/3 - p_bc(i+2,j,k)/3 + 4*p_bc(i+1,j,k)/3;
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else if (!p_bc.has_right(i,j,k)) {   //backward difference
                             p_bc(i,j,k) =-ny/nx* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dx/3 - p_bc(i-2,j,k)/3 + 4*p_bc(i-1,j,k)/3;
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else {    //central difference
                             p_bc(i+1,j,k) = -ny/nx * smart_deriv<0,1,0>(p_bc, i,j,k)*dx - nz/nx * smart_deriv<0,0,1>(p_bc, i,j,k)*dx + p_bc(i-1,j,k);
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i+1,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         }
                     } else if (big_dir == 1) {  //y direction biggest
                         if (!p_bc.has_down(i, j, k)) { //forward difference
                             p_bc(i,j,k) = nx/ny* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dy/3 - p_bc(i,j+2,k)/3 + 4*p_bc(i,j+1,k)/3;
+ #ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else if (!p_bc.has_up(i, j, k)) {  //backward difference
                             p_bc(i,j,k) =-nx/ny* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dy/3 - p_bc(i,j-2,k)/3 + 4*p_bc(i,j-1,k)/3;
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else {  //central difference
                             p_bc(i,j+1,k) = -nx/ny * smart_deriv<1,0,0>(p_bc, i,j,k)*dy - nz/ny * smart_deriv<0,0,1>(p_bc, i,j,k)*dy + p_bc(i,j-1,k);
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j+1,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         }
                     } else {    //z direction
 #ifndef NDEBUG
@@ -411,11 +448,28 @@ void boundary_conditions<N,M,P>::update_pressure_BC() {
 #endif
                         if (!p_bc.has_front(i,j,k)) {  //forward difference
                             p_bc(i,j,k) = ny/nz* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dz/3 - p_bc(i,j,k+2)/3 + 4*p_bc(i,j,k+1)/3;
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else if (!p_bc.has_back(i,j,k)) { //backward difference
                             p_bc(i,j,k) =-ny/nz* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dz/3 - p_bc(i,j,k-2)/3 + 4*p_bc(i,j,k-1)/3;
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         } else {
                             p_bc(i,j,k+1) = -ny/nz * smart_deriv<0,1,0>(p_bc, i,j,k)*dz - nx/nz * smart_deriv<1,0,0>(p_bc, i,j,k)*dz + p_bc(i,j,k-1);
+#ifndef NDEBUG
+                            if (!std::isfinite(p_bc(i,j,k+1))) {
+                                std::cerr << "pressure boundary condition returned an infinite value\n";
+                            }
+#endif
                         }
+
+
                     }
 
                 }

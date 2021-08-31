@@ -40,7 +40,7 @@ struct body {
             pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
 
 
-
+            //boundary_normals<N,M,P> norms
     auto update_pos(const std::vector<vec3> &pressure, const double dt, const double dx, const double dy, const double dz) {
         std::vector<vec3> forces;
         forces.resize(pressure.size());
