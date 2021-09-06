@@ -16,9 +16,10 @@ vec3 global_forces(const double t) {
     return vec3(0);
 }
 
-
+//updating mesh also requires updating the vectors
+// - have to extrapolate p, v_n but also v_n1 because some equations require it
 template <unsigned N, unsigned M, unsigned P>
-void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const double dt, const double t) {
+void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const big_vec<N,M,P, vec3> &v_n, const big_vec<N,M,P, vec3> &v_n1, const big_vec<N,M,P, double> &p, const double dt, const double t) {
     const auto dx = bc.p_bc.dx;
     const auto dy = bc.p_bc.dy;
     const auto dz = bc.p_bc.dz;
@@ -58,7 +59,16 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const double dt, const
 
         b->update_pos(forces, points, dt);
     }
+    bc.extrapolate(v_n);
+    bc.extrapolate(v_n1);
+    bc.extrapolate(p);
     bc.update_mesh_boundary();
+}
+
+
+template <unsigned N, unsigned M, unsigned P>
+void update(boundary_conditions<N,M,P> &bc, body *b, const double dt, const double t) {
+    update_mesh(bc, b, dt, t);
 }
 
 #endif //CODE_UPDATE_MESH_HPP

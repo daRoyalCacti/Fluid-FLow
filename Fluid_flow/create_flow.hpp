@@ -106,7 +106,7 @@ std::cout << "constructing matrices and vectors\n";
 #ifdef DLOG
     std::cout << "setting the mesh boundary conditions\n";
 #endif
-    update_mesh(BC, rb, dt, 0);
+    update_mesh(BC, rb, v_n, v_n1, p, dt, 0);
 
 #ifdef DLOG
     std::cout << "making s\n";
@@ -170,7 +170,7 @@ std::cout << "constructing matrices and vectors\n";
         }
 
         //updating the mesh
-        update_mesh(BC, rb, dt, t);
+        update_mesh(BC, rb, v_n, v_n1, p, dt, t);
 
 
         timer.set_start(std::chrono::high_resolution_clock::now());

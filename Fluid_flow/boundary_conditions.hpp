@@ -14,6 +14,7 @@
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
+    boundary_points<N,M,P> bound_prev;
     boundary_points<N,M,P> bound;
     boundary_normals<N,M,P> norms;
 
@@ -44,6 +45,13 @@ struct boundary_conditions {
     }
 
     void update_mesh_boundary();
+
+    void extrapolate(const big_vec<N,M,P, double> &p);
+    void extrapolate(const big_vec<N,M,P, vec3> &v) {
+        extrapolate(v.xv);
+        extrapolate(v.yv);
+        extrapolate(v.yz);
+    }
 
     //v is vector to enforce the conditions on
     void enforce_velocity_BC(big_vec<N,M,P,vec3> &v) {
@@ -117,6 +125,7 @@ private:
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
     void update_pressure_BC();
     void update_velocity_BC();
+    void set_matrix_row(unsigned x, unsigned y, unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,  Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, double xi, double yi, double zi);
 };
 
 
@@ -234,6 +243,8 @@ template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
     //bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
     //vector over c array so all elements initialised to 0 = false
+    bound_prev = bound;
+
     std::vector<bool> is_boundary;
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
@@ -539,6 +550,138 @@ void boundary_conditions<N,M,P>::create_wall_normals() {
         }
     }
 }
+
+//https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
+// uses linear interpolation to update points that were previously inside a boundary
+// would be quite simple to update to quadratic interpolation
+// uses interpolation instead of an explicit extrapolation procedure is because I can't find any extrapolation procedures
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::extrapolate(const big_vec<N,M,P, double> &p) {
+    //finds the constants in
+    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+
+    //TODO : NEED TO FIND ALL POINTS OF INTEREST
+
+    //the points where the extrapolation is to be usesd
+    const unsigned xi = 10;
+    const unsigned yi = 10;
+    const unsigned zi = 10;
+
+    Eigen::Matrix<double, 8, 8> mat;
+    Eigen::Matrix<double, 8, 1> vec;
+
+    //using values on the faces of ever-increasing cubes
+    for (int s = 2; s < 80; s+=2) {    //upper bound on s arbitrarily large
+        std::vector<unsigned> vals_b, vals_s;
+        vals_b.resize(s+1);
+        vals_s.resize(s-1);
+        std::iota(vals_b.begin(), vals_b.end(), -s/2);  //include the entire surface
+        std::iota(vals_s.begin(), vals_s.end(), -s/2+1);//surface less 1 edge
+
+        unsigned counter = 0;
+
+        //moving along the surfaces of the cubes
+        {
+            int x = -s/2;
+            for (const auto &y : vals_b) {
+                for (const auto &z : vals_b) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+        {
+            int x = s/2;
+            for (const auto &y : vals_b) {
+                for (const auto &z : vals_b) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+        {
+            int y = -s/2;
+            for (const auto &x : vals_s) {
+                for (const auto &z : vals_b) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+        {
+            int y = s/2;
+            for (const auto &x : vals_s) {
+                for (const auto &z : vals_b) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+        {
+            int z = -s/2;
+            for (const auto &x : vals_s) {
+                for (const auto &y : vals_s) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+        {
+            int z = s/2;
+            for (const auto &x : vals_s) {
+                for (const auto &y : vals_s) {
+                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                }
+            }
+        }
+
+        if (counter >= 8) {
+            break;
+        }
+
+
+    }   //end s for loop
+
+    //mat and vec now set, just need to solve for the coefficients
+    const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+
+    //setting the value of p
+    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+    const auto x = xi/p.dx;
+    const auto y = yi/p.dy;
+    const auto z = zi/p.dz;
+    p(xi, yi, zi) = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
+
+}
+
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::set_matrix_row(const unsigned x, const unsigned y, const unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,
+                                                Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, const double xi, const double yi, const double zi) {
+    const auto xp = x+xi;
+    const auto yp = y+yi;
+    const auto zp = z+zi;
+
+    const auto dx = p.dx;
+    const auto dy = p.dy;
+    const auto dz = p.dz;
+
+    //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
+    bool has_normal = norms.contains(xp, yp, zp);
+    if (!has_normal || (has_normal && norms.normal(xp, yp, zp) != vec3(0))  ) {    //if point not inside a boundary
+        const auto x0 = xp/dx;
+        const auto y0 = yp/dy;
+        const auto z0 = zp/dz;
+
+        mat(counter, 0) = 1;
+        mat(counter, 1) = x0;
+        mat(counter, 2) = y0;
+        mat(counter, 3) = z0;
+        mat(counter, 4) = x0*y0;
+        mat(counter, 5) = x0*z0;
+        mat(counter, 6) = y0*z0;
+        mat(counter, 7) = x0*y0*z0;
+
+        vec(counter) = p(xp, yp, zp);
+    }
+
+    counter++;
+}
+
 
 
 #endif //CODE_BOUNDARY_CONDITIONS_HPP
