@@ -83,6 +83,11 @@ struct body {
                        [&](const vec3& x)
                        {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + vel_cm*dt;}); //rotating about the old center of mass, then moving forward
 
+       //updating all normals
+       std::transform(model.normals.begin(), model.normals.end(), model.normals.begin(),
+                      [&](const vec3& x)
+                      {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length());}); //rotating about the old center of mass, then moving forward
+
         //updating all velocities
         std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
                        [&](const vec3& x)
