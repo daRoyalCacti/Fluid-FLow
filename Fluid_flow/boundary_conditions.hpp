@@ -26,7 +26,6 @@ struct boundary_conditions {
 
     boundary_conditions() = delete;
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
-        std::cerr << "Remember to change velocity BC back to 0\n";
 
         set_wall_points();
         norms = boundary_normals<N,M,P>(no_wall_points());
@@ -44,10 +43,9 @@ struct boundary_conditions {
         return 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1);
     }
 
-    void update_pressure_BC();
-    void update_velocity_BC();
     void update_mesh_boundary();
 
+    //v is vector to enforce the conditions on
     void enforce_velocity_BC(big_vec<N,M,P,vec3> &v) {
         for (unsigned i = 0; i <= N; i++) {
             for (unsigned j = 0; j <= M; j++) {
@@ -117,6 +115,8 @@ private:
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned j) noexcept;
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
+    void update_pressure_BC();
+    void update_velocity_BC();
 };
 
 
@@ -328,6 +328,14 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         }
     }
 
+    //updating pressure and wall velocity points
+    // - non-wall velocity points and normals have already been updated
+    update_velocity_BC();
+    update_pressure_BC();
+
+    //need to update the triangle mesh
+    tm.update();
+
 
     //delete [] is_boundary;
 }
@@ -503,8 +511,7 @@ void boundary_conditions<N,M,P>::update_velocity_BC()  {
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
-            vel_bc.add_elm(i, 0, k, 0.1, 0, 0);
-            //vel_bc.add_elm(i, 0, k, 0, 0, 0);
+            vel_bc.add_elm(i, 0, k, 0, 0, 0);
             vel_bc.add_elm(i,M,k, 0,0,0);
         }
     }

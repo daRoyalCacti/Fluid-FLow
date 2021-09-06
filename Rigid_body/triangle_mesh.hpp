@@ -62,6 +62,12 @@ struct triangle_mesh {
         return hits;
     }
 
+    void update() {
+        for (auto &t : tris) {
+            t.update();
+        }
+    }
+
 
 };
 

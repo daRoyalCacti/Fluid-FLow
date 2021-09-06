@@ -34,6 +34,7 @@ struct output_settings {
     std::string_view final_pres_name = "../DEBUG/vel_final.txt";
 };
 
+
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
 template<unsigned no_timesteps, unsigned N, unsigned M, unsigned P, bool write_all_times = true>
@@ -53,8 +54,6 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     //BC.DEBUG_write_boundary_points();
     //BC.DEBUG_write_normal_vectors();
 
-    std::cerr << "calling update mesh at the wrong time\n";
-    update_mesh(BC, rb, dt);
 
     //std::cerr << "Returning early for testing\n";
     //return;
@@ -103,7 +102,11 @@ std::cout << "constructing matrices and vectors\n";
     std::cout << "updating pressure BC\n";
 #endif
     //then create the s matrix
-    BC.update_pressure_BC();
+    //BC.update_pressure_BC();
+#ifdef DLOG
+    std::cout << "setting the mesh boundary conditions\n";
+#endif
+    update_mesh(BC, rb, dt, 0);
 
 #ifdef DLOG
     std::cout << "making s\n";
@@ -127,7 +130,7 @@ std::cout << "constructing matrices and vectors\n";
     std::cout << "Updating velocity BC\n";
 #endif
     //setting BC vector
-    BC.update_velocity_BC();
+    //BC.update_velocity_BC();
 #ifdef DLOG
     std::cout << "making b\n";
 #endif
@@ -166,10 +169,13 @@ std::cout << "constructing matrices and vectors\n";
             std::cerr << "Timing error\n";
         }
 
+        //updating the mesh
+        update_mesh(BC, rb, dt, t);
+
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
-        BC.update_pressure_BC();
+        //BC.update_pressure_BC();
         make_s(s, Re, dt, v_n, v_n1, p, BC.p_bc);
 
         timer.set_end(std::chrono::high_resolution_clock::now());
@@ -185,7 +191,7 @@ std::cout << "constructing matrices and vectors\n";
         timer.save_p_solve_time();
 
         //setting BC vector
-        BC.update_velocity_BC();
+        //BC.update_velocity_BC();
 
         timer.set_start(std::chrono::high_resolution_clock::now());
         //then make b
