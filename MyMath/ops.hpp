@@ -31,7 +31,16 @@ struct c_line final {
     //https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
     [[nodiscard]] constexpr double distance(const vec3& x0) const noexcept {
         const auto num = quadruple(x2_l_x1, x1-x0);
+#ifndef NDEBUG
+        const auto ret = abs(num) * dist_denom_inv;
+        if (!std::isfinite(ret)) {
+            std::cerr << "cline distance trying to return infinite value\n";
+            std::cerr << "\tnum : " << num << "\tret : " << ret << "\n";
+        }
+        return ret;
+#else
         return abs(num) * dist_denom_inv;
+#endif
     }
 };
 

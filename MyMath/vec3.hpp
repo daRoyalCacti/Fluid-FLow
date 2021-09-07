@@ -123,6 +123,8 @@ constexpr double quadruple(const vec3& A, const vec3& B) noexcept {
     const auto a =A.length_squared()*B.length_squared() - dot(A,B)*dot(A,B);
     if (a < 0) {
         std::cerr << "quadruple trying to return complex number\n";
+        std::cerr << "\ta : " << a << "\t|A||B| : " << A.length_squared()*B.length_squared() << "\t(A.B)^2 : " << dot(A,B)*dot(A,B) << "\n";
+        std::cerr << "\tA : " << A << "\tB" << B << "\n";
     }
     return sqrt(a);
 #else
