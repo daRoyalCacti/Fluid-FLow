@@ -46,11 +46,11 @@ struct boundary_conditions {
 
     void update_mesh_boundary();
 
-    void extrapolate(const big_vec<N,M,P, double> &p);
-    void extrapolate(const big_vec<N,M,P, vec3> &v) {
+    void extrapolate(big_vec<N,M,P, double> &p);
+    void extrapolate(big_vec<N,M,P, vec3> &v) {
         extrapolate(v.xv);
         extrapolate(v.yv);
-        extrapolate(v.yz);
+        extrapolate(v.zv);
     }
 
     //v is vector to enforce the conditions on
@@ -556,7 +556,7 @@ void boundary_conditions<N,M,P>::create_wall_normals() {
 // would be quite simple to update to quadratic interpolation
 // uses interpolation instead of an explicit extrapolation procedure is because I can't find any extrapolation procedures
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::extrapolate(const big_vec<N,M,P, double> &p) {
+void boundary_conditions<N,M,P>::extrapolate(big_vec<N,M,P, double> &p) {
     //finds the constants in
     //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
 

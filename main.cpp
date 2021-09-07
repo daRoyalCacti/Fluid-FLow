@@ -6,6 +6,8 @@ const double wz = 5;
 const double max_t = 1;
 const double Re = 150;
 
+#define NEW_FLOW
+
 int main() {
     constexpr output_settings o{};
     std::vector<vec3> pos;
@@ -24,7 +26,11 @@ int main() {
             for (int k = 0; k < 2; k++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
+#ifdef NEW_FLOW
+                vels.emplace_back(0);
+#else
                 vels.emplace_back(0,(2*i-1),0);
+#endif
                 norms.emplace_back((2*i-1), 0, 0);
             }
         }
@@ -36,7 +42,11 @@ int main() {
             for (int k = 0; k < 2; k++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
+#ifdef NEW_FLOW
+                vels.emplace_back(0);
+#else
                 vels.emplace_back(-(2*j-1),0,0);
+#endif
                 norms.emplace_back(0, (2*j-1), 0);
             }
         }
