@@ -57,6 +57,8 @@ struct body {
         const auto pos_cm_old = pos_cm;
         pos_cm += vel_cm*dt;
 
+        //std::cerr << vel_cm << "\t" << pos_cm << "\n";
+
 
         //finding the torque
         const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
@@ -93,7 +95,7 @@ struct body {
 
 
 
-    void debug_write_pos(const char* file_loc) {
+    void write_pos(const char* file_loc) {
         std::ofstream output(file_loc);
         for (const auto& p : model.vertices) {
             output << p << "\n";

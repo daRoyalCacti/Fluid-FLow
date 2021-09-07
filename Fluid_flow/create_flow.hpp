@@ -28,6 +28,7 @@ struct output_settings {
     std::string_view vel_file_loc = "../DEBUG/velocity_data/";
     std::string_view pres_file_loc = "../DEBUG/pressure_data/";
     std::string_view time_file_name = "../DEBUG/times.txt";
+    std::string_view body_file_loc = "../DEBUG/rigid_body_data/";
 
       //only used if write_all_times is false
     std::string_view final_vel_name = "../DEBUG/vel_final.txt";
@@ -95,7 +96,9 @@ std::cout << "constructing matrices and vectors\n";
     if constexpr (write_all_times) {
         write_vec(v_n, (std::string(os.vel_file_loc) + "0000.txt").data());
         write_vec(p, (std::string(os.pres_file_loc) + "0000.txt").data());
+        rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
     }
+
     v_n1 = v_n;
 
 #ifdef DLOG
@@ -154,6 +157,7 @@ std::cout << "constructing matrices and vectors\n";
     if constexpr (write_all_times) {
         write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
         write_vec(p, (std::string(os.pres_file_loc) + "0001.txt").data());
+        rb->write_pos((std::string(os.body_file_loc) + "0001.txt").data());
     }
 
 
@@ -242,6 +246,7 @@ std::cout << "constructing matrices and vectors\n";
 
             write_vec(v_n, (std::string(os.vel_file_loc) + file_name + ".txt").data());
             write_vec(p, (std::string(os.pres_file_loc) + file_name + ".txt").data());
+            rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
         }
 
         const auto end_loop = std::chrono::high_resolution_clock::now();
