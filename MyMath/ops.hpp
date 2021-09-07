@@ -19,7 +19,13 @@ struct c_line final {
     const double dist_denom_inv = 0;    //distance function will return NaN's if this isn't set
 
     c_line() = default;
-    constexpr c_line(const vec3& x1_, const vec3& x2_) noexcept : x1(x1_), x2(x2_), x2_l_x1(x2-x1), dist_denom_inv(1/(x2_-x1_).length()) {}
+    constexpr c_line(const vec3& x1_, const vec3& x2_) noexcept : x1(x1_), x2(x2_), x2_l_x1(x2-x1), dist_denom_inv(1/(x2_-x1_).length()) {
+#ifndef NDEBUG
+        if (!std::isfinite(dist_denom_inv)) {
+            std::cerr << "Cline gave infinite inverse distance\n";
+        }
+#endif
+    }
 
     //the distance a point x0 is from the line
     //https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
