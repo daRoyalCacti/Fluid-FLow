@@ -119,7 +119,15 @@ constexpr vec3 unit_vector(const vec3& v) noexcept {
 //computes the quadruple product
 //https://mathworld.wolfram.com/VectorQuadrupleProduct.html
 constexpr double quadruple(const vec3& A, const vec3& B) noexcept {
+#ifndef NDEBUG
+    const auto a =A.length_squared()*B.length_squared() - dot(A,B)*dot(A,B);
+    if (a < 0) {
+        std::cerr << "quadruple trying to return complex number\n";
+    }
+    return sqrt(a);
+#else
     return sqrt(A.length_squared()*B.length_squared() - dot(A,B)*dot(A,B));
+#endif
 }
 
 
