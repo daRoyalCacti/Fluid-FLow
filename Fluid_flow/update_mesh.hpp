@@ -55,8 +55,6 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
             }
         }
 
-        //std::cerr << global_forces(t) << "\n";
-
 #ifndef NDEBUG
         if (forces_counter != forces_is) {
             std::cerr << "forces is the wrong size for the number of boundary points\n";
