@@ -13,20 +13,21 @@ bool fluid_moves(const double t) {
 }
 
 vec3 global_forces(const double t) {
-    return vec3(0);
+    return vec3(sin(t), 0, 0);
+    //return vec3(0);
 }
 
 //updating mesh also requires updating the vectors
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 template <unsigned N, unsigned M, unsigned P>
-void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const big_vec<N,M,P, vec3> &v_n, const big_vec<N,M,P, vec3> &v_n1, const big_vec<N,M,P, double> &p, const double dt, const double t) {
+void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &v_n, big_vec<N,M,P, vec3> &v_n1, big_vec<N,M,P, double> &p, const double dt, const double t) {
     const auto dx = bc.p_bc.dx;
     const auto dy = bc.p_bc.dy;
     const auto dz = bc.p_bc.dz;
 
 
     std::vector<vec3> forces, points;
-    if (fluid_moves(t)) {
+
         forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
         points.resize( forces.size() );
 
@@ -42,13 +43,17 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const big_vec<N,M,P, v
                         if (bc.norms.contains(i,j,k) && bc.norms.normal(i,j,k) != vec3(0)) {    //if boundary point outside of mesh
                             points[forces_counter] = vec3(i/dx+dx/2, j/dy+dy/2, k/dz+dz/2); //forces applied at the center of grid points
                             //taking the force as pointing against the normal, not sure if this is right
-                            forces[forces_counter++] = bc.p_bc(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
-                                    global_forces(t); //P=F/A  =>  F=PA
+                            if (fluid_moves(t)) {
+                                forces[forces_counter++] = global_forces(t); //P=F/A  =>  F=PA
+                            } else {
+
+                            }
                         }
                     }
                 }
             }
         }
+
 
 #ifndef NDEBUG
         if (forces_counter != forces_is) {
@@ -57,8 +62,8 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, const big_vec<N,M,P, v
 #endif
 
 
-        b->update_pos(forces, points, dt);
-    }
+    b->update_pos(forces, points, dt);
+
     bc.extrapolate(v_n);
     bc.extrapolate(v_n1);
     bc.extrapolate(p);
