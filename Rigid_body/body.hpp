@@ -71,7 +71,17 @@ struct body {
                                             [&](const double &m, const vec3 &r){return m * r_axis.distance(r)*r_axis.distance(r);});
 
         //angular acceleration
-        const vec3 alpha = t/I;
+        vec3 alpha;
+        //can happen due to round off errors when dealing with very small rotations
+        if (!std::isfinite(I)) [[unlikely]] {
+            alpha = vec3(0);
+#ifndef NDEBUG
+            std::cerr << "dealing with the invalid I\n";    //lots of errors get printed when this branch is activated, just saying that everything is all good
+#endif
+        }  else [[likely]] {    //everything all good
+            alpha = t/I;
+        }
+
 
         //finding angle and angular-velocity pseudo-vector
         w_cm += alpha*dt;
@@ -92,10 +102,10 @@ struct body {
                 err = true;
                 std::cerr << "rigid body got infinite torque\n";
             }
-            if (!std::isfinite(I)) {
+            /*if (!std::isfinite(I)) {
                 std::cerr << "rigid body got infinite moment of inertia\n";
                 err = true;
-            }
+            }*/
             if (!std::isfinite(alpha.x()) || !std::isfinite(alpha.y()) || !std::isfinite(alpha.z())) {
                 err = true;
                 std::cerr << "rigid body got infinite angular acceleration\n";
