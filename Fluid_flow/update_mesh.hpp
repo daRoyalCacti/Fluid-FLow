@@ -44,9 +44,10 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
                             points[forces_counter] = vec3(i/dx+dx/2, j/dy+dy/2, k/dz+dz/2); //forces applied at the center of grid points
                             //taking the force as pointing against the normal, not sure if this is right
                             if (fluid_moves(t)) {
-                                forces[forces_counter++] = global_forces(t); //P=F/A  =>  F=PA
+                                forces[forces_counter++] = bc.p_bc(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
+                                        global_forces(t); //P=F/A  =>  F=PA
                             } else {
-
+                                forces[forces_counter++] = global_forces(t);
                             }
                         }
                     }
