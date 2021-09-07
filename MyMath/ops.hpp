@@ -51,6 +51,9 @@ vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double 
     const auto L = dir.length();
     const auto V = sqrt(B*B + C*C);
 
+    const bool V_not_zero = (V > 0.000001);
+    const bool L_not_zero = (L > 0.000001);
+
     Eigen::Matrix4d T;
     T << 1, 0, 0, -x1,
             0, 1, 0, -y1,
@@ -63,7 +66,7 @@ vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double 
             0, 0, 1, z1,
             0, 0, 0, 1;
 
-    const bool V_not_zero = (V > 0.000001);
+
     Eigen::Matrix4d Rx;
     if (V_not_zero) {  //can get division by 0
         Rx << 1, 0, 0, 0,
@@ -91,16 +94,30 @@ vec3 rotate(const vec3&  orig, const vec3& dir, const vec3& point, const double 
     }
 
     Eigen::Matrix4d Ry;
-    Ry << V/L, 0, -A/L, 0,
-            0,   1,  0,   0,
-            A/L, 0,  V/L, 0,
-            0,   0,  0,   1;
+    if (L_not_zero) {
+        Ry << V/L, 0, -A/L, 0,
+                0,   1,  0,   0,
+                A/L, 0,  V/L, 0,
+                0,   0,  0,   1;
+    } else {
+        Ry << 1, 0, 0, 0,
+                0,   1,  0,   0,
+                0, 0,  1, 0,
+                0,   0,  0,   1;
+    }
 
     Eigen::Matrix4d IRy;
-    IRy << V/L, 0, A/L, 0,
-            0,   1, 0,   0,
-            -A/L, 0, V/L, 0,
-            0,   0, 0,   1;
+    if (L_not_zero) {
+        IRy << V/L, 0, A/L, 0,
+                0,   1, 0,   0,
+                -A/L, 0, V/L, 0,
+                0,   0, 0,   1;
+    } else {
+        IRy << 1, 0, 0, 0,
+                0,   1, 0,   0,
+                0, 0, 1, 0,
+                0,   0, 0,   1;
+    }
 
     Eigen::Matrix4d Rz;
     Rz << cos(theta), -sin(theta), 0, 0,
