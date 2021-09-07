@@ -560,92 +560,107 @@ void boundary_conditions<N,M,P>::extrapolate(const big_vec<N,M,P, double> &p) {
     //finds the constants in
     //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
 
-    //TODO : NEED TO FIND ALL POINTS OF INTEREST
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned j = 0; j <= M; j++) {
+            for (unsigned k = 0; k <=P; k++) {
+                const bool is_bound = bound.is_boundary(i,j,k);
+                const bool was_bound = bound_prev.is_boundary(i,j,k);
 
-    //the points where the extrapolation is to be usesd
-    const unsigned xi = 10;
-    const unsigned yi = 10;
-    const unsigned zi = 10;
+                if (!is_bound && was_bound) {   //was a boundary point but not anymore
+                    //the points where the extrapolation is to be used
+                    const unsigned xi = i;
+                    const unsigned yi = j;
+                    const unsigned zi = k;
 
-    Eigen::Matrix<double, 8, 8> mat;
-    Eigen::Matrix<double, 8, 1> vec;
 
-    //using values on the faces of ever-increasing cubes
-    for (int s = 2; s < 80; s+=2) {    //upper bound on s arbitrarily large
-        std::vector<unsigned> vals_b, vals_s;
-        vals_b.resize(s+1);
-        vals_s.resize(s-1);
-        std::iota(vals_b.begin(), vals_b.end(), -s/2);  //include the entire surface
-        std::iota(vals_s.begin(), vals_s.end(), -s/2+1);//surface less 1 edge
 
-        unsigned counter = 0;
 
-        //moving along the surfaces of the cubes
-        {
-            int x = -s/2;
-            for (const auto &y : vals_b) {
-                for (const auto &z : vals_b) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+
+                    Eigen::Matrix<double, 8, 8> mat;
+                    Eigen::Matrix<double, 8, 1> vec;
+
+                    //using values on the faces of ever-increasing cubes
+                    for (int s = 2; s < 80; s+=2) {    //upper bound on s arbitrarily large
+                        std::vector<unsigned> vals_b, vals_s;
+                        vals_b.resize(s+1);
+                        vals_s.resize(s-1);
+                        std::iota(vals_b.begin(), vals_b.end(), -s/2);  //include the entire surface
+                        std::iota(vals_s.begin(), vals_s.end(), -s/2+1);//surface less 1 edge
+
+                        unsigned counter = 0;
+
+                        //moving along the surfaces of the cubes
+                        {
+                            int x = -s/2;
+                            for (const auto &y : vals_b) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int x = s/2;
+                            for (const auto &y : vals_b) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int y = -s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int y = s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int z = -s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &y : vals_s) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int z = s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &y : vals_s) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+
+                        if (counter >= 8) {
+                            break;
+                        }
+
+
+                    }   //end s for loop
+
+                    //mat and vec now set, just need to solve for the coefficients
+                    const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+
+                    //setting the value of p
+                    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+                    const auto x = xi/p.dx;
+                    const auto y = yi/p.dy;
+                    const auto z = zi/p.dz;
+                    p(xi, yi, zi) = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
+
                 }
+
             }
         }
-        {
-            int x = s/2;
-            for (const auto &y : vals_b) {
-                for (const auto &z : vals_b) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
-                }
-            }
-        }
-        {
-            int y = -s/2;
-            for (const auto &x : vals_s) {
-                for (const auto &z : vals_b) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
-                }
-            }
-        }
-        {
-            int y = s/2;
-            for (const auto &x : vals_s) {
-                for (const auto &z : vals_b) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
-                }
-            }
-        }
-        {
-            int z = -s/2;
-            for (const auto &x : vals_s) {
-                for (const auto &y : vals_s) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
-                }
-            }
-        }
-        {
-            int z = s/2;
-            for (const auto &x : vals_s) {
-                for (const auto &y : vals_s) {
-                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
-                }
-            }
-        }
-
-        if (counter >= 8) {
-            break;
-        }
-
-
-    }   //end s for loop
-
-    //mat and vec now set, just need to solve for the coefficients
-    const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
-
-    //setting the value of p
-    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
-    const auto x = xi/p.dx;
-    const auto y = yi/p.dy;
-    const auto z = zi/p.dz;
-    p(xi, yi, zi) = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
+    }
 
 }
 
