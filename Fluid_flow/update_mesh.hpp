@@ -13,7 +13,7 @@ bool fluid_moves(const double t) {
 }
 
 vec3 global_forces(const double t) {
-    return vec3(sin(t), 0, 0);
+    return {0.001*sin(t), 0, 0};
     //return vec3(0);
 }
 
@@ -28,8 +28,8 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
 
     std::vector<vec3> forces, points;
 
-        forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
-        points.resize( forces.size() );
+    forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
+    points.resize( forces.size() );
 
 #ifndef NDEBUG
         const auto forces_is = forces.size();
@@ -55,10 +55,14 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
             }
         }
 
+        //std::cerr << global_forces(t) << "\n";
 
+        std::cerr << "size of forces : " << forces_is << ". Number of boundary points : " << forces_counter << "\n";
+        std::cerr << bc.norms.size() << " " <<  bc.no_wall_points() << " " <<  bc.no_inside_mesh << "\n";
 #ifndef NDEBUG
         if (forces_counter != forces_is) {
             std::cerr << "forces is the wrong size for the number of boundary points\n";
+            std::cerr << "size of forces : " << forces_is << ". Number of boundary points : " << forces_counter << "\n";
         }
 #endif
 
@@ -68,6 +72,12 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
     bc.extrapolate(v_n);
     bc.extrapolate(v_n1);
     bc.extrapolate(p);
+
+    //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
+    bc.enforce_velocity_BC(v_n);
+    bc.enforce_velocity_BC(v_n1);
+    bc.enforce_pressure_BC(p);
+
     bc.update_mesh_boundary();
 }
 

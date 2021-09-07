@@ -244,6 +244,11 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     //bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
     //vector over c array so all elements initialised to 0 = false
     bound_prev = bound;
+    bound.clear();
+    set_wall_points();
+
+    norms.clear();
+    create_wall_normals();
 
     std::vector<bool> is_boundary;
     is_boundary.resize((N+1)*(M+1)*(P+1));
@@ -253,6 +258,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     const auto dy = p_bc.dy;
     const auto dz = p_bc.dz;
     for (unsigned i = 0; i <= N; ++i) {
+        //std::cerr << i << "\n";
         for (unsigned j = 0; j <= M; ++j) {
             const ray r(vec3(i*dx + dx/2, j*dy + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
             set_BC_mesh_1dir_z(r, is_boundary, dx, dy, dz, i, j);
@@ -374,8 +380,6 @@ void boundary_conditions<N,M,P>::set_wall_points() {
             bound(N,j,k).has_right = false;
         }
     }
-    //std::cout << num << "\n";
-    //std::cout << 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1) << "\n";
 }
 
 

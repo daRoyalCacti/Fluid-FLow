@@ -38,6 +38,16 @@ struct big_vec<N,M,P, double> final {
         return *this;
     }
 
+    auto size() {
+        return (N+1)*(M+1)*(P+1);
+    }
+
+    void clear() {
+        for (unsigned i = 0; i < size(); i++) {
+            v(i) = 0;
+        }
+    }
+
     [[nodiscard]] constexpr inline bool has_left(const unsigned i, const unsigned j, const unsigned k) const noexcept {return b->has_left(i,j,k);}
     [[nodiscard]] constexpr inline bool has_right(const unsigned i, const unsigned j, const unsigned k) const noexcept {return b->has_right(i,j,k);}
     [[nodiscard]] constexpr inline bool has_down(const unsigned i, const unsigned j, const unsigned k) const noexcept {return b->has_down(i,j,k);}
@@ -105,6 +115,12 @@ struct big_vec<N, M, P, vec3> final {
         xv.v = v.xv.v;
         yv.v = v.yv.v;
         zv.v = v.zv.v;
+    }
+
+    void clear() {
+        xv.clear();
+        yv.clear();
+        zv.clear();
     }
 
     big_vec& operator=(const big_vec<N, M, P, vec3>& v) noexcept {

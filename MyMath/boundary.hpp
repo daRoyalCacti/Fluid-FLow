@@ -45,6 +45,12 @@ struct boundary_points final {
         return v.size();
     }
 
+    void clear() {
+        for (auto& v_ : v) {
+            v_ = edge_point{};
+        }
+    }
+
     [[nodiscard]] edge_point& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v[get_index(i,j,k)]; }
     [[nodiscard]] const edge_point& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v[get_index(i,j,k)]; }
 
@@ -130,6 +136,10 @@ struct boundary_normals final {
 
     void add_point(const unsigned i, const unsigned j, const unsigned k, const vec3& normal) noexcept {
         m.insert({get_index(i,j,k), normal});
+    }
+
+    void clear() {
+        m.clear();
     }
 
     [[nodiscard]] bool contains(const unsigned i, const unsigned j, const unsigned k) const noexcept {
