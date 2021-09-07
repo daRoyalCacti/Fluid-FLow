@@ -57,8 +57,6 @@ struct body {
         const auto pos_cm_old = pos_cm;
         pos_cm += vel_cm*dt;
 
-        //std::cerr << vel_cm << "\t" << pos_cm << "\n";
-
 
         //finding the torque
         const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
@@ -131,8 +129,6 @@ struct body {
             }
         }
 #endif
-
-
 
 
 
