@@ -63,6 +63,11 @@ struct vec3 final {
     [[nodiscard]] constexpr  double length_squared() const noexcept {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
     }
+
+    [[nodiscard]] constexpr vec3 normalise() const noexcept {
+        const auto l = length();
+        return {e[0]/l, e[1]/l, e[2]/l };
+    }
 };
 
 
