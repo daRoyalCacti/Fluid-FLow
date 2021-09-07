@@ -78,28 +78,50 @@ struct body {
         const vec3 rot_angle_vec = w_cm*dt;
 
 #ifndef NDEBUG
-        if (!std::isfinite(vel_cm.x()) || !std::isfinite(vel_cm.y()) || !std::isfinite(vel_cm.z())) {
-            std::cerr << "rigid body got infinite velocity\n";
-        }
-        if (!std::isfinite(pos_cm.x()) || !std::isfinite(pos_cm.y()) || !std::isfinite(pos_cm.z())) {
-            std::cerr << "rigid body got infinite position\n";
-        }
-        if (!std::isfinite(t.x()) || !std::isfinite(t.y()) || !std::isfinite(t.z())) {
-            std::cerr << "rigid body got infinite torque\n";
-        }
-        if (!std::isfinite(I)) {
-            std::cerr << "rigid body got infinite moment of inertia\n";
-        }
-        if (!std::isfinite(alpha.x()) || !std::isfinite(alpha.y()) || !std::isfinite(alpha.z())) {
-            std::cerr << "rigid body got infinite angular acceleration\n";
-        }
-        if (!std::isfinite(w_cm.x()) || !std::isfinite(w_cm.y()) || !std::isfinite(w_cm.z())) {
-            std::cerr << "rigid body got infinite angular velocity\n";
-        }
-        if (!std::isfinite(rot_angle_vec.x()) || !std::isfinite(rot_angle_vec.y()) || !std::isfinite(rot_angle_vec.z())) {
-            std::cerr << "rigid body got infinite rotation angle\n";
+        {
+            bool err = false;
+            if (!std::isfinite(vel_cm.x()) || !std::isfinite(vel_cm.y()) || !std::isfinite(vel_cm.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite velocity\n";
+            }
+            if (!std::isfinite(pos_cm.x()) || !std::isfinite(pos_cm.y()) || !std::isfinite(pos_cm.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite position\n";
+            }
+            if (!std::isfinite(t.x()) || !std::isfinite(t.y()) || !std::isfinite(t.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite torque\n";
+            }
+            if (!std::isfinite(I)) {
+                std::cerr << "rigid body got infinite moment of inertia\n";
+                err = true;
+            }
+            if (!std::isfinite(alpha.x()) || !std::isfinite(alpha.y()) || !std::isfinite(alpha.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite angular acceleration\n";
+            }
+            if (!std::isfinite(w_cm.x()) || !std::isfinite(w_cm.y()) || !std::isfinite(w_cm.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite angular velocity\n";
+            }
+            if (!std::isfinite(rot_angle_vec.x()) || !std::isfinite(rot_angle_vec.y()) || !std::isfinite(rot_angle_vec.z())) {
+                err = true;
+                std::cerr << "rigid body got infinite rotation angle\n";
+            }
+
+            if (err) {
+                std::cerr << "\tpos : " <<pos_cm << "\n";
+                std::cerr << "\told pos : " << pos_cm_old << "\n";
+                std::cerr << "\tvelocity : " << vel_cm << "\n";
+                std::cerr << "\ttorque : " << t << "\n";
+                std::cerr << "\tmoment of inertia : " << I << "\n";
+                std::cerr << "\tangular accelerator : " << alpha << "\n";
+                std::cerr << "\tangular velocity : " << w_cm << "\n";
+                std::cerr << "\trotation vector : " << rot_angle_vec << "\n";
+            }
         }
 #endif
+
 
 
 
@@ -140,6 +162,11 @@ struct body {
         for (const auto &v : model.velocities) {
             if (!std::isfinite(v.x()) || !std::isfinite(v.y()) || !std::isfinite(v.z())) {
                 std::cerr << "rigid body got infinite normal for one of its points\n";
+            }
+        }
+        for (const auto &v : model.mass) {
+            if (!std::isfinite(v) ) {
+                std::cerr << "rigid body got infinite mass for one of its points\n";
             }
         }
 #endif

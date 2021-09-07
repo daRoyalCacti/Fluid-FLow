@@ -41,8 +41,6 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
                 for (unsigned k = 0; k <= P; k++) {
                     if (i > 0 && i <N && j > 0 && j< M && k>0 && k<P) {  //if off the boundary
                         if (bc.norms.contains(i,j,k) && bc.norms.normal(i,j,k) != vec3(0)) {    //if boundary point outside of mesh
-                            //points[forces_counter] = vec3(i/dx+dx/2, j/dy+dy/2, k/dz+dz/2);
-                            //points[forces_counter] = vec3(i/dx, j/dy, k/dz);
                             points[forces_counter] = bc.points.get_point(i,j,k);    //forces applied at the mesh boundary
                             //taking the force as pointing against the normal, not sure if this is right
                             if (fluid_moves(t)) {
