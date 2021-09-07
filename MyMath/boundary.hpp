@@ -176,4 +176,59 @@ private:
     }
 };
 
+template <unsigned N, unsigned M, unsigned P>
+struct mesh_points final {
+    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns the normal vector
+
+    mesh_points() = default;
+    explicit mesh_points(size_t num_points) noexcept {
+        m.reserve(num_points);
+    }
+
+    auto size() const {
+        return m.size();
+    }
+
+    void add_point(const unsigned i, const unsigned j, const unsigned k, const vec3& normal) noexcept {
+        m.insert({get_index(i,j,k), normal});
+    }
+
+    void clear() {
+        m.clear();
+    }
+
+    [[nodiscard]] bool contains(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+        return m.contains(get_index(i,j,k));
+    }
+
+    [[nodiscard]] vec3 get_point(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+        return m.at(get_index(i,j,k));
+    }
+
+private:
+    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+#ifndef NDEBUG
+        if (i < 0) {
+            std::cerr << "trying to access i < 0\n";
+        }
+        if (i > N) {
+            std::cerr << "trying to access i > N\n";
+        }
+        if (j < 0) {
+            std::cerr << "trying to access j < 0\n";
+        }
+        if (j > M) {
+            std::cerr << "trying to access j > M\n";
+        }
+        if (k < 0) {
+            std::cerr << "trying to access k < 0\n";
+        }
+        if (k > P) {
+            std::cerr << "trying to access k > P\n";
+        }
+#endif
+        return i + (N+1)*j + (N+1)*(M+1)*k;
+    }
+};
+
 #endif //CODE_BOUNDARY_HPP

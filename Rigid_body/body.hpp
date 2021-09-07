@@ -64,6 +64,7 @@ struct body {
         const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
                                           [&](const vec3 &r, const vec3 &F){return cross( (r-pos_cm), F);});
 
+
         //moment of inertia
         const c_line r_axis(pos_cm, t);
         const double I = std::inner_product(model.mass.begin(), model.mass.end(), model.vertices.begin(), 0.0, std::plus<>(),

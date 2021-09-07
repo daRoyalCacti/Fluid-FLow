@@ -41,7 +41,9 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
                 for (unsigned k = 0; k <= P; k++) {
                     if (i > 0 && i <N && j > 0 && j< M && k>0 && k<P) {  //if off the boundary
                         if (bc.norms.contains(i,j,k) && bc.norms.normal(i,j,k) != vec3(0)) {    //if boundary point outside of mesh
-                            points[forces_counter] = vec3(i/dx+dx/2, j/dy+dy/2, k/dz+dz/2); //forces applied at the center of grid points
+                            //points[forces_counter] = vec3(i/dx+dx/2, j/dy+dy/2, k/dz+dz/2);
+                            //points[forces_counter] = vec3(i/dx, j/dy, k/dz);
+                            points[forces_counter] = bc.points.get_point(i,j,k);    //forces applied at the mesh boundary
                             //taking the force as pointing against the normal, not sure if this is right
                             if (fluid_moves(t)) {
                                 forces[forces_counter++] = bc.p_bc(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
@@ -57,8 +59,6 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
 
         //std::cerr << global_forces(t) << "\n";
 
-        std::cerr << "size of forces : " << forces_is << ". Number of boundary points : " << forces_counter << "\n";
-        std::cerr << bc.norms.size() << " " <<  bc.no_wall_points() << " " <<  bc.no_inside_mesh << "\n";
 #ifndef NDEBUG
         if (forces_counter != forces_is) {
             std::cerr << "forces is the wrong size for the number of boundary points\n";

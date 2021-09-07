@@ -17,6 +17,7 @@ struct boundary_conditions {
     boundary_points<N,M,P> bound_prev;
     boundary_points<N,M,P> bound;
     boundary_normals<N,M,P> norms;
+    mesh_points<N,M,P> points;
 
     big_vec<N,M,P,vec3> vel_bc;
     big_vec<N,M,P,double> p_bc;
@@ -160,6 +161,10 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
             vel_bc.add_elm(i_x1, j, k, vel1);
             vel_bc.add_elm(i_x2, j, k, vel2);
 
+            points.add_point(i_x1, j, k, col1);
+            points.add_point(i_x2, j, k, col2);
+
+
         }
 
     }
@@ -197,6 +202,8 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
             vel_bc.add_elm(i, i_y1, k, vel1);
             vel_bc.add_elm(i, i_y2, k, vel2);
 
+            points.add_point(i, i_y1, k, col1);
+            points.add_point(i, i_y2, k, col2);
         }
 
     }
@@ -234,6 +241,8 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
             vel_bc.add_elm(i,j, i_z1, vel1);
             vel_bc.add_elm(i,j, i_z2, vel2);
 
+            points.add_point(i,j, i_z1, col1);
+            points.add_point(i,j, i_z2, col2);
         }
 
     }
@@ -249,6 +258,8 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
 
     norms.clear();
     create_wall_normals();
+
+    points.clear();
 
     std::vector<bool> is_boundary;
     is_boundary.resize((N+1)*(M+1)*(P+1));
