@@ -76,21 +76,72 @@ struct body {
         w_cm += alpha*dt;
         const vec3 rot_angle_vec = w_cm*dt;
 
+#ifndef NDEBUG
+        if (!std::isfinite(vel_cm.x()) || !std::isfinite(vel_cm.y()) || !std::isfinite(vel_cm.z())) {
+            std::cerr << "rigid body got infinite velocity\n";
+        }
+        if (!std::isfinite(pos_cm.x()) || !std::isfinite(pos_cm.y()) || !std::isfinite(pos_cm.z())) {
+            std::cerr << "rigid body got infinite position\n";
+        }
+        if (!std::isfinite(t.x()) || !std::isfinite(t.y()) || !std::isfinite(t.z())) {
+            std::cerr << "rigid body got infinite torque\n";
+        }
+        if (!std::isfinite(I)) {
+            std::cerr << "rigid body got infinite moment of inertia\n";
+        }
+        if (!std::isfinite(alpha.x()) || !std::isfinite(alpha.y()) || !std::isfinite(alpha.z())) {
+            std::cerr << "rigid body got infinite angular acceleration\n";
+        }
+        if (!std::isfinite(w_cm.x()) || !std::isfinite(w_cm.y()) || !std::isfinite(w_cm.z())) {
+            std::cerr << "rigid body got infinite angular velocity\n";
+        }
+        if (!std::isfinite(rot_angle_vec.x()) || !std::isfinite(rot_angle_vec.y()) || !std::isfinite(rot_angle_vec.z())) {
+            std::cerr << "rigid body got infinite rotation angle\n";
+        }
+#endif
+
+
+
+
         //updating all positions
         std::transform(model.vertices.begin(), model.vertices.end(), model.vertices.begin(),
                        [&](const vec3& x)
                        {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + vel_cm*dt;}); //rotating about the old center of mass, then moving forward
+
+#ifndef NDEBUG
+       for (const auto &v : model.vertices) {
+           if (!std::isfinite(v.x()) || !std::isfinite(v.y()) || !std::isfinite(v.z())) {
+               std::cerr << "rigid body got infinite position for one of its points\n";
+           }
+       }
+#endif
 
        //updating all normals
        std::transform(model.normals.begin(), model.normals.end(), model.normals.begin(),
                       [&](const vec3& x)
                       {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length());}); //rotating about the old center of mass, then moving forward
 
+#ifndef NDEBUG
+        for (const auto &v : model.normals) {
+            if (!std::isfinite(v.x()) || !std::isfinite(v.y()) || !std::isfinite(v.z())) {
+                std::cerr << "rigid body got infinite normal for one of its points\n";
+            }
+        }
+#endif
+
         //updating all velocities
         std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
                        [&](const vec3& x)
                        {return vel_cm + cross( (x-pos_cm),w_cm);}); //velocity of cm plus rotational velocity (v=r x w)
                                                 //https://en.wikipedia.org/wiki/Angular_velocity
+
+#ifndef NDEBUG
+        for (const auto &v : model.velocities) {
+            if (!std::isfinite(v.x()) || !std::isfinite(v.y()) || !std::isfinite(v.z())) {
+                std::cerr << "rigid body got infinite normal for one of its points\n";
+            }
+        }
+#endif
     }
 
 
