@@ -40,10 +40,6 @@ struct body {
             pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
 
 
-    void update_pos_c(std::vector<vec3> forces, std::vector<vec3> points, const double dt) {
-        update_pos(forces, points, dt);
-    }
-
     //finds the positions of all the particles undergoing forces <forces> after time dt
     // - points are the positions where the foces are applied
     void update_pos(const std::vector<vec3> &forces, const std::vector<vec3> & points, const double dt) {
