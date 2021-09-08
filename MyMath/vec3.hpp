@@ -21,7 +21,7 @@ struct vec3 final {
     [[nodiscard]] constexpr  double y() const noexcept { return e[1]; }
     [[nodiscard]] constexpr  double z() const noexcept { return e[2]; }
 
-    constexpr vec3 operator-() const noexcept { return vec3(-e[0], -e[1], -e[2]); }
+    constexpr vec3 operator-() const noexcept { return {-e[0], -e[1], -e[2]}; }
     constexpr double operator[](unsigned i) const noexcept { return e[i]; }
     constexpr double &operator[](unsigned i) noexcept { return e[i]; }
 
@@ -64,7 +64,7 @@ struct vec3 final {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
     }
 
-    [[nodiscard]] constexpr vec3 normalise() const noexcept {
+    [[maybe_unused]] [[nodiscard]] constexpr vec3 normalise() const noexcept {
         const auto l = length();
         return {e[0]/l, e[1]/l, e[2]/l };
     }
@@ -78,11 +78,11 @@ std::ostream& operator << (std::ostream &out, const vec3 &v) noexcept {
 }
 
 constexpr vec3 operator + (const vec3 &u, const vec3 &v) noexcept {
-    return vec3(u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]);
+    return {u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]};
 }
 
 constexpr vec3 operator + (const double t, const vec3 &v) noexcept {
-    return vec3(t+v.e[0], t+v.e[1], t+v.e[2]);
+    return {t+v.e[0], t+v.e[1], t+v.e[2]};
 }
 
 constexpr vec3 operator + (const vec3 &v, const double t) noexcept {
@@ -90,15 +90,15 @@ constexpr vec3 operator + (const vec3 &v, const double t) noexcept {
 }
 
 constexpr vec3 operator - (const vec3 &u, const vec3 &v) noexcept {
-    return vec3(u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]);
+    return {u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]};
 }
 
 constexpr vec3 operator * (const vec3 &u, const vec3 &v) noexcept {
-    return vec3(u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2]);
+    return {u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2]};
 }
 
 constexpr vec3 operator * (const double t, const vec3 &v) noexcept {
-    return vec3(t*v.e[0], t*v.e[1], t*v.e[2]);
+    return {t*v.e[0], t*v.e[1], t*v.e[2]};
 }
 
 constexpr vec3 operator * (const vec3 &v, const double t) noexcept {
@@ -114,10 +114,10 @@ constexpr double dot(const vec3 &u, const vec3 &v) noexcept {
 }
 
 constexpr vec3 cross(const vec3 &u, const vec3 &v) noexcept {
-    return vec3( u.e[1] * v.e[2] - u.e[2] * v.e[1],  u.e[2] * v.e[0] - u.e[0] * v.e[2],  u.e[0] * v.e[1] - u.e[1] * v.e[0]);
+    return { u.e[1] * v.e[2] - u.e[2] * v.e[1],  u.e[2] * v.e[0] - u.e[0] * v.e[2],  u.e[0] * v.e[1] - u.e[1] * v.e[0]};
 }
 
-constexpr vec3 unit_vector(const vec3& v) noexcept {
+[[maybe_unused]] constexpr vec3 unit_vector(const vec3& v) noexcept {
     return v / v.length();
 }
 
@@ -138,28 +138,28 @@ constexpr double quadruple(const vec3& A, const vec3& B) noexcept {
 }
 
 
-constexpr vec3 tan(const vec3& v) noexcept {
-    return vec3(tan(v.x()), tan(v.y()), tan(v.z()));
+[[maybe_unused]] constexpr vec3 tan(const vec3& v) noexcept {
+    return {tan(v.x()), tan(v.y()), tan(v.z())};
 }
 
-constexpr vec3 sin(const vec3& v) noexcept {
-    return vec3(sin(v.x()), sin(v.y()), sin(v.z()));
+[[maybe_unused]] constexpr vec3 sin(const vec3& v) noexcept {
+    return {sin(v.x()), sin(v.y()), sin(v.z())};
 }
 
-constexpr vec3 cos(const vec3& v) noexcept {
-    return vec3(cos(v.x()), cos(v.y()), cos(v.z()));
+[[maybe_unused]] constexpr vec3 cos(const vec3& v) noexcept {
+    return {cos(v.x()), cos(v.y()), cos(v.z())};
 }
 
 constexpr vec3 sqrt(const vec3& v) noexcept {
-    return vec3(sqrt(v.x()), sqrt(v.y()), sqrt(v.z()));
+    return {sqrt(v.x()), sqrt(v.y()), sqrt(v.z())};
 }
 
-constexpr vec3 pow(const vec3& v, const double p) noexcept {
-    return vec3(pow(v.x(), p), pow(v.y(), p), pow(v.z(),p));
+[[maybe_unused]] constexpr vec3 pow(const vec3& v, const double p) noexcept {
+    return {pow(v.x(), p), pow(v.y(), p), pow(v.z(),p)};
 }
 
-constexpr vec3 abs2(const vec3& v)noexcept  {
-    return vec3( v.x()*v.x(), v.y()*v.y(), v.z()*v.z());
+[[maybe_unused]] constexpr vec3 abs2(const vec3& v)noexcept  {
+    return { v.x()*v.x(), v.y()*v.y(), v.z()*v.z()};
 }
 
 #endif //CODE_VEC3_HPP

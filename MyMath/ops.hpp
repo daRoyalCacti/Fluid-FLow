@@ -49,7 +49,7 @@ struct c_line final {
 vec3 operator * (const Eigen::Matrix4d &M, const vec3 &v) noexcept {
     const Eigen::Vector4d v_E = Eigen::Vector4d(v.x(), v.y(), v.z(), 1);
     const Eigen::Vector4d R = M*v_E;
-    return vec3(R.x(), R.y(), R.z());
+    return {R.x(), R.y(), R.z()};
 }
 
 //http://paulbourke.net/geometry/rotate/
