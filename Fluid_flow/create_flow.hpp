@@ -114,7 +114,7 @@ std::cout << "constructing matrices and vectors\n";
 #ifdef DLOG
     std::cout << "making s\n";
 #endif
-    BC.update_velocity_wall_BC(BC.p_bc);
+    BC.update_pressure_BC(BC.p_bc);
     make_s_first(s, Re, dt, v_n, p, BC.p_bc);
 
 #ifdef DLOG
@@ -127,7 +127,7 @@ std::cout << "constructing matrices and vectors\n";
 #ifdef DLOG
     std::cout << "Enforcing pressure boundary conditions\n";
 #endif
-    BC.enforce_pressure_BC(p_c);
+    BC.update_pressure_BC(p_c);
     p += p_c;
 
 /*#ifdef DLOG
@@ -195,7 +195,7 @@ std::cout << "constructing matrices and vectors\n";
         timer.set_start(std::chrono::high_resolution_clock::now());
         //solve for p for the next timestep
         solve(Q, s, p_c);
-        BC.enforce_pressure_BC(p_c);
+        BC.update_pressure_BC(p_c);
         p += p_c;
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_p_solve_time();

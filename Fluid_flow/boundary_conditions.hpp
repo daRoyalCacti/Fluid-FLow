@@ -122,7 +122,7 @@ struct boundary_conditions {
         output.close();
     }
 
-    void update_pressure_BC(const big_vec<N,M,P, double> &p);
+    void update_pressure_BC(big_vec<N,M,P, double> &p);
     void update_velocity_wall_BC();
 
 private:
@@ -391,7 +391,7 @@ void boundary_conditions<N,M,P>::set_wall_points() {
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double> &p) {
+void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
