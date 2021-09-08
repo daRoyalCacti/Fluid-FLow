@@ -579,10 +579,10 @@ void boundary_conditions<N,M,P>::extrapolate(big_vec<N,M,P, double> &p) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <=P; k++) {
                 const bool is_bound = bound.is_boundary(i,j,k);
-                const bool was_bound = bound_prev.is_boundary(i,j,k);
+                const bool was_bound = norms.contains(i,j,k) && norms.normal(i,j,k) != vec3(0); //bound_prev.is_boundary(i,j,k);
 
 
-                if (!is_bound && (was_bound && norms.normal(i,j,k) == vec3(0) ) ) {   //was inside mesh but is current outside of the boundary
+                if (!is_bound && was_bound ) {   //was inside mesh but is current outside of the boundary
                     //the points where the extrapolation is to be used
                     const unsigned xi = i;
                     const unsigned yi = j;
