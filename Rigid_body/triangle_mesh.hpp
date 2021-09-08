@@ -10,17 +10,18 @@
 #include <map>
 #include <algorithm>
 
-template <class T>
-class no_init_alloc
-    : public std::allocator<T>
-    {
-    public:
-        using std::allocator<T>::allocator;
-
-        template <class U, class... Args> void construct(U*, Args&&...) {}
-    };
 
 struct triangle_mesh {
+    template <class T>
+    class no_init_alloc
+            : public std::allocator<T>
+            {
+            public:
+                using std::allocator<T>::allocator;
+
+                template <class U, class... Args> void construct(U*, Args&&...) {}
+            };
+
     std::vector<triangle, no_init_alloc<triangle>> tris;    //custom allocator because vector is filled immediately after resizing it
 
     triangle_mesh() = delete;

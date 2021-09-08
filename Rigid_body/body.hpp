@@ -20,21 +20,10 @@ struct body {
     mesh model; //positions and velocities global
 
     vec3 pos_cm;  //the position of the center of mass
-    vec3 vel_cm{};  //the velocity of the center of mass
 
     const double M;   //the mass of the system
 
-    vec3 w_cm{};    //the angular velocity of the system about the center of mass
-
     body() = delete;
-    body(const std::vector<vec3> &pos_, const std::vector<double>& mass_) : model(pos_, mass_), M(std::accumulate(mass_.begin(), mass_.end(), 0.0)),
-                                         pos_cm{ std::inner_product(mass_.begin(), mass_.end(), pos_.begin(), vec3{}) / std::accumulate(mass_.begin(), mass_.end(), 0.0)}{
-#ifndef NDEBUG
-        if (pos_.size() != mass_.size()) {
-            std::cerr << "mass and pos must be the same size\n";
-        }
-#endif
-    }
 
     explicit body(const mesh &model_) : model(model_), M(std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)),
             pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
@@ -53,10 +42,9 @@ struct body {
         const vec3 a =  std::accumulate(forces.begin(), forces.end(), vec3{}) / M;
 
         //finding position and velocity of CoM
-        vel_cm += a*dt;
+        model.v += a*dt;
         const auto pos_cm_old = pos_cm;
-        pos_cm += vel_cm*dt;
-
+        pos_cm += model.v*dt;
 
         //finding the torque
         const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
@@ -82,8 +70,8 @@ struct body {
 
 
         //finding angle and angular-velocity pseudo-vector
-        w_cm += alpha*dt;
-        const vec3 rot_angle_vec = w_cm*dt;
+        model.w += alpha*dt;
+        const vec3 rot_angle_vec = model.w*dt;
 
 #ifndef NDEBUG
         {
@@ -135,7 +123,7 @@ struct body {
         //updating all positions
         std::transform(model.vertices.begin(), model.vertices.end(), model.vertices.begin(),
                        [&](const vec3& x)
-                       {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + vel_cm*dt;}); //rotating about the old center of mass, then moving forward
+                       {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}); //rotating about the old center of mass, then moving forward
 
 #ifndef NDEBUG
        for (const auto &v : model.vertices) {
@@ -161,7 +149,7 @@ struct body {
         //updating all velocities
         std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
                        [&](const vec3& x)
-                       {return vel_cm + cross( (x-pos_cm),w_cm);}); //velocity of cm plus rotational velocity (v=r x w)
+                       {return model.v + cross( (x-pos_cm),model.w);}); //velocity of cm plus rotational velocity (v=r x w)
                                                 //https://en.wikipedia.org/wiki/Angular_velocity
 
 #ifndef NDEBUG
