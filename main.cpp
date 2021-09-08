@@ -27,7 +27,7 @@ int main() {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
 #ifdef NEW_FLOW
-                vels.emplace_back(0);
+                vels.emplace_back(0.75,0,0);
 #else
                 vels.emplace_back(0,(2*i-1),0);
 #endif
@@ -43,7 +43,7 @@ int main() {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
 #ifdef NEW_FLOW
-                vels.emplace_back(0);
+                vels.emplace_back(0.75,0,0);
 #else
                 vels.emplace_back(-(2*j-1),0,0);
 #endif
@@ -58,7 +58,11 @@ int main() {
             for (int i = 0; i < 2; i++) {
                 pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
                 mass.push_back(1);
+#ifdef NEW_FLOW
+                vels.emplace_back(0.75,0,0);
+#else
                 vels.emplace_back(0,0,0);
+#endif
                 norms.emplace_back(0, 0, (2*k-1));
             }
         }

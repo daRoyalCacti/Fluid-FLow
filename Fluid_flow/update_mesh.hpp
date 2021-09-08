@@ -13,8 +13,8 @@ bool fluid_moves(const double t) {
 }
 
 vec3 global_forces(const double t) {
-    return {0.01*sin(t), 0, 0};
-    //return vec3(0);
+    //return {0.01*sin(t), 0, 0};
+    return vec3(0);
 }
 
 //updating mesh also requires updating the vectors
