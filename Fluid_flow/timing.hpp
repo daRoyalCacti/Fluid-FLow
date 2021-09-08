@@ -16,6 +16,7 @@ struct flow_timer final {
     double vx_solve_time{};
     double vy_solve_time{};
     double vz_solve_time{};
+    double update_mesh_time{};
     std::ofstream output;
 
     flow_timer() = delete;
@@ -33,10 +34,11 @@ struct flow_timer final {
     void save_vx_solve_time() noexcept {vx_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_vy_solve_time() noexcept {vy_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_vz_solve_time() noexcept {vz_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_mesh_update_time() noexcept {vz_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
 
     void write_times(const double t) noexcept {
         output << t << " " << s_create_time << " " << p_solve_time << " " << b_create_time << " " << vx_solve_time
-             << " " << vy_solve_time << " " << vz_solve_time << " " << total_time() << "\n";
+        << " " << vy_solve_time << " " << vz_solve_time << " " << update_mesh_time << " " << total_time() << "\n";
         output.flush();
     }
 

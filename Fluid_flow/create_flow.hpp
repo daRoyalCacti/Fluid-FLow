@@ -129,9 +129,9 @@ std::cout << "constructing matrices and vectors\n";
     BC.enforce_pressure_BC(p_c);
     p += p_c;
 
-#ifdef DLOG
+/*#ifdef DLOG
     std::cout << "Updating velocity BC\n";
-#endif
+#endif*/
     //setting BC vector
     //BC.update_velocity_BC();
 #ifdef DLOG
@@ -174,7 +174,11 @@ std::cout << "constructing matrices and vectors\n";
         }
 
         //updating the mesh
+        timer.set_start(std::chrono::high_resolution_clock::now());
+
         update_mesh(BC, rb, v_n, v_n1, p, dt, t);
+        timer.set_end(std::chrono::high_resolution_clock::now());
+        timer.save_mesh_update_time();
 
 
         timer.set_start(std::chrono::high_resolution_clock::now());
