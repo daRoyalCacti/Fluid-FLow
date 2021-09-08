@@ -9,11 +9,11 @@
 #include "../Rigid_body/body.hpp"
 
 bool fluid_moves(const double t) {
-    return false;
+    return true;
 }
 
 vec3 global_forces(const double t) {
-    return {0.001*sin(t), 0, 0};
+    return {0.01*sin(t), 0, 0};
     //return vec3(0);
 }
 
@@ -65,14 +65,15 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
 
     b->update_pos(forces, points, dt);
 
+    //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
     bc.extrapolate(v_n);
     bc.extrapolate(v_n1);
     bc.extrapolate(p);
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
-    bc.enforce_velocity_BC(v_n);
-    bc.enforce_velocity_BC(v_n1);
-    bc.enforce_pressure_BC(p);
+    //bc.enforce_velocity_BC(v_n);
+    //bc.enforce_velocity_BC(v_n1);
+    //bc.enforce_pressure_BC(p);
 
     bc.update_mesh_boundary();
 }
