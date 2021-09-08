@@ -118,14 +118,15 @@ struct boundary_conditions {
         output.close();
     }
 
+    void update_pressure_BC(const big_vec<N,M,P, double> &p);
+    void update_velocity_wall_BC();
+
 private:
     void set_wall_points();
     void create_wall_normals();
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned j) noexcept;
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
-    void update_pressure_BC();
-    void update_velocity_BC();
     void set_matrix_row(unsigned x, unsigned y, unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,  Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, double xi, double yi, double zi);
 };
 
@@ -250,7 +251,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
-    //bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
     //vector over c array so all elements initialised to 0 = false
     norms_prev = norms;
     bound.clear();
@@ -356,16 +356,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
         }
     }
 
-    //updating pressure and wall velocity points
-    // - non-wall velocity points and normals have already been updated
-    update_velocity_BC();
-    update_pressure_BC();
 
-    //need to update the triangle mesh
-    tm.update();
-
-
-    //delete [] is_boundary;
 }
 
 template <unsigned N, unsigned M, unsigned P>
@@ -396,7 +387,8 @@ void boundary_conditions<N,M,P>::set_wall_points() {
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_pressure_BC() {
+void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double> &p) {
+    p_bc = p;
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
@@ -521,7 +513,7 @@ void boundary_conditions<N,M,P>::update_pressure_BC() {
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_velocity_BC()  {
+void boundary_conditions<N,M,P>::update_velocity_wall_BC()  {
     //setting the walls
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
