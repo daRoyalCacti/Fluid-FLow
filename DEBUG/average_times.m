@@ -1,3 +1,5 @@
+function average_times      %function so workspace doesn't get filled with variables
+
 file_loc = "./times.txt";
 fileID = fopen(file_loc, 'r');
 data = fscanf(fileID, '%f %f %f %f %f %f %f %f %f');
