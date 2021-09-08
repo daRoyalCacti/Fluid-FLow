@@ -14,9 +14,9 @@
 template <unsigned N, unsigned M, unsigned P>
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
-    boundary_points<N,M,P> bound_prev;
     boundary_points<N,M,P> bound;
     boundary_normals<N,M,P> norms;
+    boundary_normals<N,M,P> norms_prev;
     mesh_points<N,M,P> points;
 
     big_vec<N,M,P,vec3> vel_bc;
@@ -252,7 +252,7 @@ template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
     //bool *is_boundary = new bool[(N+1)*(M+1)*(P+1)];
     //vector over c array so all elements initialised to 0 = false
-    bound_prev = bound;
+    norms_prev = norms;
     bound.clear();
     set_wall_points();
 
@@ -578,8 +578,11 @@ void boundary_conditions<N,M,P>::extrapolate(big_vec<N,M,P, double> &p) {
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <=P; k++) {
-                const bool is_bound = bound.is_boundary(i,j,k);
-                const bool was_bound = norms.contains(i,j,k) && norms.normal(i,j,k) != vec3(0); //bound_prev.is_boundary(i,j,k);
+                //const bool is_bound = bound.is_boundary(i,j,k);
+                //const bool was_bound = norms.contains(i,j,k) && norms.normal(i,j,k) != vec3(0); //bound_prev.is_boundary(i,j,k);
+
+                const bool is_bound = norms.contains(i,j,k);
+                const bool was_bound = norms_prev.contains(i,j,k) && norms_prev.normal(i,j,k) == vec3(0);
 
 
                 if (!is_bound && was_bound ) {   //was inside mesh but is current outside of the boundary
