@@ -55,15 +55,15 @@ struct mesh final{
 #endif
     }
 
-    const vec3& get_vertice_index( const unsigned i) const noexcept {
+    [[nodiscard]] const vec3& get_vertice_index( const unsigned i) const noexcept {
         return vertices[indices[i]];
     }
 
-    const vec3& get_normal_index( const unsigned i) const noexcept {
+    [[nodiscard]] const vec3& get_normal_index( const unsigned i) const noexcept {
         return normals[indices[i]];
     }
 
-    const vec3& get_velocity_index( const unsigned i) const noexcept {
+    [[nodiscard]] const vec3& get_velocity_index( const unsigned i) const noexcept {
         return velocities[indices[i]];
     }
 };
