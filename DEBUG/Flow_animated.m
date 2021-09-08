@@ -60,6 +60,7 @@ for frame = 1:no_files
     axis([minx, maxx, miny, maxy])
     xlabel('x')
     ylabel('y')
+    title(['frame = ', num2str(frame)])
     
     subplot(2,1,2)
     heatmap(unique(data(frame).x),unique(data(frame).y), flip(data(frame).p), 'GridVisible', 'off', 'ColorLimits', [min_p, max_p]);
