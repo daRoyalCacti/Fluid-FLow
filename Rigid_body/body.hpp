@@ -40,7 +40,7 @@ struct body {
 
         //finding the linear acceleration
         const vec3 a =  std::accumulate(forces.begin(), forces.end(), vec3{}) / M;
-        //std::cerr << a << "\n";
+        std::cerr << a << "\n";
 
         //finding position and velocity of CoM
         model.v += a*dt;

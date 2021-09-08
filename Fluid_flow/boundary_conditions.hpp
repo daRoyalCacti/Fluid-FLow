@@ -36,7 +36,9 @@ struct boundary_conditions {
         p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
-        //needs to be called after p_bc is set because it uses dx, dy, dz from it
+        update_velocity_wall_BC();
+
+        //needs to be called after vel_bc is set because it uses dx, dy, dz from it
         update_mesh_boundary();
 
     }
@@ -68,6 +70,7 @@ struct boundary_conditions {
         }
     }
 
+    /*
     void enforce_pressure_BC(big_vec<N,M,P,double> &p) {
         for (unsigned i = 0; i <= N; i++) {
             for (unsigned j = 0; j <= M; j++) {
@@ -79,14 +82,15 @@ struct boundary_conditions {
                 }
             }
         }
-    }
+    }*/
+
 
     void DEBUG_write_boundary_points() {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
             for (unsigned i = 0; i <= N; i++) {
                 for (unsigned j = 0; j <= M; j++) {
-                    output << i * p_bc.dx << " " << j * p_bc.dy << " " << bound.is_boundary(i,j,P/2) << "\n";
+                    output << i * vel_bc.dx << " " << j * vel_bc.dy << " " << bound.is_boundary(i,j,P/2) << "\n";
                 }
             }
         } else {
@@ -101,7 +105,7 @@ struct boundary_conditions {
         if (output.is_open()) {
             for (unsigned i = 0; i <= N; i++) {
                 for (unsigned j = 0; j <= M; j++) {
-                    output << i * p_bc.dx << " " << j * p_bc.dy << " ";
+                    output << i * vel_bc.dx << " " << j * vel_bc.dy << " ";
                     if (norms.contains(i,j,P/2)) {
                         output << norms.normal(i,j,P/2);
                     } else {
@@ -265,9 +269,9 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
     //ray r(vec3{}, vec3(0,0,1));
-    const auto dx = p_bc.dx;
-    const auto dy = p_bc.dy;
-    const auto dz = p_bc.dz;
+    const auto dx = vel_bc.dx;
+    const auto dy = vel_bc.dy;
+    const auto dz = vel_bc.dz;
     for (unsigned i = 0; i <= N; ++i) {
         //std::cerr << i << "\n";
         for (unsigned j = 0; j <= M; ++j) {
@@ -388,11 +392,10 @@ void boundary_conditions<N,M,P>::set_wall_points() {
 
 template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double> &p) {
-    p_bc = p;
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-                if (p_bc.is_boundary(i,j,k)) {
+                if (p.is_boundary(i,j,k)) {
 #ifndef NDEBUG
                     if (!norms.contains(i,j,k)) {
                         std::cerr << "norms does not contain (" << i << ", " << j << ", " << k << ")\n";
@@ -403,7 +406,7 @@ void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double>
 
                     //this occurs when inside a boundary
                     if (norm.x() == 0 && norm.y() == 0 && norm.z() == 0) {
-                        p_bc(i,j,k) = 0;
+                        p(i,j,k) = 0;
                         continue;   //rest of the code will only error
                     }
 
@@ -411,9 +414,9 @@ void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double>
                     const auto ny = norm.y();
                     const auto nz = norm.z();
 
-                    const auto dx = p_bc.dx;
-                    const auto dy = p_bc.dy;
-                    const auto dz = p_bc.dz;
+                    const auto dx = p.dx;
+                    const auto dy = p.dy;
+                    const auto dz = p.dz;
 
                     //picking the direction
                     unsigned big_dir = 0;
@@ -427,22 +430,22 @@ void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double>
 
 
                     if (big_dir == 0) { //x direction biggest
-                        if (!p_bc.has_left(i,j,k)) {   //forward difference
-                            p_bc(i,j,k) = ny/nx* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dx/3 - p_bc(i+2,j,k)/3 + 4*p_bc(i+1,j,k)/3;
+                        if (!p.has_left(i,j,k)) {   //forward difference
+                            p(i,j,k) = ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i+2,j,k)/3 + 4*p(i+1,j,k)/3;
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
-                        } else if (!p_bc.has_right(i,j,k)) {   //backward difference
-                            p_bc(i,j,k) =-ny/nx* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dx/3 - p_bc(i-2,j,k)/3 + 4*p_bc(i-1,j,k)/3;
+                        } else if (!p.has_right(i,j,k)) {   //backward difference
+                            p(i,j,k) =-ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i-2,j,k)/3 + 4*p(i-1,j,k)/3;
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
                         } else {    //central difference
-                            p_bc(i+1,j,k) = -ny/nx * smart_deriv<0,1,0>(p_bc, i,j,k)*dx - nz/nx * smart_deriv<0,0,1>(p_bc, i,j,k)*dx + p_bc(i-1,j,k);
+                            p(i+1,j,k) = -ny/nx * smart_deriv<0,1,0>(p, i,j,k)*dx - nz/nx * smart_deriv<0,0,1>(p, i,j,k)*dx + p(i-1,j,k);
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i+1,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
@@ -450,22 +453,22 @@ void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double>
 #endif
                         }
                     } else if (big_dir == 1) {  //y direction biggest
-                        if (!p_bc.has_down(i, j, k)) { //forward difference
-                            p_bc(i,j,k) = nx/ny* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dy/3 - p_bc(i,j+2,k)/3 + 4*p_bc(i,j+1,k)/3;
+                        if (!p.has_down(i, j, k)) { //forward difference
+                            p(i,j,k) = nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j+2,k)/3 + 4*p(i,j+1,k)/3;
  #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
-                        } else if (!p_bc.has_up(i, j, k)) {  //backward difference
-                            p_bc(i,j,k) =-nx/ny* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(p_bc, i,j,k)*2*dy/3 - p_bc(i,j-2,k)/3 + 4*p_bc(i,j-1,k)/3;
+                        } else if (!p.has_up(i, j, k)) {  //backward difference
+                            p(i,j,k) =-nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j-2,k)/3 + 4*p(i,j-1,k)/3;
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
                         } else {  //central difference
-                            p_bc(i,j+1,k) = -nx/ny * smart_deriv<1,0,0>(p_bc, i,j,k)*dy - nz/ny * smart_deriv<0,0,1>(p_bc, i,j,k)*dy + p_bc(i,j-1,k);
+                            p(i,j+1,k) = -nx/ny * smart_deriv<1,0,0>(p, i,j,k)*dy - nz/ny * smart_deriv<0,0,1>(p, i,j,k)*dy + p(i,j-1,k);
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j+1,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
@@ -478,22 +481,22 @@ void boundary_conditions<N,M,P>::update_pressure_BC(const big_vec<N,M,P, double>
                             std::cerr << "the biggest direction cannot be larger than 2\n";
                         }
 #endif
-                        if (!p_bc.has_front(i,j,k)) {  //forward difference
-                            p_bc(i,j,k) = ny/nz* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dz/3 - p_bc(i,j,k+2)/3 + 4*p_bc(i,j,k+1)/3;
+                    if (!p.has_front(i,j,k)) {  //forward difference
+                            p(i,j,k) = ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k+2)/3 + 4*p(i,j,k+1)/3;
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
-                        } else if (!p_bc.has_back(i,j,k)) { //backward difference
-                            p_bc(i,j,k) =-ny/nz* smart_deriv<0,1,0>(p_bc, i,j,k)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(p_bc, i,j,k)*2*dz/3 - p_bc(i,j,k-2)/3 + 4*p_bc(i,j,k-1)/3;
+                        } else if (!p.has_back(i,j,k)) { //backward difference
+                            p(i,j,k) =-ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k-2)/3 + 4*p(i,j,k-1)/3;
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";
                             }
 #endif
                         } else {
-                            p_bc(i,j,k+1) = -ny/nz * smart_deriv<0,1,0>(p_bc, i,j,k)*dz - nx/nz * smart_deriv<1,0,0>(p_bc, i,j,k)*dz + p_bc(i,j,k-1);
+                            p(i,j,k+1) = -ny/nz * smart_deriv<0,1,0>(p, i,j,k)*dz - nx/nz * smart_deriv<1,0,0>(p, i,j,k)*dz + p(i,j,k-1);
 #ifndef NDEBUG
                             if (!std::isfinite(p_bc(i,j,k+1))) {
                                 std::cerr << "pressure boundary condition returned an infinite value\n";

@@ -114,6 +114,7 @@ std::cout << "constructing matrices and vectors\n";
 #ifdef DLOG
     std::cout << "making s\n";
 #endif
+    BC.update_velocity_wall_BC(BC.p_bc);
     make_s_first(s, Re, dt, v_n, p, BC.p_bc);
 
 #ifdef DLOG
@@ -184,6 +185,7 @@ std::cout << "constructing matrices and vectors\n";
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
         //BC.update_pressure_BC();
+        BC.update_pressure_BC(BC.p_bc);
         make_s(s, Re, dt, v_n, v_n1, p, BC.p_bc);
 
         timer.set_end(std::chrono::high_resolution_clock::now());

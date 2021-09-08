@@ -39,7 +39,7 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
         for (unsigned i = 0; i <= N; i++) {
             for (unsigned j = 0; j <= M; j++) {
                 for (unsigned k = 0; k <= P; k++) {
-                    if (i > 0 && i <N && j > 0 && j< M && k>0 && k<P) {  //if off the boundary
+                    if (i > 1 && i <N-1 && j > 1 && j< M-1 && k>1 && k<P-1) {  //if off the boundary
                         if (bc.norms.contains(i,j,k) && bc.norms.normal(i,j,k) != vec3(0)) {    //if boundary point outside of mesh
                             points[forces_counter] = bc.points.get_point(i,j,k);    //forces applied at the mesh boundary
                             //taking the force as pointing against the normal, not sure if this is right
@@ -70,21 +70,21 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
     bc.extrapolate(v_n1);
     bc.extrapolate(p);
 
-    bc.enforce_velocity_BC(v_n1);
+    //bc.enforce_velocity_BC(v_n1);
     bc.update_mesh_boundary();
 
     //updating pressure and wall velocity points
     // - non-wall velocity points and normals have already been updated
-    bc.update_velocity_wall_BC();
-    bc.update_pressure_BC(p);
+    //bc.update_velocity_wall_BC();
+    //bc.update_pressure_BC(p);
 
     //need to update the triangle mesh
     bc.tm.update();
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
-    bc.enforce_velocity_BC(v_n);
-    bc.enforce_pressure_BC(p);
+    //bc.enforce_velocity_BC(v_n);
+    //bc.enforce_pressure_BC(p);
 }
 
 
