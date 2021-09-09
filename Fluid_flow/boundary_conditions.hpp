@@ -263,6 +263,8 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     norms.clear();
     create_wall_normals();
 
+    vel_bc.clear();
+    update_velocity_wall_BC();
     points.clear();
 
     std::vector<bool> is_boundary;
