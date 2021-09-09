@@ -52,7 +52,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     std::cout << "setting boundary conditions\n";
 #endif
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
-    BC.DEBUG_write_boundary_points();
+    //BC.DEBUG_write_boundary_points();
     //BC.DEBUG_write_normal_vectors();
 
 
@@ -114,8 +114,7 @@ std::cout << "constructing matrices and vectors\n";
 #ifdef DLOG
     std::cout << "making s\n";
 #endif
-    BC.update_pressure_BC(BC.p_bc);
-    make_s_first(s, Re, dt, v_n, p, BC.p_bc);
+    make_s_first(s, Re, dt, v_n, p);
 
 #ifdef DLOG
     std::cout << "Solving pressure\n";
@@ -185,8 +184,7 @@ std::cout << "constructing matrices and vectors\n";
         timer.set_start(std::chrono::high_resolution_clock::now());
         //first make the s matrix
         //BC.update_pressure_BC();
-        BC.update_pressure_BC(BC.p_bc);
-        make_s(s, Re, dt, v_n, v_n1, p, BC.p_bc);
+        make_s(s, Re, dt, v_n, v_n1, p);
 
         timer.set_end(std::chrono::high_resolution_clock::now());
         timer.save_s_create_time();

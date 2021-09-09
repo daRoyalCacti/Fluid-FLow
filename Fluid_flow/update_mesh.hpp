@@ -21,9 +21,9 @@ vec3 global_forces(const double t) {
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 template <unsigned N, unsigned M, unsigned P>
 void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &v_n, big_vec<N,M,P, vec3> &v_n1, big_vec<N,M,P, double> &p, const double dt, const double t) {
-    const auto dx = bc.p_bc.dx;
-    const auto dy = bc.p_bc.dy;
-    const auto dz = bc.p_bc.dz;
+    const auto dx = bc.vel_bc.dx;
+    const auto dy = bc.vel_bc.dy;
+    const auto dz = bc.vel_bc.dz;
 
 
     std::vector<vec3> forces, points;
@@ -44,7 +44,7 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
                             points[forces_counter] = bc.points.get_point(i,j,k);    //forces applied at the mesh boundary
                             //taking the force as pointing against the normal, not sure if this is right
                             if (fluid_moves(t)) {
-                                forces[forces_counter++] = bc.p_bc(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
+                                forces[forces_counter++] = p(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
                                         global_forces(t); //P=F/A  =>  F=PA
                             } else {
                                 forces[forces_counter++] = global_forces(t);

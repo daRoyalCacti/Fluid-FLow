@@ -20,7 +20,7 @@ struct boundary_conditions {
     mesh_points<N,M,P> points;
 
     big_vec<N,M,P,vec3> vel_bc;
-    big_vec<N,M,P,double> p_bc;
+    //big_vec<N,M,P,double> p_bc;
 
 
     triangle_mesh tm;
@@ -33,7 +33,7 @@ struct boundary_conditions {
         norms = boundary_normals<N,M,P>(no_wall_points());
         create_wall_normals();
 
-        p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
+        //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
         update_velocity_wall_BC();
@@ -407,7 +407,7 @@ void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
                     const auto norm = norms.normal(i,j,k);
 
                     //this occurs when inside a boundary
-                    if (norm.x() == 0 && norm.y() == 0 && norm.z() == 0) {
+                    if (norm == vec3(0) ) {
                         p(i,j,k) = 0;
                         continue;   //rest of the code will only error
                     }
