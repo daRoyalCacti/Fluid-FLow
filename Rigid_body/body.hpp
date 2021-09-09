@@ -77,7 +77,7 @@ struct body {
 #ifndef NDEBUG
         {
             bool err = false;
-            if (!std::isfinite(vel_cm.x()) || !std::isfinite(vel_cm.y()) || !std::isfinite(vel_cm.z())) {
+            if (!std::isfinite(model.v.x()) || !std::isfinite(model.v.y()) || !std::isfinite(model.v.z())) {
                 err = true;
                 std::cerr << "rigid body got infinite velocity\n";
             }
@@ -97,7 +97,7 @@ struct body {
                 err = true;
                 std::cerr << "rigid body got infinite angular acceleration\n";
             }
-            if (!std::isfinite(w_cm.x()) || !std::isfinite(w_cm.y()) || !std::isfinite(w_cm.z())) {
+            if (!std::isfinite(model.w.x()) || !std::isfinite(model.w.y()) || !std::isfinite(model.w.z())) {
                 err = true;
                 std::cerr << "rigid body got infinite angular velocity\n";
             }
@@ -109,11 +109,11 @@ struct body {
             if (err) {
                 std::cerr << "\tpos : " <<pos_cm << "\n";
                 std::cerr << "\told pos : " << pos_cm_old << "\n";
-                std::cerr << "\tvelocity : " << vel_cm << "\n";
+                std::cerr << "\tvelocity : " << model.v << "\n";
                 std::cerr << "\ttorque : " << t << "\n";
                 std::cerr << "\tmoment of inertia : " << I << "\n";
                 std::cerr << "\tangular accelerator : " << alpha << "\n";
-                std::cerr << "\tangular velocity : " << w_cm << "\n";
+                std::cerr << "\tangular velocity : " << model.w << "\n";
                 std::cerr << "\trotation vector : " << rot_angle_vec << "\n";
             }
         }

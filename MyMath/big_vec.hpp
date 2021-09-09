@@ -124,6 +124,10 @@ struct big_vec<N, M, P, vec3> final {
     }
 
     big_vec& operator=(const big_vec<N, M, P, vec3>& v) noexcept {
+        dx = v.dx;
+        dy = v.dy;
+        dz = v.dz;
+
         xv.v = v.xv.v;
         yv.v = v.yv.v;
         zv.v = v.zv.v;

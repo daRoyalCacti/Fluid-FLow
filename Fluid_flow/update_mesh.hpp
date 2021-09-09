@@ -78,8 +78,7 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
     //bc.update_velocity_wall_BC();
     //bc.update_pressure_BC(p);
 
-    //need to update the triangle mesh
-    bc.tm.update();
+
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced

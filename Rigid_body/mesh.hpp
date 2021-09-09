@@ -42,6 +42,7 @@ struct mesh final{
             velocities[i] = v_ + cross( (vertices_[i] - pos_cm), w_);
         }
 
+
 #ifndef NDEBUG
         if (vertices_.size() != mass_.size()) {
             std::cerr << "vertices and mass must be the same size\n";

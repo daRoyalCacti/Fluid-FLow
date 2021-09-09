@@ -273,7 +273,6 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     const auto dy = vel_bc.dy;
     const auto dz = vel_bc.dz;
     for (unsigned i = 0; i <= N; ++i) {
-        //std::cerr << i << "\n";
         for (unsigned j = 0; j <= M; ++j) {
             const ray r(vec3(i*dx + dx/2, j*dy + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
             set_BC_mesh_1dir_z(r, is_boundary, dx, dy, dz, i, j);
@@ -359,6 +358,9 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
             }
         }
     }
+
+    //need to update the triangle mesh
+    tm.update();
 
 
 }
@@ -691,7 +693,7 @@ void boundary_conditions<N,M,P>::set_matrix_row(const unsigned x, const unsigned
 
     //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
     bool has_normal = norms.contains(xp, yp, zp);
-    if (!has_normal || (has_normal && norms.normal(xp, yp, zp) != vec3(0))  ) {    //if point not inside a boundary
+    if (!has_normal || (norms.normal(xp, yp, zp) != vec3(0))  ) {    //if point not inside a boundary
         const auto x0 = xp/dx;
         const auto y0 = yp/dy;
         const auto z0 = zp/dz;
