@@ -64,6 +64,7 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const noexcept {return b->has_2back(i,j,k);}
 
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_boundary(i,j,k); }
+    [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_inside_boundary(i,j,k); }
 
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
@@ -150,6 +151,7 @@ struct big_vec<N, M, P, vec3> final {
     [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2back(i,j,k);}
 
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_boundary(i,j,k); }
+    [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_inside_boundary(i,j,k); }
 
     //not ideal, should make it so () can return a reference
     void add_elm(const unsigned i, const unsigned j, const unsigned k, const vec3 elm) noexcept {
