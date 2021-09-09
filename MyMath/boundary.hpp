@@ -68,6 +68,13 @@ struct boundary_points final {
         return end_x || end_y || end_z;
     }
 
+    [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept {
+        const auto end_x = !has_left(i,j,k) || !has_right(i,j,k);
+        const auto end_y = !has_down(i,j,k) || !has_up(i,j,k);
+        const auto end_z = !has_front(i,j,k) || !has_back(i,j,k);
+        return end_x && end_y && end_z;
+    }
+
 
     [[nodiscard]] constexpr inline bool has_2left(const unsigned i, const unsigned j, const unsigned k) const noexcept {
         if (i-1 < 0) return false;
