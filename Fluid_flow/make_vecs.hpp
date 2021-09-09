@@ -37,7 +37,7 @@ void make_b_first(big_vec<N,M,P,vec3> &b, const double Re, const double dt, cons
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-                if (v_n.is_boundary(i,j,k)) {
+                if (v_n.is_inside_boundary(i,j,k)) {
                     b.add_elm(i,j,k,  bc(i,j,k));
                 } else {
                     b.add_elm(i, j, k,
@@ -57,12 +57,14 @@ void make_s(big_vec<N,M,P,double> &s, const double Re, const double dt, const bi
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-
+                if (p.is_inside_boundary(i,j,k)) {
+                    s(i,j,k) =0;
+                } else {
                 s(i,j,k) = divergence(v_n, i, j, k) / dt - 3/2 * divergence_advection(v_n, i,j,k) + 1/2 *
                         divergence_advection(v_n1, i,j,k) + 3/(2*Re) *
                         divergence_laplacian(v_n,i,j,k) - 1/(2*Re) * divergence_laplacian(v_n1, i,j,k) - laplacian(p, i,j,k);
 
-
+                }
 
             }
         }
@@ -77,10 +79,12 @@ void make_s_first(big_vec<N,M,P,double> &s, const double Re, const double dt, co
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
             for (unsigned k = 0; k <= P; k++) {
-
-                s(i, j, k) = divergence(v_n, i, j, k) / dt - divergence_advection(v_n, i, j, k) + 1 / Re *
-                              divergence_laplacian(v_n, i, j,k) - laplacian(p, i, j, k);
-
+                if (p.is_boundary(i,j,k)) {
+                    s(i,j,k) = 0;
+                } else {
+                    s(i, j, k) = divergence(v_n, i, j, k) / dt - divergence_advection(v_n, i, j, k) + 1 / Re *
+                                  divergence_laplacian(v_n, i, j,k) - laplacian(p, i, j, k);
+                }
 
             }
         }
