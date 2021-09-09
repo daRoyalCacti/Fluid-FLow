@@ -16,7 +16,7 @@ int main() {
     std::vector<vec3> vels;
     std::vector<vec3> norms;
 
-    constexpr double mass1 = 0.00001;
+    constexpr double mass1 = 0.01;
 
     const vec3 vel_cm = vec3(0.75, 0, 0);
     const vec3 w{};

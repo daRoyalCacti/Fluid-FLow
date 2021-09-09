@@ -40,7 +40,7 @@ struct body {
 
         //finding the linear acceleration
         const vec3 a =  std::accumulate(forces.begin(), forces.end(), vec3{}) / M;
-        std::cerr << a << "\n";
+
 
         //finding position and velocity of CoM
         model.v += a*dt;
@@ -73,6 +73,8 @@ struct body {
         //finding angle and angular-velocity pseudo-vector
         model.w += alpha*dt;
         const vec3 rot_angle_vec = model.w*dt;
+
+        std::cerr << "\n" << a << "\t" << model.v << "\t" << model.w << "\n";
 
 #ifndef NDEBUG
         {
