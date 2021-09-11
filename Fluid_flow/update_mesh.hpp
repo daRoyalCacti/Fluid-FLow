@@ -9,7 +9,7 @@
 #include "../Rigid_body/body.hpp"
 
 bool fluid_moves(const double t) {
-    return true;
+    return false;
 }
 
 vec3 global_forces(const double t) {

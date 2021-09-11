@@ -52,9 +52,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     std::cout << "setting boundary conditions\n";
 #endif
     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
-    //std::cerr << dx << "\n";
     BC.DEBUG_write_boundary_points();
-    return;
     //BC.DEBUG_write_normal_vectors();
 
 
