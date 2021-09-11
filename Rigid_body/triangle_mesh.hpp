@@ -40,7 +40,7 @@ struct triangle_mesh {
     };
 
     //returns if ray collided with mesh
-    std::map<double, d_vec3> get_collision_points(const ray &r) {
+    [[nodiscard]] std::map<double, d_vec3> get_collision_points(const ray &r) const {
         //this does not work if the ray hits the mesh an odd number of times
         // - should only happen when a ray just barely grazes past the mesh
         // - note that hits is stored in order of hit time
