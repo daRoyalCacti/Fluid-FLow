@@ -1,6 +1,7 @@
 fprintf("Finding files\n")
 All_v_files = dirPlus('velocity_data');   %https://stackoverflow.com/questions/2652630/how-to-get-all-files-under-a-specific-directory-in-matlab#2654459
 All_p_files = dirPlus('pressure_data'); 
+All_b_files = dirPlus('rigid_body_data');
 
 no_files = length(All_v_files);
 
@@ -10,7 +11,9 @@ for ii = 1:no_files
     [data(ii).x, data(ii).y , data(ii).vx , data(ii).vy , data(ii).vz ] = read_v_data( cell2mat(All_v_files(ii)) );
     
     data(ii).p = read_p_data( cell2mat(All_p_files(ii)) );
+    [data(ii).bx, data(ii).by, data(ii).bz] = read_b_data( cell2mat(All_b_files(ii)) );
 end
+
 
 
 
@@ -55,20 +58,33 @@ for frame = 1:no_files
     %fprintf('drawing frame %d of %d\n', frame+1, frames)
     
     clf
-    subplot(2,1,1)
+    sgtitle(['frame = ', num2str(frame)])
+    subplot(2,2,1)
     quiver(data(frame).x, data(frame).y, data(frame).vx/max_vx, data(frame).vy/max_vy)
     axis([minx, maxx, miny, maxy])
     xlabel('x')
     ylabel('y')
-    title(['frame = ', num2str(frame)])
+
     
-    subplot(2,1,2)
+    subplot(2,2,2)
     heatmap(unique(data(frame).x),unique(data(frame).y), flip(data(frame).p), 'GridVisible', 'off', 'ColorLimits', [min_p, max_p]);
     
     %turning off axes
     Ax = gca;
     Ax.XDisplayLabels = nan(size(Ax.XDisplayData));
     Ax.YDisplayLabels = nan(size(Ax.YDisplayData));
+    
+    subplot(2,2,3)
+    quiver(data(frame).x, data(frame).y, data(frame).vx./sqrt( data(frame).vx.^2 + data(frame).vy.^2), data(frame).vy./sqrt( data(frame).vx.^2 + data(frame).vy.^2))
+    axis([minx, maxx, miny, maxy])
+    xlabel('x')
+    ylabel('y')
+    
+    subplot(2,2,4)
+    plot3(data(frame).bx, data(frame).by, data(frame).bz, 'o')
+    xlabel('x')
+    ylabel('y')
+    zlabel('z')
 
 
     % Capture the plot as an image
@@ -116,6 +132,16 @@ function p = read_p_data(file_loc)
         end
     end
 
+end
+
+
+function [x,y,z] = read_b_data(file_loc)
+fileID = fopen(file_loc, 'r');
+    data = fscanf(fileID, '%f %f %f');
+    fclose(fileID);
+    x = data(1:3:end);
+    y = data(2:3:end);
+    z = data(3:3:end);
 end
 
 
