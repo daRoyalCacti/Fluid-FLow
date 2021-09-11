@@ -69,6 +69,7 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline double xn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i+n,j,k);}
     [[nodiscard]] constexpr inline double yn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j+n,k);}
     [[nodiscard]] constexpr inline double zn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j,k+n);}
+    [[nodiscard]] constexpr inline double move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {return *this(i+x,j+y,k+z);}
 
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
