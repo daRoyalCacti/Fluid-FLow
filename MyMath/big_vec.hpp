@@ -66,6 +66,10 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_boundary(i,j,k); }
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_inside_boundary(i,j,k); }
 
+    [[nodiscard]] constexpr inline double xn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i+n,j,k);}
+    [[nodiscard]] constexpr inline double yn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j+n,k);}
+    [[nodiscard]] constexpr inline double zn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j,k+n);}
+
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
     [[nodiscard]] const double& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v( get_index(i,j,k) ); }
