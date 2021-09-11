@@ -7,13 +7,20 @@
 
 #include <vector>
 
+//stores the neighbours of a grid point
+// -1 if no neighbour
+struct grid_relation {
+    int left{}, right{}, up{}, down{}, front{}, back{};
+};
+
 //grids must be axis aligned
 struct grid {
     std::vector<double> x, y, z;
     double dx, dy, dz;
+    std::vector<grid_relation> r{};
 
 
-    grid() = default;
+    grid() : dx{}, dy{}, dz{} {};
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_)
         : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_) {
 #ifndef NDEBUG
@@ -28,9 +35,10 @@ struct grid {
         }
         if (x_.size() != z_.size()) {
             std::cerr << "x and z need to be the same size\n";
+            err = true;
         }
         if (err) {
-            std::cerr << "x.size = " << x_.size() << "\ty.size = " << y_.size() << "\tz.size = " << z_.size() << "\n";
+            std::cerr << "\tx.size = " << x_.size() << "\ty.size = " << y_.size() << "\tz.size = " << z_.size() << "\n";
         }
 #endif
     }
