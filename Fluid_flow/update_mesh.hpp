@@ -71,6 +71,8 @@ void update_mesh(boundary_conditions<N,M,P> &bc, body *b, big_vec<N,M,P, vec3> &
     //bc.enforce_velocity_BC(v_n1);
     bc.update_mesh_boundary();
 
+    bc.update_pressure_BC(p);
+
     //updating pressure and wall velocity points
     // - non-wall velocity points and normals have already been updated
     //bc.update_velocity_wall_BC();
