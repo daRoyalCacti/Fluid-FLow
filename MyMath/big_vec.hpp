@@ -69,7 +69,7 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dxb;}
     [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dyb;}
     [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dzb;}
-    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return {i/dxb, j/dyb, k/dzb};}
+    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return {i*dxb, j*dyb, k*dzb};}
     [[nodiscard]] constexpr inline vec3 get_inds(const vec3& p) const noexcept {return {static_cast<unsigned>(p.x()/dxb), static_cast<unsigned>(p.y()/dyb), static_cast<unsigned>(p.z()/dzb)};}
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
