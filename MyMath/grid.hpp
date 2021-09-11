@@ -10,7 +10,7 @@
 //stores the neighbours of a grid point
 // -1 if no neighbour
 struct grid_relation {
-    int left{}, right{}, up{}, down{}, front{}, back{};
+    int left{}, right{}, down{}, up{}, front{}, back{};
 };
 
 //grids must be axis aligned

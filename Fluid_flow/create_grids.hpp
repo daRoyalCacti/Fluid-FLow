@@ -17,14 +17,51 @@ void make_enitre_gid(grid &g, const double Wx, const double Wy, const double Wz,
     g.x.resize(s);
     g.y.resize(s);
     g.z.resize(s);
+    g.r.resize(s);
 
     unsigned counter = 0;
-    for (unsigned i = 0; i < sx; i++) {
-        for (unsigned j = 0; j < sy; j++) {
-            for (unsigned k = 0; k < sz; k++) {
+    for (int i = 0; i < sx; i++) {
+        for (int j = 0; j < sy; j++) {
+            for (int k = 0; k < sz; k++) {
                 g.x[counter] = i*dx;
                 g.y[counter] = j*dy;
                 g.z[counter] = k*dz;
+
+                int left, right, up, down, front, back;
+                if (i != 0) {
+                    left = i - 1;
+                } else {
+                    left = -1;
+                }
+                if (i != sx-1) {
+                    right = i + 1;
+                } else {
+                    right = -1;
+                }
+
+                if (j != 0) {
+                    down = j - 1;
+                } else {
+                    down = -1;
+                }
+                if (j != sy-1) {
+                    up = j + 1;
+                } else {
+                    up = -1;
+                }
+
+                if (k != 0) {
+                    front = k - 1;
+                } else {
+                    back = -1;
+                }
+                if (k != sx-1) {
+                    front = k + 1;
+                } else {
+                    back = -1;
+                }
+
+                g.r[counter] = {left, right, down, up, front, back};
 
                 counter++;
             }
