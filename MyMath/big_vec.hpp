@@ -66,10 +66,7 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_boundary(i,j,k); }
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_inside_boundary(i,j,k); }
 
-    [[nodiscard]] constexpr inline double xn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i+n,j,k);}
-    [[nodiscard]] constexpr inline double yn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j+n,k);}
-    [[nodiscard]] constexpr inline double zn(const unsigned i, const unsigned j, const unsigned k, const int n) const noexcept {return *this(i,j,k+n);}
-    [[nodiscard]] constexpr inline double move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {return *this(i+x,j+y,k+z);}
+    [[nodiscard]] constexpr inline double move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {return operator()(i+x,j+y,k+z);}
 
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
@@ -154,6 +151,10 @@ struct big_vec<N, M, P, vec3> final {
     [[nodiscard]] constexpr inline bool has_2up(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2up(i,j,k);}
     [[nodiscard]] constexpr inline bool has_2front(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2front(i,j,k);}
     [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2back(i,j,k);}
+
+    [[nodiscard]] constexpr inline vec3 move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {
+        return vec3(xv.move(i,j,k,x,y,z), yv.move(i,j,k,x,y,z),zv.move(i,j,k,x,y,z));
+    }
 
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_boundary(i,j,k); }
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_inside_boundary(i,j,k); }
