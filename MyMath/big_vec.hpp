@@ -37,6 +37,16 @@ struct big_vec<N,M,P, double> final {
         return *this;
     }
 
+    big_vec& operator=(const big_vec<N, M, P, double>& q) noexcept {
+        dxb = q.dxb;
+        dyb = q.dyb;
+        dzb = q.dzb;
+
+        v = q.v;
+        b = q.b;
+        return *this;
+    }
+
     auto size() {
         return (N+1)*(M+1)*(P+1);
     }
@@ -69,7 +79,8 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dxb;}
     [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dyb;}
     [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dzb;}
-    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return {i*dxb, j*dyb, k*dzb};}
+    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {//std::cerr << dxb << "\n";
+        return {i*dxb, j*dyb, k*dzb};}
     [[nodiscard]] constexpr inline vec3 get_inds(const vec3& p) const noexcept {return {static_cast<unsigned>(p.x()/dxb), static_cast<unsigned>(p.y()/dyb), static_cast<unsigned>(p.z()/dzb)};}
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
@@ -130,9 +141,9 @@ struct big_vec<N, M, P, vec3> final {
         dyb = v.dyb;
         dzb = v.dzb;
 
-        xv.v = v.xv.v;
-        yv.v = v.yv.v;
-        zv.v = v.zv.v;
+        xv = v.xv;
+        yv = v.yv;
+        zv = v.zv;
         return *this;
     }
 

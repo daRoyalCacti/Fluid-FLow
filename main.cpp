@@ -11,13 +11,7 @@ const double wz = 5;
 const double max_t = 1;
 const double Re = 150;
 
-#define NEW_FLOW
-
 int main() {
-
-    calc_derivs_ex();
-    big_veg_derivs_ex();
-
 
 
     constexpr output_settings o{};

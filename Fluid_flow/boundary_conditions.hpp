@@ -88,9 +88,11 @@ struct boundary_conditions {
     void DEBUG_write_boundary_points() {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
+            constexpr auto k = P/2;
             for (unsigned i = 0; i <= N; i++) {
                 for (unsigned j = 0; j <= M; j++) {
-                    output << i * vel_bc.dx << " " << j * vel_bc.dy << " " << bound.is_boundary(i,j,P/2) << "\n";
+                    const auto pos = vel_bc.get_pos(i,j,k);
+                    output << pos.x() << " " << pos.y() << " " << bound.is_boundary(i,j,k) << "\n";
                 }
             }
         } else {
