@@ -12,6 +12,7 @@
 #include "vec3.hpp"
 #include "finite_difference.hpp"
 #include "boundary.hpp"
+#include "grid.hpp"
 
 template <unsigned N, unsigned M, unsigned P, typename T>
 struct big_vec{};
