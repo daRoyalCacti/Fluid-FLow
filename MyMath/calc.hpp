@@ -26,27 +26,27 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
     if constexpr (s==1) {   //first order derivative
         if constexpr(nx==1) {   //d/dx
             if (!v.has_left(i,j,k)) {    //at left boundary --- forward difference needed
-                return forward_difference_1st<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                return forward_difference_1st<0>(v, i, j, k);
             } else if (!v.has_right(i,j,k))  {   //at right boundary --- need backward difference
-                return backward_difference_1st<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                return backward_difference_1st<0>(v, i, j, k);
             } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                return central_difference_1st<0>(v, i, j, k);
             }
         } else if constexpr(ny==1) {    //d/dy
             if (!v.has_down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                return forward_difference_1st<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                return forward_difference_1st<1>(v, i, j, k);
             } else if (!v.has_up(i,j,k))  {   //at top boundary --- need backward difference
-                return backward_difference_1st<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                return backward_difference_1st<1>(v, i, j, k);
             } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                return central_difference_1st<1>(v, i, j, k);
             }
         } else if constexpr(nz==1) {    //d/dz
             if (!v.has_front(i,j,k)) {    //at front boundary --- forward difference needed
-                return forward_difference_1st<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                return forward_difference_1st<2>(v, i, j, k);
             } else if (!v.has_back(i,j,k))  {   //at back boundary --- need backward difference
-                return backward_difference_1st<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                return backward_difference_1st<2>(v, i, j, k);
             } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                return central_difference_1st<2>(v, i, j, k);
             }
         }
     }
@@ -54,28 +54,28 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
         if constexpr(m==2) {    //pure derivative
             if constexpr(nx==2) {   //d^2/dx^2
                 if (!v.has_left(i,j,k)) {    //at left boundary --- forward difference needed
-                    return forward_difference_2nd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_2nd<0>(v, i, j, k);
                 } else if (!v.has_right(i,j,k))  {   //at right boundary --- need backward difference
-                    return backward_difference_2nd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_2nd<0>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    //return forward_difference_2nd<0>(v, i, j, k, v.dx, v.dy, v.dz);
-                    return central_difference_2nd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    //return forward_difference_2nd<0>(v, i, j, k);
+                    return central_difference_2nd<0>(v, i, j, k);
                 }
             } else if constexpr(ny==2) {    //d^2/dy^2
                 if (!v.has_down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                    return forward_difference_2nd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_2nd<1>(v, i, j, k);
                 } else if (!v.has_up(i,j,k))  {   //at top boundary --- need backward difference
-                    return backward_difference_2nd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_2nd<1>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    return central_difference_2nd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return central_difference_2nd<1>(v, i, j, k);
                 }
             } else if constexpr(nz==2) {    //d^2/dz^2
                 if (!v.has_front(i,j,k)) {    //at front boundary --- forward difference needed
-                    return forward_difference_2nd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_2nd<2>(v, i, j, k);
                 } else if (!v.has_back(i,j,k))  {   //at back boundary --- need backward difference
-                    return backward_difference_2nd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_2nd<2>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    return central_difference_2nd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return central_difference_2nd<2>(v, i, j, k);
                 }
             }
         }
@@ -83,79 +83,79 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
             if constexpr( (nx==1) && (ny==1)) { //d^2/dxdy
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_2nd_mixed<0, 1>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<0, 1>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_2nd_mixed<1,0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<1,0>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<1, 0>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<0,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_2nd_mixed<0,1>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_2nd_mixed<1,0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<1,0>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_down(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<0,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<0,1>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<0,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<0,1>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_2nd_mixed<0,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_2nd_mixed<0,1>(v, i, j, k);
                     }
                 }
             } else if constexpr( (nx==1) && (nz==1)) {  //d^2/dxdz
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_2nd_mixed<0, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<0, 2>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_2nd_mixed<2,0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<2,0>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<2, 0>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<0,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_2nd_mixed<0,2>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_2nd_mixed<2,0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<2,0>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<0,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<0,2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<0,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<0,2>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_2nd_mixed<0,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_2nd_mixed<0,2>(v, i, j, k);
                     }
                 }
             } else if constexpr( (ny==1) && (nz==1)) {  //d^2/dydz
                 if (!v.has_down(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_2nd_mixed<1, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<1, 2>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_2nd_mixed<2,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<2,1>(v, i, j, k);
                     }
                 } else if (!v.has_up(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_2nd_mixed<2, 1>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<1,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_2nd_mixed<1,2>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_2nd_mixed<2,1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<2,1>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<1,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_2nd_mixed<1,2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<1,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_2nd_mixed<1,2>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_2nd_mixed<1,2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_2nd_mixed<1,2>(v, i, j, k);
                     }
                 }
             }
@@ -166,189 +166,189 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
         if constexpr(m==3) {    //pure derivative
             if constexpr(nx==3) {   //d^3/dx^3
                 if (!v.has_2left(i,j,k)) {    //at left boundary --- forward difference needed
-                    return forward_difference_3rd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_3rd<0>(v, i, j, k);
                 } else if (!v.has_2right(i,j,k))  {   //at right boundary --- need backward difference
-                    return backward_difference_3rd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_3rd<0>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<0>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return central_difference_3rd<0>(v, i, j, k);
                 }
             } else if constexpr(ny==3) {    //d^3/dy^3
                 if (!v.has_2down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                    return forward_difference_3rd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_3rd<1>(v, i, j, k);
                 } else if (!v.has_2up(i,j,k))  {   //at top boundary --- need backward difference
-                    return backward_difference_3rd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_3rd<1>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<1>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return central_difference_3rd<1>(v, i, j, k);
                 }
             } else if constexpr(nz==3) {    //d^3/dz^3
                 if (!v.has_2front(i,j,k)) {    //at front boundary --- forward difference needed
-                    return forward_difference_3rd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return forward_difference_3rd<2>(v, i, j, k);
                 } else if (!v.has_2back(i,j,k))  {   //at back boundary --- need backward difference
-                    return backward_difference_3rd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return backward_difference_3rd<2>(v, i, j, k);
                 } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<2>(v, i, j, k, v.dx, v.dy, v.dz);
+                    return central_difference_3rd<2>(v, i, j, k);
                 }
             }
         } else {    //mixed derivative
             if constexpr( (nx==2) && (ny==1) ) {    //d^3/dx^2dy
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else {    //forward central
-                        return forward_central_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<0, 1>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else {    //backward central
-                        return backward_central_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<0, 1>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_down(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<0, 1>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<0, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<0, 1>(v, i, j, k);
                     }
                 }
             }
             else if constexpr( (nx==1) && (ny==2) ) { //d^3/dy^2dx
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_down(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<1, 0>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_down(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else if (!v.has_up(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<1, 0>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<1, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<1, 0>(v, i, j, k);
                     }
                 }
             }
             else if constexpr( (nx==2) && (nz==1) ) { //d^3/dx^2dz
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else {    //forward central
-                        return forward_central_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<0, 2>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else {    //backward central
-                        return backward_central_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<0, 2>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<0, 2>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<0, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<0, 2>(v, i, j, k);
                     }
                 }
             }
             else if constexpr( (nx==1) && (nz==2) ) { //d^3/dz^2dx
                 if (!v.has_left(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     }
                 } else if (!v.has_right(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<2, 0>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<2, 0>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<2, 0>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<2, 0>(v, i, j, k);
                     }
                 }
             }
             else if constexpr( (nz==2) && (ny==1) ) { //d^3/dz^2dy
                 if (!v.has_down(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else {    //forward central
-                        return central_forward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     }
                 } else if (!v.has_up(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else {    //backward central
-                        return central_backward_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<2, 1>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<2, 1>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<2, 1>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<2, 1>(v, i, j, k);
                     }
                 }
             }
             else if constexpr( (nz==1) && (ny==2) ) { //d^3/dy^2dz
                 if (!v.has_down(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_backward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else {    //forward central
-                        return forward_central_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return forward_central_difference_3rd_mixed<1, 2>(v, i, j, k);
                     }
                 } else if (!v.has_up(i,j,k)) {
                     if (!v.has_front(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_forward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else {    //backward central
-                        return backward_central_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return backward_central_difference_3rd_mixed<1, 2>(v, i, j, k);
                     }
                 } else {
                     if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_forward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_backward_difference_3rd_mixed<1, 2>(v, i, j, k);
                     } else {    //central central
-                        return central_difference_3rd_mixed<1, 2>(v, i, j, k, v.dx, v.dy, v.dz);
+                        return central_difference_3rd_mixed<1, 2>(v, i, j, k);
                     }
                 }
             }

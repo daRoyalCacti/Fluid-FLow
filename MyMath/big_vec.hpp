@@ -20,13 +20,13 @@ template <unsigned N, unsigned M, unsigned P>
 struct big_vec<N,M,P, double> final {
     //Eigen::Matrix<vec3, (N+1)*(M+1)*(P+1), 1> v;
     Eigen::Matrix<double, Eigen::Dynamic, 1> v;
-    double dx, dy, dz;
+    double dxb, dyb, dzb;
     const boundary_points<N,M,P>* b;
 
 
 
-    big_vec() : dx{}, dy{}, dz{}, b{}, v{} {}
-    big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept  : dx(dx_), dy(dy_), dz(dz_), b(b_) {
+    big_vec() : dxb{}, dyb{}, dzb{}, b{}, v{} {}
+    big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept  : dxb(dx_), dyb(dy_), dzb(dz_), b(b_) {
         v.resize( (N+1)*(M+1)*(P+1) );
         for (unsigned i = 0; i < (N+1)*(M+1)*(P+1); i++) {
             v(i) = double{};   //ensuring nothing strange
@@ -67,7 +67,9 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return b->is_inside_boundary(i,j,k); }
 
     [[nodiscard]] constexpr inline double move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {return operator()(i+x,j+y,k+z);}
-
+    [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dxb;}
+    [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dyb;}
+    [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dzb;}
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
     [[nodiscard]] const double& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v( get_index(i,j,k) ); }
@@ -104,17 +106,17 @@ struct big_vec<N, M, P, vec3> final {
     //Eigen::Matrix<, Eigen::Dynamic, 1> v;
 
     big_vec<N,M,P,double> xv, yv, zv;
-    double dx, dy, dz;
+    double dxb, dyb, dzb;
     //const boundary_points<N,M,P>* b;
 
 
-    big_vec() : dx{}, dy{}, dz{}, xv{}, yv{}, zv{} {}
-    big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept : dx(dx_), dy(dy_), dz(dz_),
+    big_vec() : dxb{}, dyb{}, dzb{}, xv{}, yv{}, zv{} {}
+    big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept : dxb(dx_), dyb(dy_), dzb(dz_),
         xv(dx_, dy_, dz_, b_),
         yv(dx_, dy_, dz_, b_),
         zv(dx_, dy_, dz_, b_) {}
 
-    [[maybe_unused]] big_vec(const big_vec<N, M, P, vec3>& v) noexcept : dx(v.dx), dy(v.dy), dz(v.dz) {
+    [[maybe_unused]] big_vec(const big_vec<N, M, P, vec3>& v) noexcept : dxb(v.dx), dyb(v.dy), dzb(v.dz) {
         xv.v = v.xv.v;
         yv.v = v.yv.v;
         zv.v = v.zv.v;
@@ -127,9 +129,9 @@ struct big_vec<N, M, P, vec3> final {
     }
 
     big_vec& operator=(const big_vec<N, M, P, vec3>& v) noexcept {
-        dx = v.dx;
-        dy = v.dy;
-        dz = v.dz;
+        dxb = v.dxb;
+        dyb = v.dyb;
+        dzb = v.dzb;
 
         xv.v = v.xv.v;
         yv.v = v.yv.v;
@@ -155,6 +157,10 @@ struct big_vec<N, M, P, vec3> final {
     [[nodiscard]] constexpr inline vec3 move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {
         return vec3(xv.move(i,j,k,x,y,z), yv.move(i,j,k,x,y,z),zv.move(i,j,k,x,y,z));
     }
+
+    [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dx(i,j,k);}
+    [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dy(i,j,k);}
+    [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dz(i,j,k);}
 
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_boundary(i,j,k); }
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_inside_boundary(i,j,k); }
