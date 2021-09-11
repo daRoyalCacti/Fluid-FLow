@@ -13,7 +13,7 @@ struct grid {
     double dx, dy, dz;
 
 
-    grid() = delete;
+    grid() = default;
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_)
         : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_) {
 #ifndef NDEBUG

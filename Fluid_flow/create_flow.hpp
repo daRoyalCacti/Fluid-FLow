@@ -21,6 +21,7 @@
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
 #include "update_mesh.hpp"
+#include "create_grids.hpp"
 
 #define DLOG    //detailed logging
 
@@ -47,7 +48,15 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
     double dt = max_t / (double)no_timesteps;
 
+    //creating timer
     flow_timer timer(os.time_file_name.data() );
+
+#ifdef DLOG
+    std::cout << "creating global grid\n";
+#endif
+    grid global_grid;
+    make_enitre_gid(global_grid, Wx, Wy, Wz, dx, dy, dz);
+
 #ifdef DLOG
     std::cout << "setting boundary conditions\n";
 #endif
