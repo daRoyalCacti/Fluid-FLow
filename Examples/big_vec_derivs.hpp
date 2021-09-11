@@ -2,8 +2,8 @@
 // Created by jacob on 11/8/21.
 //
 
-#ifndef CODE_BIG_VEC_DERIVS_H
-#define CODE_BIG_VEC_DERIVS_H
+#ifndef CODE_BIG_VEC_DERIVS_HPP
+#define CODE_BIG_VEC_DERIVS_HPP
 
 #include "../MyMath/big_vec.hpp"
 #include "../MyMath/calc.hpp"
@@ -244,4 +244,4 @@ void big_veg_derivs_ex() {
 }
 
 
-#endif //CODE_BIG_VEC_DERIVS_H
+#endif //CODE_BIG_VEC_DERIVS_HPP
