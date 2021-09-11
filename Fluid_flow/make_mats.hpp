@@ -19,9 +19,7 @@ template <unsigned N, unsigned M, unsigned P>
 // - which boundary matters depends on the direction of the normal vector
 void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary_normals<N,M,P> &norms) noexcept {
 
-    const auto dxdx = p.dx*p.dx;
-    const auto dydy = p.dy*p.dy;
-    const auto dzdz = p.dz*p.dz;
+
 
 //#pragma omp parallel for
     //shared(Q, p, dxdx, dydy, dzdz) default(none)
@@ -72,6 +70,10 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary
                     }
 
                 } else {
+
+                    const auto dxdx = p.dx(i,j,k)*p.dx(i,j,k);
+                    const auto dydy = p.dy(i,j,k)*p.dy(i,j,k);
+                    const auto dzdz = p.dz(i,j,k)*p.dz(i,j,k);
 
 
                     //x axis checks
@@ -148,9 +150,7 @@ void make_Q(big_matrix<N,M,P> &Q, const big_vec<N,M,P,double> &p, const boundary
 
 template <unsigned N, unsigned M, unsigned P>
 void make_A(big_matrix<N,M,P> &A,  const big_vec<N,M,P,vec3> &v, const double dt, const double Re) noexcept {
-    const auto Rdxdx = Re*v.dx*v.dx;
-    const auto Rdydy = Re*v.dy*v.dy;
-    const auto Rdzdz = Re*v.dz*v.dz;
+
 
 //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)
@@ -160,6 +160,10 @@ void make_A(big_matrix<N,M,P> &A,  const big_vec<N,M,P,vec3> &v, const double dt
                 if (v.is_boundary(i,j,k)) {
                     A.add_elm(i,j,k,  i,j,k,  1);
                 } else {
+                    const auto Rdxdx = Re*v.dx(i,j,k)*v.dx(i,j,k);
+                    const auto Rdydy = Re*v.dy(i,j,k)*v.dy(i,j,k);
+                    const auto Rdzdz = Re*v.dz(i,j,k)*v.dz(i,j,k);
+
                     A.add_elm(i,j,k,  i,j,k,  1/dt + 1/Rdxdx + 1/Rdydy + 1/Rdzdz );
                     A.add_elm(i,j,k,  i+1,j,k,  -1/(2*Rdxdx));
                     A.add_elm(i,j,k,  i-1,j,k,  -1/(2*Rdxdx));

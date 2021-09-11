@@ -128,15 +128,15 @@ struct boundary_conditions {
 private:
     void set_wall_points();
     void create_wall_normals();
-    void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned j) noexcept;
-    void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned i, unsigned k) noexcept;
-    void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, double dx, double dy, double dz, unsigned j, unsigned k) noexcept;
+    void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned j) noexcept;
+    void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned k) noexcept;
+    void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, unsigned j, unsigned k) noexcept;
     void set_matrix_row(unsigned x, unsigned y, unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,  Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, double xi, double yi, double zi);
 };
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned j, const unsigned k) noexcept {
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned j, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
 
@@ -151,8 +151,10 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
             const auto norm2 = th->second.v2;
             const auto vel2 = th->second.v3;
 
-            const auto i_x1 = static_cast<unsigned>(floor(col1.x()/dx));
-            const auto i_x2 = static_cast<unsigned>(floor(col2.x()/dx));
+            const auto ind1 = vel_bc.get_inds(col1);
+            const auto ind2 = vel_bc.get_inds(col2);
+            const auto i_x1 = ind1.x();
+            const auto i_x2 = ind2.x();
 
             //setting boundary points
             for (unsigned i = i_x1; i<=i_x2; i++) {
@@ -177,7 +179,7 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned i, const unsigned k) noexcept {
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
 
@@ -192,8 +194,10 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
             const auto norm2 = th->second.v2;
             const auto vel2 = th->second.v3;
 
-            const auto i_y1 = static_cast<unsigned>(floor(col1.y()/dy));
-            const auto i_y2 = static_cast<unsigned>(floor(col2.y()/dy));
+            const auto ind1 = vel_bc.get_inds(col1);
+            const auto ind2 = vel_bc.get_inds(col2);
+            const auto i_y1 = ind1.y();
+            const auto i_y2 = ind2.y();
 
             //setting boundary points
             for (unsigned j = i_y1; j<=i_y2; j++) {
@@ -216,7 +220,7 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
 
 
 template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, const double dx, const double dy, const double dz, const unsigned i, const unsigned j) noexcept {
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned j) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
 
@@ -231,8 +235,10 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
             const auto norm2 = th->second.v2;
             const auto vel2 = th->second.v3;
 
-            const auto i_z1 = static_cast<unsigned>(floor(col1.z()/dz));
-            const auto i_z2 = static_cast<unsigned>(floor(col2.z()/dz));
+            const auto ind1 = vel_bc.get_inds(col1);
+            const auto ind2 = vel_bc.get_inds(col2);
+            const auto i_z1 = ind1.z();
+            const auto i_z2 = ind2.z();
 
             //setting boundary points
             for (unsigned k = i_z1; k<=i_z2; k++) {
@@ -271,27 +277,37 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
     //ray r(vec3{}, vec3(0,0,1));
-    const auto dx = vel_bc.dx;
-    const auto dy = vel_bc.dy;
-    const auto dz = vel_bc.dz;
+    /*std::cerr << "update mesh boundary will soon not work --- spacial coordinates will be wrong\n";
+    const auto dx = vel_bc.dxb;
+    const auto dy = vel_bc.dyb;
+    const auto dz = vel_bc.dzb;*/
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
-            const ray r(vec3(i*dx + dx/2, j*dy + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_z(r, is_boundary, dx, dy, dz, i, j);
+            const auto pos = vel_bc.get_pos(i,j,0);
+            const auto dx = vel_bc.dx(i,j,0);
+            const auto dy = vel_bc.dy(i,j,0);
+            const ray r(vec3(pos.x() + dx/2, pos.y() + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_z(r, is_boundary, i, j);
         }
     }
 
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned k = 0; k <= P; ++k) {
-            const ray r(vec3(i*dx + dx/2, 0, k*dz + dz/2), vec3(0,1,0) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_y(r, is_boundary, dx, dy, dz, i, k);
+            const auto pos = vel_bc.get_pos(i,0,k);
+            const auto dx = vel_bc.dx(i,0,k);
+            const auto dz = vel_bc.dz(i,0,k);
+            const ray r(vec3(pos.x() + dx/2, 0, pos.z() + dz/2), vec3(0,1,0) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_y(r, is_boundary, i, k);
         }
     }
 
     for (unsigned j = 0; j <= M; ++j) {
         for (unsigned k = 0; k <= P; ++k) {
-            const ray r(vec3(0, j*dy + dy/2, k*dz + dz/2), vec3(1,0,0) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_x(r, is_boundary, dx, dy, dz, j, k);
+            const auto pos = vel_bc.get_pos(0,j,k);
+            const auto dy = vel_bc.dy(0,j,k);
+            const auto dz = vel_bc.dz(0,j,k);
+            const ray r(vec3(0, pos.y() + dy/2, pos.z() + dz/2), vec3(1,0,0) );//shoot ray through the middle of a grid point
+            set_BC_mesh_1dir_x(r, is_boundary, j, k);
         }
     }
 
@@ -418,9 +434,9 @@ void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
                     const auto ny = norm.y();
                     const auto nz = norm.z();
 
-                    const auto dx = p.dx;
-                    const auto dy = p.dy;
-                    const auto dz = p.dz;
+                    const auto dx = p.dx(i,j,k);
+                    const auto dy = p.dy(i,j,k);
+                    const auto dz = p.dz(i,j,k);
 
                     //picking the direction
                     unsigned big_dir = 0;
@@ -536,7 +552,11 @@ void boundary_conditions<N,M,P>::update_velocity_wall_BC()  {
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
+#ifdef MOVING_WALL
+            vel_bc.add_elm(i, 0, k, 1, 0, 0);
+#else
             vel_bc.add_elm(i, 0, k, 0, 0, 0);
+#endif
             vel_bc.add_elm(i,M,k, 0,0,0);
         }
     }
@@ -669,9 +689,10 @@ void boundary_conditions<N,M,P>::extrapolate(big_vec<N,M,P, double> &p) {
 
                     //setting the value of p
                     //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
-                    const auto x = xi/p.dx;
-                    const auto y = yi/p.dy;
-                    const auto z = zi/p.dz;
+                    const auto pos = vel_bc.get_pos(xi,yi,zi);
+                    const auto x = pos.x();
+                    const auto y = pos.y();
+                    const auto z = pos.z();
                     p(xi, yi, zi) = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
 
                 }
@@ -689,16 +710,16 @@ void boundary_conditions<N,M,P>::set_matrix_row(const unsigned x, const unsigned
     const auto yp = y+yi;
     const auto zp = z+zi;
 
-    const auto dx = p.dx;
-    const auto dy = p.dy;
-    const auto dz = p.dz;
+    std::cerr << "set matrix row will soon be wrong\n";
+
 
     //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
     bool has_normal = norms.contains(xp, yp, zp);
     if (!has_normal || (norms.normal(xp, yp, zp) != vec3(0))  ) {    //if point not inside a boundary
-        const auto x0 = xp/dx;
-        const auto y0 = yp/dy;
-        const auto z0 = zp/dz;
+        const auto pos = vel_bc.get_pos(xp, yp, zp);
+        const auto x0 = pos.x();
+        const auto y0 = pos.y();
+        const auto z0 = pos.z();
 
         mat(counter, 0) = 1;
         mat(counter, 1) = x0;

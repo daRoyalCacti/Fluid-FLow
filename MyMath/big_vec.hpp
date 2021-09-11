@@ -20,7 +20,6 @@ template <unsigned N, unsigned M, unsigned P>
 struct big_vec<N,M,P, double> final {
     //Eigen::Matrix<vec3, (N+1)*(M+1)*(P+1), 1> v;
     Eigen::Matrix<double, Eigen::Dynamic, 1> v;
-    double dxb, dyb, dzb;
     const boundary_points<N,M,P>* b;
 
 
@@ -70,11 +69,14 @@ struct big_vec<N,M,P, double> final {
     [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dxb;}
     [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dyb;}
     [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return dzb;}
+    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return {i/dxb, j/dyb, k/dzb};}
+    [[nodiscard]] constexpr inline vec3 get_inds(const vec3& p) const noexcept {return {static_cast<unsigned>(p.x()/dxb), static_cast<unsigned>(p.y()/dyb), static_cast<unsigned>(p.z()/dzb)};}
 
     [[nodiscard]] double& operator()(const unsigned i, const unsigned j, const unsigned k) noexcept { return v(get_index(i,j,k) ); }
     [[nodiscard]] const double& operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept { return v( get_index(i,j,k) ); }
 
 private:
+    double dxb, dyb, dzb;
     [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
 #ifndef NDEBUG
         if (i < 0) {
@@ -102,12 +104,7 @@ private:
 
 template <unsigned N, unsigned M, unsigned P>
 struct big_vec<N, M, P, vec3> final {
-    //Eigen::Matrix<vec3, (N+1)*(M+1)*(P+1), 1> v;
-    //Eigen::Matrix<, Eigen::Dynamic, 1> v;
-
     big_vec<N,M,P,double> xv, yv, zv;
-    double dxb, dyb, dzb;
-    //const boundary_points<N,M,P>* b;
 
 
     big_vec() : dxb{}, dyb{}, dzb{}, xv{}, yv{}, zv{} {}
@@ -161,6 +158,8 @@ struct big_vec<N, M, P, vec3> final {
     [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dx(i,j,k);}
     [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dy(i,j,k);}
     [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dz(i,j,k);}
+    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.get_pos(i,j,k);}
+    [[nodiscard]] constexpr inline vec3 get_inds(const vec3& v) const noexcept {return xv.get_inds(v);}
 
     [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_boundary(i,j,k); }
     [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_inside_boundary(i,j,k); }
@@ -185,6 +184,7 @@ struct big_vec<N, M, P, vec3> final {
 
 
 private:
+    double dxb, dyb, dzb;
     [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
 #ifndef NDEBUG
         if (i < 0) {
@@ -217,9 +217,11 @@ template<unsigned N, unsigned M, unsigned P, typename T>
 void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) noexcept {
     std::ofstream output(file_loc);
     if (output.is_open()) {
+        const auto k = P/2;
         for (unsigned i = 0; i <= N; i++) {
             for (unsigned j = 0; j <= M; j++) {
-                output << i * v.dx << " " << j * v.dy << " " << v(i, j, P / 2) << "\n";
+                const auto pos = v.get_pos(i,j,k);
+                output << pos.x() << " " << pos.y() << " " << v(i, j, k) << "\n";
             }
         }
     } else {

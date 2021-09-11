@@ -1,4 +1,9 @@
+#define MOVING_WALL
+
 #include "Fluid_flow/create_flow.hpp"
+
+#include "Examples/calc_derivs.hpp"
+#include "Examples/big_vec_derivs.hpp"
 
 const double wx = 3;
 const double wy = 4;
@@ -9,6 +14,12 @@ const double Re = 150;
 #define NEW_FLOW
 
 int main() {
+
+    calc_derivs_ex();
+    big_veg_derivs_ex();
+
+
+
     constexpr output_settings o{};
     std::vector<vec3> pos;
     std::vector<unsigned> inds;
@@ -72,6 +83,7 @@ int main() {
     mesh m(pos, inds, mass, norms, vec3(0.0,0,0), vec3(0,0,0));
     body b(m);
     solve_flow<1000, 128, 128, 128>(&b, o, max_t, Re, wx, wy, wz);
+
 
     return 0;
 }
