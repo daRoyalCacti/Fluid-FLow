@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include "../MyMath/vec3.hpp"
 
 /*
 template <class T>

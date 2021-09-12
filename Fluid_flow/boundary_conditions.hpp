@@ -9,39 +9,47 @@
 #include "../MyMath/boundary.hpp"
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
+#include "../MyMath/grid.hpp"
+#include "create_grids.hpp"
 #include <cmath>
 
 
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
-    grid g;
+    grid global_grid;
     boundary_normals norms;
     mesh_points m_points;
     vel_points v_points;
 
-    big_vec<vec3> vel_bc;
 
 
     triangle_mesh tm;
 
 
     boundary_conditions() = delete;
-    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
+    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const unsigned Wx, const unsigned Wy, const unsigned Wz) : tm(m) {
+        std::cerr << "making entire grid\n";
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
+        std::cerr << "removing inside points\n";
+        remove_inside_boundary_unif(global_grid, tm, norms, m_points, v_points);
 
+        /*
         set_wall_points();
         norms = boundary_normals(no_wall_points());
         create_wall_normals();
 
         //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
-        vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
+        //vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
         update_velocity_wall_BC();
 
         //needs to be called after vel_bc is set because it uses dx, dy, dz from it
         update_mesh_boundary();
+         */
 
     }
 
+    /*
     static unsigned no_wall_points() {
         return 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1);
     }
@@ -68,30 +76,25 @@ struct boundary_conditions {
             }
         }
     }
-
-    /*
-    void enforce_pressure_BC(big_vec<N,M,P,double> &p) {
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                for (unsigned k = 0; k <= P; k++) {
-                    if (bound.is_boundary(i,j,k)) {
-                        p(i,j,k) = p_bc(i,j,k);
-                    }
-
-                }
-            }
-        }
-    }*/
+     */
 
 
-    void DEBUG_write_boundary_points() {
+    void DEBUG_write_boundary_points() const {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
-            constexpr auto k = P/2;
-            for (unsigned i = 0; i <= N; i++) {
-                for (unsigned j = 0; j <= M; j++) {
-                    const auto pos = vel_bc.get_pos(i,j,k);
-                    output << pos.x() << " " << pos.y() << " " << bound.is_boundary(i,j,k) << "\n";
+            auto k = floor(global_grid.no_points_unif.z()/2);
+            for (unsigned i = 0; i < global_grid.no_points_unif.x(); i++) {
+                for (unsigned j = 0; j < global_grid.no_points_unif.y(); j++) {
+                    const auto ind = global_grid.convert_indices_unif( vec3(i,j,k) );
+
+                    //output << global_grid[ind].x() << " " << global_grid[ind].y() << " " << norms.contains(ind) << "\n";
+                    output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                    if (norms.contains(ind)) {
+                        output << 1;
+                    } else {
+                        output << 0;
+                    }
+                    output << "\n";
                 }
             }
         } else {
@@ -101,14 +104,17 @@ struct boundary_conditions {
         output.close();
     }
 
-    void DEBUG_write_normal_vectors() {
+
+    void DEBUG_write_normal_vectors() const {
         std::ofstream output("../DEBUG/normal_vectors.txt");
         if (output.is_open()) {
-            for (unsigned i = 0; i <= N; i++) {
-                for (unsigned j = 0; j <= M; j++) {
-                    output << i * vel_bc.dx << " " << j * vel_bc.dy << " ";
-                    if (norms.contains(i,j,P/2)) {
-                        output << norms.normal(i,j,P/2);
+            auto k = floor(global_grid.no_points_unif.z()/2);
+            for (unsigned i = 0; i < global_grid.no_points_unif.x(); i++) {
+                for (unsigned j = 0; j < global_grid.no_points_unif.y(); j++) {
+                    const auto ind = global_grid.convert_indices_unif( vec3(i,j,k) );
+                    output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                    if (norms.contains(ind)) {
+                        output << norms.normal(ind);
                     } else {
                         output << vec3(0);
                     }
@@ -123,6 +129,7 @@ struct boundary_conditions {
         output.close();
     }
 
+    /*
     void update_pressure_BC(big_vec<N,M,P, double> &p);
     void update_velocity_wall_BC();
 
@@ -133,9 +140,10 @@ private:
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, unsigned j, unsigned k) noexcept;
     void set_matrix_row(unsigned x, unsigned y, unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,  Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, double xi, double yi, double zi);
+    */
 };
 
-
+/*
 void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned  j, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
@@ -275,10 +283,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
     //ray r(vec3{}, vec3(0,0,1));
-    /*std::cerr << "update mesh boundary will soon not work --- spacial coordinates will be wrong\n";
-    const auto dx = vel_bc.dxb;
-    const auto dy = vel_bc.dyb;
-    const auto dz = vel_bc.dzb;*/
+
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             const auto pos = vel_bc.get_pos(i,j,0);
@@ -734,6 +739,6 @@ void boundary_conditions<N,M,P>::set_matrix_row(const unsigned x, const unsigned
     counter++;
 }
 
-
+*/
 
 #endif //CODE_BOUNDARY_CONDITIONS_HPP

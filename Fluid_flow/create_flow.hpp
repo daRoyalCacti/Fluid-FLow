@@ -19,7 +19,7 @@
 //#include "../MyMath/boundary.hpp"
 //#include "flow_env.hpp"
 #include "timing.hpp"
-//#include "boundary_conditions.hpp"
+#include "boundary_conditions.hpp"
 //#include "update_mesh.hpp"
 #include "create_grids.hpp"
 #include "../Rigid_body/body.hpp"
@@ -57,7 +57,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 #ifdef DLOG
     std::cout << "creating global grid\n";
 #endif
-    grid global_grid;
+    /*grid global_grid;
     std::cerr << "making entire grid\n";
     make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
     mesh_points mp;
@@ -65,7 +65,11 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     vel_points vp;
     std::cerr << "removing inside points\n";
     remove_inside_boundary_unif(global_grid, triangle_mesh(&rb->model), bn, mp, vp);
-    std::cerr << "done\n";
+    std::cerr << "done\n";*/
+
+    boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
+    BC.DEBUG_write_boundary_points();
+    BC.DEBUG_write_normal_vectors();
    /*
 
 #ifdef DLOG

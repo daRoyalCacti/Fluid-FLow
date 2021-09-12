@@ -30,9 +30,11 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
     g.r.resize(s);
 
     unsigned counter = 0;
-    for (int i = 0; i < sx; i++) {
+    for (int k = 0; k < sz; k++) {
         for (int j = 0; j < sy; j++) {
-            for (int k = 0; k < sz; k++) {
+            for (int i = 0; i < sx; i++) {
+
+
                 g.x[counter] = i*dx;
                 g.y[counter] = j*dy;
                 g.z[counter] = k*dz;
@@ -124,7 +126,7 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             auto ind_cpy = inds1;
              for (unsigned i = static_cast<unsigned>(inds1[axis]) + 1; i < inds2[axis]; i++) {
                 ind_cpy[axis] = i;
-                inside_indices.insert( g.convert_indices_unif(ind_cpy, no_points) );
+                inside_indices.insert( g.convert_indices_unif(ind_cpy) );
             }
 
             //setting normals

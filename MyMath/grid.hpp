@@ -25,6 +25,8 @@ struct grid {
     vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
 
 
+    vec3 operator[](unsigned i) const noexcept { return { x[i], y[i], z[i] }; }
+
     grid() : dx{}, dy{}, dz{} {};
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_,
          const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
