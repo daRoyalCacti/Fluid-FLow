@@ -6,6 +6,8 @@
 #define CODE_CREATE_GRIDS_HPP
 
 #include "../MyMath/grid.hpp"
+#include "Rigid_body/triangle_mesh.hpp"
+#include "../Rigid_body/ray.hpp"
 #include <vector>
 #include <unordered_set>
 
