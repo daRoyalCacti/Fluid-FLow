@@ -74,39 +74,70 @@ void make_enitre_gid(grid &g, const double Wx, const double Wy, const double Wz,
 
 }
 
+void get_mesh_collision(const triangle_mesh &tm, const grid &g, const ray &r, std::unordered_set<unsigned> &inside_indices, boundary_normals &norms, mesh_points &m_points) noexcept {
+    const auto hits = tm.get_collision_points(r);
+    if (!hits.empty()) { //there was a collision
 
-void remove_inside_boundary(grid &g, const mesh &model, boundary_normals &norms, mesh_points &m_points) {
+        for (auto h = hits.begin(); h != hits.end(); ++(++h)) {
+            auto th = h;
+            const auto col1 = th->second.v1;
+            const auto norm1 = th->second.v2;
+            const auto vel1 = th->second.v3;
+
+            ++th;
+            const auto col2 = th->second.v1;
+            const auto norm2 = th->second.v2;
+            const auto vel2 = th->second.v3;
+
+            const auto inds = g.get_inds(col1, col2);
+
+            //const auto ind1 = g.get_ind(col1);
+            //const auto ind2 = g.get_ind(col2);
+            const auto ind1 = *inds.begin();
+            const auto ind2 = *(--inds.end());
+
+            //setting boundary points
+            const auto begin_it = ++inds.begin();
+            const auto end_it = --inds.end();
+            for (auto i = begin_it; i != end_it; i++) {
+                inside_indices.insert(*i);
+            }
+
+            //setting normals
+            norms.add_point(ind1, norm1);
+            norms.add_point(ind2, norm2);
+
+            m_points.add_point(ind1, col1);
+            m_points.add_point(ind2, col2);
+
+
+        }
+
+    }
+}
+
+void remove_inside_boundary(grid &g, const triangle_mesh &tm, boundary_normals &norms, mesh_points &m_points) {
     std::unordered_set<unsigned> inside_indices;
 
-    for (unsigned i = 0; i <= N; ++i) {
-        for (unsigned j = 0; j <= M; ++j) {
-            const auto pos = vel_bc.get_pos(i,j,0);
-            const auto dx = vel_bc.dx(i,j,0);
-            const auto dy = vel_bc.dy(i,j,0);
-            const ray r(vec3(pos.x() + dx/2, pos.y() + dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_z(r, inside_indices, norms, m_points, i, j);
+    for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
+        for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
+            const ray r(vec3(x+g.dx/2, y+g.dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
+            get_mesh_collision(tm, g, r, inside_indices, norms, m_points);
+        }
+    }
+    for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
+        for (double z = g.mins.z(); z < g.maxs.z(); z += g.dz) {
+            const ray r(vec3(x+g.dx/2, 0, z + g.dz/2), vec3(0,1,0) );
+            get_mesh_collision(tm, g, r, inside_indices, norms, m_points);
+        }
+    }
+    for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
+        for (double z = g.mins.z(); z < g.maxs.z(); z += g.dz) {
+            const ray r(vec3(0, y+g.dy/2, z + g.dz/2), vec3(1,0,0) );
+            get_mesh_collision(tm, g, r, inside_indices, norms, m_points);
         }
     }
 
-    for (unsigned i = 0; i <= N; ++i) {
-        for (unsigned k = 0; k <= P; ++k) {
-            const auto pos = vel_bc.get_pos(i,0,k);
-            const auto dx = vel_bc.dx(i,0,k);
-            const auto dz = vel_bc.dz(i,0,k);
-            const ray r(vec3(pos.x() + dx/2, 0, pos.z() + dz/2), vec3(0,1,0) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_y(r, inside_indices, norms, m_points, i, k);
-        }
-    }
-
-    for (unsigned j = 0; j <= M; ++j) {
-        for (unsigned k = 0; k <= P; ++k) {
-            const auto pos = vel_bc.get_pos(0,j,k);
-            const auto dy = vel_bc.dy(0,j,k);
-            const auto dz = vel_bc.dz(0,j,k);
-            const ray r(vec3(0, pos.y() + dy/2, pos.z() + dz/2), vec3(1,0,0) );//shoot ray through the middle of a grid point
-            set_BC_mesh_1dir_x(r, inside_indices, norms, m_points, j, k);
-        }
-    }
 }
 
 
