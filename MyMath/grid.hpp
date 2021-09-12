@@ -90,6 +90,82 @@ struct grid {
 
     }
 
+
+
+    [[nodiscard]] inline auto get_inds(vec3 p1, vec3 p2) const noexcept {
+        //find the axis to look along
+        unsigned axis1 = 4, axis2, axis3;
+        const std::vector<double>* arr1, *arr2, *arr3;
+        double d1, d2, d3;
+        if (p1.x() != p2.x()) { //ray moving in x direction
+            arr1 = &x;
+            arr2 = &y;
+            arr3 = &z;
+            axis1 = 0;
+            axis2 = 1;
+            axis3 = 2;
+            d1 = dx;
+            d2 = dy;
+            d3 = dz;
+        } else if (p1.y() != p2.y()) {
+            arr1 = &y;
+            arr2 = &x;
+            arr3 = &z;
+            axis1 = 1;
+            axis2 = 0;
+            axis3 = 2;
+            d1 = dy;
+            d2 = dx;
+            d3 = dz;
+        } else if (p1.z() != p2.z()) {
+            arr1 = &z;
+            arr2 = &y;
+            arr3 = &x;
+            axis1 = 2;
+            axis2 = 1;
+            axis3 = 0;
+            d1 = dz;
+            d2 = dy;
+            d3 = dx;
+        }
+#ifndef NDEBUG
+        if (axis1 == 4) {
+            std::cerr << "p1 cannot be equal to p2\n\tp1 = " << p1 << "\tp2 = " << p2 << "\n";
+        }
+        if (p1[axis2] != p2[axis2]) {
+            std::cerr << "p1 and p2 cannot differ along 2 dimensions\n\tp1 = " << p1 << "\tp2 = " << p2 << "\n";
+        }
+        if (p1[axis3] != p2[axis3]) {
+            std::cerr << "p1 and p2 cannot differ along 2 dimensions\n\tp1 = " << p1 << "\tp2 = " << p2 << "\n";
+        }
+#endif
+
+        //ensuring p1 is to the left of p2
+        if (p1[axis1] > p2[axis1]) {
+            auto tmp = p1;
+            p1 = p2;
+            p2 = tmp;
+        }
+
+
+
+        std::vector<unsigned long> ret_vec;
+        for (unsigned long i = 0; i < x.size(); i++) {
+            if ( (*arr3)[i] < p1[axis3] && (*arr3)[i]+d3 > p2[axis3] ) {  //finding the points that lie on the same line as p1 and p2
+                if ( (*arr2)[i] < p1[axis2] && (*arr2)[i]+d2 > p2[axis2] ) { //points that lie between p1 and p2 along axis 2
+                    //the dimension the vectors are changing along
+                    if ( (*arr1)[i]+d1 > p1[axis1] && (*arr1)[i]-d1 < p2[axis1] ) {
+                        ret_vec.push_back(i);
+                    }
+                }
+            }
+
+        }   //end for
+
+        return ret_vec;
+
+    }
+
 };
 
 #endif //CODE_GRID_HPP
