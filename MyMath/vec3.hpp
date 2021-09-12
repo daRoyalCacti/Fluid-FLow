@@ -39,13 +39,6 @@ struct vec3 final {
         return *this;
     }
 
-    //for testing
-    /*vec3 &operator=(const double d) {
-        e[0] = d;
-        e[1] = d;
-        e[2] = d;
-        return *this;
-    }*/
 
 
     vec3 &operator/=(const double t) noexcept {
