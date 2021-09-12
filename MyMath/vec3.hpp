@@ -102,6 +102,10 @@ constexpr vec3 operator / (const vec3 &v, const double t) noexcept {
     return (1/t) * v;
 }
 
+constexpr vec3 operator / (const vec3 &u, const vec3 &v) noexcept {
+    return {u.e[0] / v.e[0], u.e[1] / v.e[1], u.e[2] / v.e[2]};
+}
+
 constexpr double dot(const vec3 &u, const vec3 &v) noexcept {
     return u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2];
 }
