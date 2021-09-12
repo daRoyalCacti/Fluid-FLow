@@ -32,16 +32,15 @@ struct edge_point final {
     edge_point() = default;
 };
 
-
-template <unsigned N, unsigned M, unsigned P>
+/*
 struct boundary_points final {
     std::vector<edge_point> v;
 
-    boundary_points() {
-        v.resize( (N+1)*(M+1)*(P+1) );
+    explicit boundary_points(const unsigned total_size) {
+        v.resize( total_size);
     }
 
-    auto size() const {
+    [[nodiscard]] auto size() const {
         return v.size();
     }
 
@@ -127,10 +126,11 @@ private:
     }
 
 };
+*/
 
-template <unsigned N, unsigned M, unsigned P>
 struct boundary_normals final {
     std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns the normal vector
+    std::unordered_map<unsigned, vec3> v{};     //takes and index and returns the velocity
 
     boundary_normals() = default;
     explicit boundary_normals(size_t num_points) noexcept {
@@ -141,51 +141,27 @@ struct boundary_normals final {
         return m.size();
     }
 
-    void add_point(const unsigned i, const unsigned j, const unsigned k, const vec3& normal) noexcept {
-        m.insert({get_index(i,j,k), normal});
+    void add_point(const unsigned index, const vec3& normal) noexcept {
+        m.insert({index, normal});
     }
 
     void clear() {
         m.clear();
     }
 
-    [[nodiscard]] bool contains(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-        return m.contains(get_index(i,j,k));
+    [[nodiscard]] bool contains(const unsigned index) const noexcept {
+        return m.contains(index);
     }
 
-    [[nodiscard]] vec3 normal(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-        return m.at(get_index(i,j,k));
+    [[nodiscard]] vec3 normal(const unsigned index) const noexcept {
+        return m.at(index);
     }
 
-private:
-    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-#ifndef NDEBUG
-        if (i < 0) {
-        std::cerr << "trying to access i < 0\n";
-    }
-    if (i > N) {
-        std::cerr << "trying to access i > N\n";
-    }
-    if (j < 0) {
-        std::cerr << "trying to access j < 0\n";
-    }
-    if (j > M) {
-        std::cerr << "trying to access j > M\n";
-    }
-    if (k < 0) {
-        std::cerr << "trying to access k < 0\n";
-    }
-    if (k > P) {
-        std::cerr << "trying to access k > P\n";
-    }
-#endif
-        return i + (N+1)*j + (N+1)*(M+1)*k;
-    }
 };
 
-template <unsigned N, unsigned M, unsigned P>
+
 struct mesh_points final {
-    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns the normal vector
+    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns a point on the boundary of a mesh
 
     mesh_points() = default;
     explicit mesh_points(size_t num_points) noexcept {
@@ -196,46 +172,52 @@ struct mesh_points final {
         return m.size();
     }
 
-    void add_point(const unsigned i, const unsigned j, const unsigned k, const vec3& normal) noexcept {
-        m.insert({get_index(i,j,k), normal});
+    void add_point(const unsigned index, const vec3& normal) noexcept {
+        m.insert({index, normal});
     }
 
     void clear() {
         m.clear();
     }
 
-    [[nodiscard]] bool contains(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-        return m.contains(get_index(i,j,k));
+    [[nodiscard]] bool contains(const unsigned index) const noexcept {
+        return m.contains(index);
     }
 
-    [[nodiscard]] vec3 get_point(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-        return m.at(get_index(i,j,k));
+    [[nodiscard]] vec3 get_point(const unsigned index) const noexcept {
+        return m.at(index);
+    }
+};
+
+
+struct vel_points final {
+    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns a point on the velocity of the mehs
+
+    vel_points() = default;
+    explicit vel_points(size_t num_points) noexcept {
+        m.reserve(num_points);
     }
 
-private:
-    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-#ifndef NDEBUG
-        if (i < 0) {
-            std::cerr << "trying to access i < 0\n";
-        }
-        if (i > N) {
-            std::cerr << "trying to access i > N\n";
-        }
-        if (j < 0) {
-            std::cerr << "trying to access j < 0\n";
-        }
-        if (j > M) {
-            std::cerr << "trying to access j > M\n";
-        }
-        if (k < 0) {
-            std::cerr << "trying to access k < 0\n";
-        }
-        if (k > P) {
-            std::cerr << "trying to access k > P\n";
-        }
-#endif
-        return i + (N+1)*j + (N+1)*(M+1)*k;
+    auto size() const {
+        return m.size();
     }
+
+    void add_point(const unsigned index, const vec3& normal) noexcept {
+        m.insert({index, normal});
+    }
+
+    void clear() {
+        m.clear();
+    }
+
+    [[nodiscard]] bool contains(const unsigned index) const noexcept {
+        return m.contains(index);
+    }
+
+    [[nodiscard]] vec3 get_vel(const unsigned index) const noexcept {
+        return m.at(index);
+    }
+
 };
 
 #endif //CODE_BOUNDARY_HPP

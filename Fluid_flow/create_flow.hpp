@@ -12,16 +12,19 @@
 #include <ctime>
 #include <ratio>
 
-#include "make_mats.hpp"
-#include "make_vecs.hpp"
+//#include "make_mats.hpp"
+//#include "make_vecs.hpp"
 
-#include "solver.hpp"
-#include "../MyMath/boundary.hpp"
-#include "flow_env.hpp"
+//#include "solver.hpp"
+//#include "../MyMath/boundary.hpp"
+//#include "flow_env.hpp"
 #include "timing.hpp"
-#include "boundary_conditions.hpp"
-#include "update_mesh.hpp"
+//#include "boundary_conditions.hpp"
+//#include "update_mesh.hpp"
 #include "create_grids.hpp"
+#include "../Rigid_body/body.hpp"
+#include "../Rigid_body/triangle_mesh.hpp"
+#include "../MyMath/boundary.hpp"
 
 #define DLOG    //detailed logging
 
@@ -55,7 +58,15 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     std::cout << "creating global grid\n";
 #endif
     grid global_grid;
-    make_enitre_gid(global_grid, Wx, Wy, Wz, dx, dy, dz);
+    std::cerr << "making entire grid\n";
+    make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
+    mesh_points mp;
+    boundary_normals bn;
+    vel_points vp;
+    std::cerr << "removing inside points\n";
+    remove_inside_boundary_unif(global_grid, triangle_mesh(&rb->model), bn, mp, vp);
+    std::cerr << "done\n";
+   /*
 
 #ifdef DLOG
     std::cout << "setting boundary conditions\n";
@@ -138,9 +149,7 @@ std::cout << "constructing matrices and vectors\n";
     BC.update_pressure_BC(p_c);
     p += p_c;
 
-/*#ifdef DLOG
-    std::cout << "Updating velocity BC\n";
-#endif*/
+
     //setting BC vector
     //BC.update_velocity_BC();
 #ifdef DLOG
@@ -279,6 +288,8 @@ std::cout << "constructing matrices and vectors\n";
         write_vec(v_n, os.final_vel_name.data());
         write_vec(p, os.final_pres_name.data());
     }
+
+     */
 
 
 }

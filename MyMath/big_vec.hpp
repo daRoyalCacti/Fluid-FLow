@@ -14,6 +14,7 @@
 #include "boundary.hpp"
 #include "grid.hpp"
 
+/*
 template <unsigned N, unsigned M, unsigned P, typename T>
 struct big_vec{};
 
@@ -242,7 +243,7 @@ void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) noexcept {
 
     output.close();
 }
-
+*/
 
 
 #endif //CODE_BIG_VEC_HPP

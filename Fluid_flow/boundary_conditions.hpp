@@ -11,16 +11,15 @@
 #include "../Rigid_body/triangle_mesh.hpp"
 #include <cmath>
 
-template <unsigned N, unsigned M, unsigned P>
+
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
-    boundary_points<N,M,P> bound;
-    boundary_normals<N,M,P> norms;
-    boundary_normals<N,M,P> norms_prev;
-    mesh_points<N,M,P> points;
+    grid g;
+    boundary_normals norms;
+    mesh_points m_points;
+    vel_points v_points;
 
-    big_vec<N,M,P,vec3> vel_bc;
-    //big_vec<N,M,P,double> p_bc;
+    big_vec<vec3> vel_bc;
 
 
     triangle_mesh tm;
@@ -30,7 +29,7 @@ struct boundary_conditions {
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
 
         set_wall_points();
-        norms = boundary_normals<N,M,P>(no_wall_points());
+        norms = boundary_normals(no_wall_points());
         create_wall_normals();
 
         //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
@@ -137,8 +136,7 @@ private:
 };
 
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned j, const unsigned k) noexcept {
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned  j, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
 
@@ -180,7 +178,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
 }
 
 
-template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
@@ -221,7 +218,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
 }
 
 
-template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned j) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
@@ -261,7 +257,7 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
     }
 }
 
-template <unsigned N, unsigned M, unsigned P>
+
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
     //vector over c array so all elements initialised to 0 = false
     norms_prev = norms;

@@ -7,6 +7,7 @@
 
 #include "ray.hpp"
 #include "triangle.hpp"
+#include "mesh.hpp"
 #include <map>
 #include <algorithm>
 

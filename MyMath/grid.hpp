@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <limits>
+#include "../MyMath/vec3.hpp"
 
 //stores the neighbours of a grid point
 // -1 if no neighbour
@@ -47,7 +48,7 @@ struct grid {
 #endif
     }
 
-    [[nodiscard]] constexpr inline auto get_ind(const vec3& p) const noexcept {
+    [[nodiscard]] inline auto get_ind(const vec3& p) const noexcept {
         //finds the index of the grid that p is in
         constexpr double inf = std::numeric_limits<double>::max();
         double min_x = inf, min_y = inf, min_z = inf;
