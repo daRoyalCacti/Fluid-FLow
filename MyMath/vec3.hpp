@@ -159,4 +159,8 @@ constexpr vec3 sqrt(const vec3& v) noexcept {
     return { v.x()*v.x(), v.y()*v.y(), v.z()*v.z()};
 }
 
+constexpr vec3 round(const vec3 &v) noexcept {
+    return {round(v.x()), round(v.y()), round(v.z())};
+}
+
 #endif //CODE_VEC3_HPP
