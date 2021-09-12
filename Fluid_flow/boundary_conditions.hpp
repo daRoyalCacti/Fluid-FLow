@@ -82,21 +82,18 @@ struct boundary_conditions {
     void DEBUG_write_boundary_points() const {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
-            auto k = floor(global_grid.no_points_unif.z()/2);
-            for (unsigned i = 0; i < global_grid.no_points_unif.x(); i++) {
-                for (unsigned j = 0; j < global_grid.no_points_unif.y(); j++) {
-                    const auto ind = global_grid.convert_indices_unif( vec3(i,j,k) );
-
-                    //output << global_grid[ind].x() << " " << global_grid[ind].y() << " " << norms.contains(ind) << "\n";
-                    output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
-                    if (norms.contains(ind)) {
-                        output << 1;
-                    } else {
-                        output << 0;
-                    }
-                    output << "\n";
+            const auto inds = global_grid.get_middle_inds();
+            for (const auto ind : inds) {
+                output << global_grid[ind].x() << " " << global_grid[ind].y() << " " << norms.contains(ind) << "\n";
+                /*output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                if (norms.contains(ind)) {
+                    output << 1;
+                } else {
+                    output << 0;
                 }
+                output << "\n";*/
             }
+
         } else {
             std::cerr << "failed to open file\n";
         }
@@ -108,20 +105,18 @@ struct boundary_conditions {
     void DEBUG_write_normal_vectors() const {
         std::ofstream output("../DEBUG/normal_vectors.txt");
         if (output.is_open()) {
-            auto k = floor(global_grid.no_points_unif.z()/2);
-            for (unsigned i = 0; i < global_grid.no_points_unif.x(); i++) {
-                for (unsigned j = 0; j < global_grid.no_points_unif.y(); j++) {
-                    const auto ind = global_grid.convert_indices_unif( vec3(i,j,k) );
-                    output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
-                    if (norms.contains(ind)) {
-                        output << norms.normal(ind);
-                    } else {
-                        output << vec3(0);
-                    }
-                    output << "\n";
+            const auto inds = global_grid.get_middle_inds();
+            for (const auto ind : inds) {
+                output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                if (norms.contains(ind)) {
+                    output << norms.normal(ind);
+                } else {
+                    output << vec3(0);
                 }
-
+                output << "\n";
             }
+
+
         } else {
             std::cerr << "failed to open file\n";
         }

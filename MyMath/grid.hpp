@@ -170,6 +170,21 @@ struct grid {
 
     }
 
+    [[nodiscard]] inline auto get_middle_inds() const noexcept {
+        const double middle_z = ( maxs.z() + mins.z() ) /2;
+
+        std::vector<unsigned long> ret_vec;
+        ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
+        for (unsigned long i = 0; i < z.size(); i++) {
+            if ( z[i] < middle_z && z[i]+dz > middle_z ) {
+                ret_vec.push_back(i);
+            }
+        }
+
+        return ret_vec;
+
+    }
+
     void create_no_points_unif() {
         no_points_unif = round( (maxs - mins) / vec3(dx, dy, dz) );
     }
