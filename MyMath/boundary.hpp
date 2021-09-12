@@ -131,7 +131,6 @@ private:
 
 struct boundary_normals final {
     std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns the normal vector
-    std::unordered_map<unsigned, vec3> v{};     //takes and index and returns the velocity
 
     boundary_normals() = default;
     explicit boundary_normals(size_t num_points) noexcept {

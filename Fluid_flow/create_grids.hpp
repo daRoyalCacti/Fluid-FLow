@@ -170,6 +170,75 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
         }
     }
 
+    //removing points
+    //======================================================
+    std::vector<double> x, y, z;
+    x.resize(g.x.size());
+    y.resize(g.y.size());
+    z.resize(g.z.size());
+    std::vector<grid_relation> r;
+    r.resize(g.r.size());
+    std::map<unsigned, int> old_new;
+
+    unsigned index_counter = 0;
+    for (unsigned i = 0; i < g.x.size(); i++) {
+        if (inside_indices.contains(i)) {
+            old_new.insert({i, -1});
+        } else {
+            //std::cerr << index_counter << "\n";
+            x[index_counter] = g.x[i];
+            y[index_counter] = g.y[i];
+            z[index_counter] = g.z[i];
+            r[index_counter] = g.r[i];
+
+            if (inside_indices.contains(r[index_counter].left)) { r[index_counter].left = -1; }
+            if (inside_indices.contains(r[index_counter].right)) { r[index_counter].right = -1; }
+            if (inside_indices.contains(r[index_counter].down)) { r[index_counter].down = -1; }
+            if (inside_indices.contains(r[index_counter].up)) { r[index_counter].up = -1; }
+            if (inside_indices.contains(r[index_counter].front)) { r[index_counter].front = -1; }
+            if (inside_indices.contains(r[index_counter].back)) { r[index_counter].back -1; }
+            old_new.insert({i, index_counter});
+            index_counter++;
+        }
+
+    }
+    x.shrink_to_fit();
+    y.shrink_to_fit();
+    z.shrink_to_fit();
+    r.shrink_to_fit();
+    g.x = std::move(x);
+    g.y = std::move(y);
+    g.z = std::move(z);
+    g.r = std::move(r);
+
+    boundary_normals norms_c(norms.size());
+    std::cerr << "removing norms\n";
+    for (const auto & n : norms.m) {
+        norms_c.add_point( old_new.at(n.first), n.second  );
+        //norms_c.add_point( old_new[n.first], n.second  );
+    }
+    norms = std::move(norms_c);
+
+    mesh_points m_points_c(m_points.size());
+    std::cerr << "removing points\n";
+    for (const auto & n : m_points.m) {
+        m_points_c.add_point( old_new.at(n.first), n.second  );
+        //m_points_c.add_point( old_new[n.first], n.second  );
+    }
+    m_points = std::move(m_points_c);
+
+    vel_points v_points_c(v_points.size());
+    std::cerr << "removing vels\n";
+    for (const auto & n : v_points.m) {
+        v_points_c.add_point( old_new.at(n.first), n.second  );
+        //v_points_c.add_point( old_new[n.first], n.second  );
+    }
+    v_points = std::move(v_points_c);
+
+    //boundary_normals norms_c(norms.size());
+    //mesh_points m_points_c(m_points.size());
+    //vel_points v_points_c(v_points.size());
+
     //actually need to remove the points !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 }
