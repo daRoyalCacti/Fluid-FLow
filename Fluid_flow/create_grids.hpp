@@ -80,9 +80,7 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
 
 }
 
-unsigned long convert_indices_unif(const vec3 &inds, const vec3 &no_points) {
-    return static_cast<unsigned long>( inds.x() + inds.y()*no_points.x() + inds.z()*no_points.x()*no_points.y() );
-}
+
 
 void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &r, std::unordered_set<unsigned> &inside_indices,
                              boundary_normals &norms, mesh_points &m_points, vel_points &v_points) noexcept {
@@ -111,8 +109,8 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
 
             const vec3 no_points = round( (g.maxs - g.mins) / vec3(g.dx, g.dy, g.dz) );
 
-            const auto ind1 = convert_indices_unif(inds1, no_points);
-            const auto ind2 = convert_indices_unif(inds2, no_points);
+            const auto ind1 = g.convert_indices_unif(inds1, no_points);
+            const auto ind2 = g.convert_indices_unif(inds2, no_points);
 
             unsigned axis;
             if (r.dir.x() == 1) {
@@ -127,7 +125,7 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             auto ind_cpy = inds1;
              for (unsigned i = static_cast<unsigned>(inds1[axis]) + 1; i < inds2[axis]; i++) {
                 ind_cpy[axis] = i;
-                inside_indices.insert( convert_indices_unif(ind_cpy, no_points) );
+                inside_indices.insert( g.convert_indices_unif(ind_cpy, no_points) );
             }
 
             //setting normals
@@ -168,6 +166,8 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
             get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points);
         }
     }
+
+    //actually need to remove the points !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 }
 

@@ -167,6 +167,10 @@ struct grid {
 
     }
 
+    unsigned long convert_indices_unif(const vec3 &inds, const vec3 &no_points) const {
+        return static_cast<unsigned long>( inds.x() + inds.y()*no_points.x() + inds.z()*no_points.x()*no_points.y() );
+    }
+
 };
 
 #endif //CODE_GRID_HPP
