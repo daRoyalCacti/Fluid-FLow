@@ -191,7 +191,7 @@ struct mesh_points final {
 
 
 struct vel_points final {
-    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns a point on the velocity of the mehs
+    std::unordered_map<unsigned, vec3> m{};   //takes a square index and returns a point on the velocity of the mesh
 
     vel_points() = default;
     explicit vel_points(size_t num_points) noexcept {

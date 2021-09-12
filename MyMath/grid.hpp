@@ -189,7 +189,7 @@ struct grid {
         no_points_unif = round( (maxs - mins) / vec3(dx, dy, dz) );
     }
 
-    unsigned long convert_indices_unif(const vec3 &inds) const {
+    auto convert_indices_unif(const vec3 &inds) const {
         return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
     }
 

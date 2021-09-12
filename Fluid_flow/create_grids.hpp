@@ -179,8 +179,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     std::unordered_set<unsigned> inside_indices;
     std::unordered_set<unsigned> boundary_indices;
 
-    g.create_no_points_unif();
-
     /*std::cerr << "rays from the z direction\n";
     for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
         for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
@@ -220,11 +218,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
         if (inside_indices.contains(i) && !boundary_indices.contains(i)) {
             old_new.insert({i, -1});
         } else {
-            //std::cerr << index_counter << "\n";
-            /*x[index_counter] = g.x[i];
-            y[index_counter] = g.y[i];
-            z[index_counter] = g.z[i];
-            r[index_counter] = g.r[i];*/
             x.push_back(g.x[i]);
             y.push_back(g.y[i]);
             z.push_back(g.z[i]);
@@ -246,61 +239,57 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     z.shrink_to_fit();
     r.shrink_to_fit();
 
-    //std::cerr << g.x.size() << "\n";
 
     g.x = std::move(x);
     g.y = std::move(y);
     g.z = std::move(z);
     g.r = std::move(r);
 
-    //std::cerr << g.x.size() << "\n";
 
     boundary_normals norms_c(norms.size());
     std::cerr << "removing norms\n";
     for (const auto & n : norms.m) {
-        norms_c.add_point( old_new.at(n.first), n.second  );
+
 #ifndef NDEBUG
+        norms_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
             std::cerr << "normal point lies inside mesh\n";
-        } else {
-            //std::cerr << "normal point not inside mesh\n";
         }
+#else
+        norms_c.add_point( old_new[n.first], n.second  );
 #endif
-        //norms_c.add_point( old_new[n.first], n.second  );
     }
     norms = std::move(norms_c);
 
     mesh_points m_points_c(m_points.size());
     std::cerr << "removing points\n";
     for (const auto & n : m_points.m) {
-        m_points_c.add_point( old_new.at(n.first), n.second  );
 #ifndef NDEBUG
+        m_points_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
-            //std::cerr << "normal point lies inside mesh\n";
+            std::cerr << "normal point lies inside mesh\n";
         }
+#else
+        m_points_c.add_point( old_new[n.first], n.second  );
 #endif
-        //m_points_c.add_point( old_new[n.first], n.second  );
+
     }
     m_points = std::move(m_points_c);
 
     vel_points v_points_c(v_points.size());
     std::cerr << "removing vels\n";
     for (const auto & n : v_points.m) {
-        v_points_c.add_point( old_new.at(n.first), n.second  );
+
 #ifndef NDEBUG
+        v_points_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
-            //std::cerr << "normal point lies inside mesh\n";
+            std::cerr << "normal point lies inside mesh\n";
         }
+#else
+        v_points_c.add_point( old_new[n.first], n.second  );
 #endif
-        //v_points_c.add_point( old_new[n.first], n.second  );
     }
     v_points = std::move(v_points_c);
-
-    //boundary_normals norms_c(norms.size());
-    //mesh_points m_points_c(m_points.size());
-    //vel_points v_points_c(v_points.size());
-
-    //actually need to remove the points !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 }
 

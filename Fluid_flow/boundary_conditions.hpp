@@ -30,29 +30,40 @@ struct boundary_conditions {
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const unsigned Wx, const unsigned Wy, const unsigned Wz) : tm(m) {
         std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
-        std::cerr << "removing inside points\n";
-        remove_inside_boundary_unif(global_grid, tm, norms, m_points, v_points);
+        global_grid.create_no_points_unif();
 
-        /*
-        set_wall_points();
+        std::cerr << "setting boundary normals\n";
+        //set_wall_points();
         norms = boundary_normals(no_wall_points());
+        std::cerr << "creating wall normals\n";
         create_wall_normals();
+        std::cerr << "updating velocities at wall\n";
+        update_velocity_wall_BC();
 
         //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         //vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
-        update_velocity_wall_BC();
+
+
+        std::cerr << "removing inside points\n";
+        remove_inside_boundary_unif(global_grid, tm, norms, m_points, v_points);
 
         //needs to be called after vel_bc is set because it uses dx, dy, dz from it
+        /*
         update_mesh_boundary();
          */
 
     }
 
-    /*
-    static unsigned no_wall_points() {
+
+    unsigned no_wall_points() const {
+        const auto dims = global_grid.no_points_unif;
+        const auto N = static_cast<unsigned>(dims.x()-1);
+        const auto M = static_cast<unsigned>(dims.y()-1);
+        const auto P = static_cast<unsigned>(dims.z()-1);
         return 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1);
     }
+    /*
 
     void update_mesh_boundary();
 
@@ -85,13 +96,6 @@ struct boundary_conditions {
             const auto inds = global_grid.get_middle_inds();
             for (const auto ind : inds) {
                 output << global_grid[ind].x() << " " << global_grid[ind].y() << " " << norms.contains(ind) << "\n";
-                /*output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
-                if (norms.contains(ind)) {
-                    output << 1;
-                } else {
-                    output << 0;
-                }
-                output << "\n";*/
             }
 
         } else {
@@ -126,11 +130,13 @@ struct boundary_conditions {
 
     /*
     void update_pressure_BC(big_vec<N,M,P, double> &p);
+     */
     void update_velocity_wall_BC();
 
 private:
     void set_wall_points();
     void create_wall_normals();
+    /*
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned j) noexcept;
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, unsigned j, unsigned k) noexcept;
@@ -531,58 +537,69 @@ void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
         }
     }
 }
+*/
 
+void boundary_conditions::update_velocity_wall_BC()  {
+    const auto dims = global_grid.no_points_unif;
+    const auto N = static_cast<unsigned>(dims.x()-1);
+    const auto M = static_cast<unsigned>(dims.y()-1);
+    const auto P = static_cast<unsigned>(dims.z()-1);
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_velocity_wall_BC()  {
     //setting the walls
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
-            vel_bc.add_elm(i,j,0, 0,0,0);
-            vel_bc.add_elm(i,j,P, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,j,0) ), vec3(0) );
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,j,P) ), vec3(0) );
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
-            vel_bc.add_elm(0,j,k, 0,0,0);
-            vel_bc.add_elm(N,j,k, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(0,j,k) ), vec3(0) );
+            v_points.add_point(global_grid.convert_indices_unif(vec3(N,j,k) ), vec3(0) );
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
 #ifdef MOVING_WALL
-            vel_bc.add_elm(i, 0, k, 1, 0, 0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(1,0,0) );
 #else
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0) );
             vel_bc.add_elm(i, 0, k, 0, 0, 0);
 #endif
-            vel_bc.add_elm(i,M,k, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0) );
         }
     }
 
 }
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::create_wall_normals() {
+
+void boundary_conditions::create_wall_normals() {
+    const auto dims = global_grid.no_points_unif;
+    const auto N = static_cast<unsigned>(dims.x()-1);
+    const auto M = static_cast<unsigned>(dims.y()-1);
+    const auto P = static_cast<unsigned>(dims.z()-1);
+
+
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(i,0,k, vec3(0,1,0));
-            norms.add_point(i,M,k, vec3(0,-1,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0,1,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0,-1,0));
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
-            norms.add_point(i,j,0, vec3(0,0,1));
-            norms.add_point(i,j,P, vec3(0,0,-1));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,0) ), vec3(0,0,1));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,P) ), vec3(0,0,-1));
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(0,j,k,vec3(1,0,0));
-            norms.add_point(N,j,k,vec3(-1,0,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(0,j,k) ),vec3(1,0,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(N,j,k) ),vec3(-1,0,0));
         }
     }
 }
-
+/*
 //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
 // uses linear interpolation to update points that were previously inside a boundary
 // would be quite simple to update to quadratic interpolation
