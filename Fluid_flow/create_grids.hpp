@@ -107,10 +107,9 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const auto inds1 = vec3( floor(col1.x()/g.dx), floor(col1.y()/g.dy),floor(col1.z()/g.dz) );
             const auto inds2 = vec3( floor(col2.x()/g.dx), floor(col2.y()/g.dy),floor(col2.z()/g.dz) );
 
-            const vec3 no_points = round( (g.maxs - g.mins) / vec3(g.dx, g.dy, g.dz) );
 
-            const auto ind1 = g.convert_indices_unif(inds1, no_points);
-            const auto ind2 = g.convert_indices_unif(inds2, no_points);
+            const auto ind1 = g.convert_indices_unif(inds1);
+            const auto ind2 = g.convert_indices_unif(inds2);
 
             unsigned axis;
             if (r.dir.x() == 1) {
@@ -147,6 +146,8 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
 //moves points inside boundary on a boring grid
 void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_normals &norms, mesh_points &m_points, vel_points &v_points) {
     std::unordered_set<unsigned> inside_indices;
+
+    g.create_no_points_unif();
 
     for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
         for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {

@@ -22,6 +22,7 @@ struct grid {
     double dx, dy, dz;
     std::vector<grid_relation> r{};
     vec3 mins, maxs;    //min = (minx, miny, minz)
+    vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
 
 
     grid() : dx{}, dy{}, dz{} {};
@@ -167,8 +168,12 @@ struct grid {
 
     }
 
-    unsigned long convert_indices_unif(const vec3 &inds, const vec3 &no_points) const {
-        return static_cast<unsigned long>( inds.x() + inds.y()*no_points.x() + inds.z()*no_points.x()*no_points.y() );
+    void create_no_points_unif() {
+        no_points_unif = round( (maxs - mins) / vec3(dx, dy, dz) );
+    }
+
+    unsigned long convert_indices_unif(const vec3 &inds) const {
+        return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
     }
 
 };
