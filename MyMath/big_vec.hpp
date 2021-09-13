@@ -13,6 +13,7 @@
 #include "finite_difference.hpp"
 #include "boundary.hpp"
 #include "grid.hpp"
+#include "../Fluid_flow/boundary_conditions.hpp"
 
 template <typename T>
 struct big_vec {
@@ -163,23 +164,16 @@ struct big_vec_d final : public big_vec<double> {
 
 
 struct big_vec_v final : public big_vec<vec3> {
-    Eigen::Matrix<double, Eigen::Dynamic, 1> xv, yv, zv;
+    big_vec_d xv, yv, zv;   //needed because these are to be passed into derivative functions
 
 
     big_vec_v() : xv{}, yv{}, zv{}, big_vec() {}
-    explicit big_vec_v(const boundary_conditions &b) noexcept : big_vec(b) {
-        xv.resize( static_cast<long>(g->size()) );
-        yv.resize( static_cast<long>(g->size()) );
-        zv.resize( static_cast<long>(g->size()) );
-        clear();    //ensuring nothing weird happens
-    }
+    explicit big_vec_v(const boundary_conditions &b) noexcept : big_vec(b), xv(b), yv(b), zv(b) {}
 
     void clear() override {
-        for (unsigned i = 0; i < size(); i++) {
-            xv(i) = 0;
-            yv(i) = 0;
-            zv(i) = 0;
-        }
+        xv.clear();
+        yv.clear();
+        zv.clear();
     }
 
     unsigned long size() override {
@@ -227,7 +221,7 @@ struct big_vec_v final : public big_vec<vec3> {
             }
         }
 
-        return {xv[curr_ind], yv[curr_ind], zv[curr_ind]};
+        return {xv.v[curr_ind], yv.v[curr_ind], zv.v[curr_ind]};
     }
 
     //not ideal, should make it so () can return a reference
@@ -242,7 +236,7 @@ struct big_vec_v final : public big_vec<vec3> {
     }
 
     [[nodiscard]] vec3 operator()(const unsigned ind) const noexcept override {
-        return vec3(xv[ind], yv[ind], zv[ind]);
+        return {xv.v[ind], yv.v[ind], zv.v[ind]};
     }
 
 };

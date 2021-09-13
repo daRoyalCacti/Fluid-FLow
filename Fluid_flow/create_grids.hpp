@@ -12,13 +12,13 @@
 #include <vector>
 #include <unordered_set>
 
-void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz, const double dx, const double dy, const double dz) {
+void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz, const double dx, const double dy, const double dz, const double minx = 0, const double miny = 0, const double minz = 0) {
     const auto sx = static_cast<unsigned long>(Wx/dx);
     const auto sy = static_cast<unsigned long>(Wy/dy);
     const auto sz = static_cast<unsigned long>(Wz/dz);
 
-    g.mins = {0,0,0};
-    g.maxs = {Wx, Wy, Wz};
+    g.mins = {minx,miny,minz};
+    g.maxs = {minx+Wx, miny+Wy, minz+Wz};
     g.dx = dx;
     g.dy = dy;
     g.dz = dz;
@@ -35,9 +35,9 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
             for (int i = 0; i < sx; i++) {
 
 
-                g.x[counter] = i*dx;
-                g.y[counter] = j*dy;
-                g.z[counter] = k*dz;
+                g.x[counter] = minx + i*dx;
+                g.y[counter] = miny + j*dy;
+                g.z[counter] = minz + k*dz;
 
                 int left, right, up, down, front, back;
                 if (i != 0) {
