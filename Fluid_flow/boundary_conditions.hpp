@@ -27,7 +27,7 @@ struct boundary_conditions {
 
 
     boundary_conditions() = delete;
-    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const unsigned Wx, const unsigned Wy, const unsigned Wz) : tm(m) {
+    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz) : tm(m) {
         std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
         global_grid.create_no_points_unif();
