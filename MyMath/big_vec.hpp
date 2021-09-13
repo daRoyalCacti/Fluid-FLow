@@ -63,25 +63,25 @@ struct big_vec {
     }
 
 
-    [[nodiscard]] virtual constexpr inline T move(const unsigned ind, const int x, const int y, const int z) const noexcept {
+    [[nodiscard]] virtual inline T move(const unsigned ind, const int x, const int y, const int z) const noexcept {
 #ifndef NDEBUG
         std::cerr << "virtual move function of big_vec called. This should never happen\n";
 #endif
         return T{};
     }
 
-    [[nodiscard]] virtual double& operator()(const unsigned ind) noexcept {
+    [[nodiscard]] virtual T operator()(const unsigned ind) const noexcept {
 #ifndef NDEBUG
         std::cerr << "virtual () overload of big_vec called. This should never happen\n";
 #endif
-        double a = 1;
+        T a{};
         return a;
     }
-    [[nodiscard]] virtual const double& operator()(const unsigned ind) const noexcept {
+    [[nodiscard]] virtual T& operator()(const unsigned ind) noexcept {
 #ifndef NDEBUG
         std::cerr << "virtual () overload of big_vec called. This should never happen\n";
 #endif
-        double a = 1;
+        T a{};
         return a;
     }
 
@@ -94,10 +94,8 @@ struct big_vec_d final : public big_vec<double> {
 
     big_vec_d() : v{}, big_vec() {  }
     explicit big_vec_d(const boundary_conditions &b) noexcept  : big_vec(b) {
-        v.resize( g->size() );
-        for (unsigned i = 0; i < v.size(); i++) {
-            v(i) = double{};   //ensuring nothing strange
-        }
+        v.resize( static_cast<long>(g->size()) );
+        clear(); //ensuring nothing weird happens
     }
 
     big_vec_d &operator+=(const big_vec_d &other) {
@@ -123,7 +121,7 @@ struct big_vec_d final : public big_vec<double> {
 
 
 
-    [[nodiscard]] constexpr inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
+    [[nodiscard]] inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
         auto curr_ind = ind;
 
         if (x > 0) {
@@ -157,40 +155,39 @@ struct big_vec_d final : public big_vec<double> {
         return v[curr_ind];
     }
 
-    [[nodiscard]] double& operator()(const unsigned ind) noexcept { return v(ind); }
-    [[nodiscard]] const double& operator()(const unsigned ind) const noexcept { return v(ind); }
+    [[nodiscard]] double& operator()(const unsigned ind) noexcept override { return v(ind); }
+    [[nodiscard]] double operator()(const unsigned ind) const noexcept override { return v(ind); }
 };
 
 
 
-/*
 
-struct big_vec_v final : public big_vec {
-    big_vec<double> xv, yv, zv;
+struct big_vec_v final : public big_vec<vec3> {
+    Eigen::Matrix<double, Eigen::Dynamic, 1> xv, yv, zv;
 
 
-    big_vec() : dxb{}, dyb{}, dzb{}, xv{}, yv{}, zv{} {}
-    big_vec(const double dx_, const double dy_, const double dz_, const boundary_points<N,M,P>* const b_) noexcept : dxb(dx_), dyb(dy_), dzb(dz_),
-        xv(dx_, dy_, dz_, b_),
-        yv(dx_, dy_, dz_, b_),
-        zv(dx_, dy_, dz_, b_) {}
-
-    [[maybe_unused]] big_vec(const big_vec<N, M, P, vec3>& v) noexcept : dxb(v.dx), dyb(v.dy), dzb(v.dz) {
-        xv.v = v.xv.v;
-        yv.v = v.yv.v;
-        zv.v = v.zv.v;
+    big_vec_v() : xv{}, yv{}, zv{}, big_vec() {}
+    explicit big_vec_v(const boundary_conditions &b) noexcept : big_vec(b) {
+        xv.resize( static_cast<long>(g->size()) );
+        yv.resize( static_cast<long>(g->size()) );
+        zv.resize( static_cast<long>(g->size()) );
+        clear();    //ensuring nothing weird happens
     }
 
-    void clear() {
-        xv.clear();
-        yv.clear();
-        zv.clear();
+    void clear() override {
+        for (unsigned i = 0; i < size(); i++) {
+            xv(i) = 0;
+            yv(i) = 0;
+            zv(i) = 0;
+        }
     }
 
-    big_vec& operator=(const big_vec<N, M, P, vec3>& v) noexcept {
-        dxb = v.dxb;
-        dyb = v.dyb;
-        dzb = v.dzb;
+    unsigned long size() override {
+        return xv.size();
+    }
+
+    big_vec_v& operator=(const big_vec_v& v) noexcept {
+        g = v.g;
 
         xv = v.xv;
         yv = v.yv;
@@ -198,83 +195,61 @@ struct big_vec_v final : public big_vec {
         return *this;
     }
 
-    [[nodiscard]] constexpr inline bool has_left(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_left(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_right(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_right(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_down(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_down(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_up(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_up(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_front(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_front(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_back(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_back(i,j,k);}
 
+    [[nodiscard]] inline vec3 move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
+        auto curr_ind = ind;
 
-    [[nodiscard]] constexpr inline bool has_2left(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2left(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_2right(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2right(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_2down(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2down(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_2up(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2up(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_2front(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2front(i,j,k);}
-    [[nodiscard]] constexpr inline bool has_2back(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.has_2back(i,j,k);}
+        if (x > 0) {
+            for (unsigned i = 0; i < x; i++) {
+                curr_ind = g->r[curr_ind].left;
+            }
+        } else {
+            for (unsigned i = -x; i < 0; i++) {
+                curr_ind = g->r[curr_ind].right;
+            }
+        }
+        if (y > 0) {
+            for (unsigned j = 0; j < y; j++) {
+                curr_ind = g->r[curr_ind].up;
+            }
+        } else {
+            for (unsigned j = -y; j < 0; j++) {
+                curr_ind = g->r[curr_ind].down;
+            }
+        }
+        if (z > 0) {
+            for (unsigned k = 0; k < z; k++) {
+                curr_ind = g->r[curr_ind].front;
+            }
+        } else {
+            for (unsigned k = -z; k < 0; k++) {
+                curr_ind = g->r[curr_ind].back;
+            }
+        }
 
-    [[nodiscard]] constexpr inline vec3 move(const unsigned i, const unsigned j, const unsigned k, const int x, const int y, const int z) const noexcept {
-        return vec3(xv.move(i,j,k,x,y,z), yv.move(i,j,k,x,y,z),zv.move(i,j,k,x,y,z));
+        return {xv[curr_ind], yv[curr_ind], zv[curr_ind]};
     }
-
-    [[nodiscard]] constexpr inline double dx(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dx(i,j,k);}
-    [[nodiscard]] constexpr inline double dy(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dy(i,j,k);}
-    [[nodiscard]] constexpr inline double dz(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.dz(i,j,k);}
-    [[nodiscard]] constexpr inline vec3 get_pos(const unsigned i, const unsigned j, const unsigned k) const noexcept {return xv.get_pos(i,j,k);}
-    [[nodiscard]] constexpr inline vec3 get_inds(const vec3& v) const noexcept {return xv.get_inds(v);}
-
-    [[nodiscard]] constexpr inline bool is_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_boundary(i,j,k); }
-    [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned i, const unsigned j, const unsigned k) const noexcept { return xv.is_inside_boundary(i,j,k); }
 
     //not ideal, should make it so () can return a reference
-    void add_elm(const unsigned i, const unsigned j, const unsigned k, const vec3 elm) noexcept {
-        xv(i,j,k) = elm.x();
-        yv(i,j,k) = elm.y();
-        zv(i,j,k) = elm.z();
+    auto add_elm(const unsigned ind, const vec3 &elm) noexcept {
+        return add_elm(ind, elm.x(), elm.y(), elm.z());
     }
     //not ideal, should make it so () can return a reference
-    void add_elm(const unsigned i, const unsigned j, const unsigned k, const double ex, const double ey, const double ez) noexcept {
-        xv(i,j,k) = ex;
-        yv(i,j,k) = ey;
-        zv(i,j,k) = ez;
+    void add_elm(const unsigned ind, const double ex, const double ey, const double ez) noexcept {
+        xv(ind) = ex;
+        yv(ind) = ey;
+        zv(ind) = ez;
     }
 
-    [[nodiscard]] vec3 operator()(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-        const auto in = get_index(i,j,k);
-        return vec3(xv.v(in), yv.v(in), zv.v(in));
-    } //{ return v( get_index(i,j,k) ); }
-
-
-private:
-    double dxb, dyb, dzb;
-    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-#ifndef NDEBUG
-        if (i < 0) {
-            std::cerr << "trying to access i < 0\n";
-        }
-        if (i > N) {
-            std::cerr << "trying to access i > N\n";
-        }
-        if (j < 0) {
-            std::cerr << "trying to access j < 0\n";
-        }
-        if (j > M) {
-            std::cerr << "trying to access j > M\n";
-        }
-        if (k < 0) {
-            std::cerr << "trying to access k < 0\n";
-        }
-        if (k > P) {
-            std::cerr << "trying to access k > P\n";
-        }
-#endif
-        return i + (N+1)*j + (N+1)*(M+1)*k;
+    [[nodiscard]] vec3 operator()(const unsigned ind) const noexcept override {
+        return vec3(xv[ind], yv[ind], zv[ind]);
     }
+
 };
 
 
 
-
+/*
 template<unsigned N, unsigned M, unsigned P, typename T>
 void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) noexcept {
     std::ofstream output(file_loc);

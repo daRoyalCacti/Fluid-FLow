@@ -22,6 +22,7 @@ public:
  */
 
 //only have to set those that are false
+/*
 struct edge_point final {
     bool has_left = true;
     bool has_right = true;
@@ -33,7 +34,7 @@ struct edge_point final {
     edge_point() = default;
 };
 
-/*
+
 struct boundary_points final {
     std::vector<edge_point> v;
 

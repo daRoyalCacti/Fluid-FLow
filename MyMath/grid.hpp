@@ -198,46 +198,46 @@ struct grid {
     }
 
 
-    [[nodiscard]] constexpr inline bool has_left(const unsigned ind) const noexcept {return r[ind].left != -1;} //returns true if it has a left
-    [[nodiscard]] constexpr inline bool has_right(const unsigned ind) const noexcept {return r[ind].right != -1;}
-    [[nodiscard]] constexpr inline bool has_down(const unsigned ind) const noexcept {return r[ind].down != -1;}
-    [[nodiscard]] constexpr inline bool has_up(const unsigned ind) const noexcept {return r[ind].up != -1;}
-    [[nodiscard]] constexpr inline bool has_front(const unsigned ind) const noexcept {return r[ind].front != -1;}
-    [[nodiscard]] constexpr inline bool has_back(const unsigned ind) const noexcept {return r[ind].back != -1;}
+    [[nodiscard]] inline bool has_left(const unsigned ind) const noexcept {return r[ind].left != -1;} //returns true if it has a left
+    [[nodiscard]] inline bool has_right(const unsigned ind) const noexcept {return r[ind].right != -1;}
+    [[nodiscard]] inline bool has_down(const unsigned ind) const noexcept {return r[ind].down != -1;}
+    [[nodiscard]] inline bool has_up(const unsigned ind) const noexcept {return r[ind].up != -1;}
+    [[nodiscard]] inline bool has_front(const unsigned ind) const noexcept {return r[ind].front != -1;}
+    [[nodiscard]] inline bool has_back(const unsigned ind) const noexcept {return r[ind].back != -1;}
 
-    [[nodiscard]] constexpr inline bool has_2left(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2left(const unsigned ind) const noexcept {
         if (r[ind].left != -1) return false;
         return r[r[ind].left].left == -1;
     }
-    [[nodiscard]] constexpr inline bool has_2right(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2right(const unsigned ind) const noexcept {
         if (r[ind].right != -1) return false;
         return r[r[ind].right].right == -1;
     }
-    [[nodiscard]] constexpr inline bool has_2down(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2down(const unsigned ind) const noexcept {
         if (r[ind].down != -1) return false;
         return r[r[ind].down].down == -1;
     }
-    [[nodiscard]] constexpr inline bool has_2up(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2up(const unsigned ind) const noexcept {
         if (r[ind].up != -1) return false;
         return r[r[ind].up].up == -1;
     }
-    [[nodiscard]] constexpr inline bool has_2front(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2front(const unsigned ind) const noexcept {
         if (r[ind].front != -1) return false;
         return r[r[ind].front].front == -1;
     }
-    [[nodiscard]] constexpr inline bool has_2back(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool has_2back(const unsigned ind) const noexcept {
         if (r[ind].back != -1) return false;
         return r[r[ind].back].back == -1;
     }
 
-    [[nodiscard]] constexpr inline bool is_boundary(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool is_boundary(const unsigned ind) const noexcept {
         const auto end_x = !has_left(ind) || !has_right(ind);
         const auto end_y = !has_down(ind) || !has_up(ind);
         const auto end_z = !has_front(ind) || !has_back(ind);
         return end_x || end_y || end_z;
     }
 
-    [[nodiscard]] constexpr inline bool is_inside_boundary(const unsigned ind) const noexcept {
+    [[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept {
         const auto end_x = !has_left(ind) || !has_right(ind);
         const auto end_y = !has_down(ind) || !has_up(ind);
         const auto end_z = !has_front(ind) || !has_back(ind);
