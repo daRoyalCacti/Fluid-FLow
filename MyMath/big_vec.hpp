@@ -288,17 +288,15 @@ struct big_vec_v final : public big_vec<vec3> {
 
 
 
-/*
-template<unsigned N, unsigned M, unsigned P, typename T>
-void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) noexcept {
+
+template<typename T>
+void write_vec(const T& v, const char* file_loc) noexcept {
     std::ofstream output(file_loc);
     if (output.is_open()) {
-        const auto k = P/2;
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                const auto pos = v.get_pos(i,j,k);
-                output << pos.x() << " " << pos.y() << " " << v(i, j, k) << "\n";
-            }
+        const auto inds = v.g->get_middle_inds();
+        for (const auto ind : inds) {
+            output << v.g[ind].x() << " " << v.g[ind].y() << " " << v(ind) << "\n";
+
         }
     } else {
         std::cerr << "failed to open file\n";
@@ -306,7 +304,7 @@ void write_vec(const big_vec<N,M,P,T>& v, const char* file_loc) noexcept {
 
     output.close();
 }
-*/
+
 
 
 #endif //CODE_BIG_VEC_HPP

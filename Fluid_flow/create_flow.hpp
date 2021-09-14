@@ -119,7 +119,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      //making Q
      make_Q(Q, p, BC.norms);
-/*
+
  #ifdef DLOG
      std::cout << "setting velocity IC\n";
  #endif
@@ -301,7 +301,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
          write_vec(p, os.final_pres_name.data());
      }
 
-      */
+
 
 
 }
