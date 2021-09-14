@@ -12,7 +12,7 @@
 #include <ctime>
 #include <ratio>
 
-//#include "make_mats.hpp"
+#include "make_mats.hpp"
 //#include "make_vecs.hpp"
 
 //#include "solver.hpp"
@@ -26,7 +26,7 @@
 #include "../Rigid_body/triangle_mesh.hpp"
 #include "../MyMath/boundary.hpp"
 #include "../MyMath/big_vec.hpp"
-#include "../MyMath/big_matrix.hpp"
+//#include "../MyMath/big_matrix.hpp"
 
 #define DLOG    //detailed logging
 
@@ -73,6 +73,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     std::cout << "setting boundary conditions\n";
  #endif
     boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
+    //boundary_conditions BC(dx, dy, dz, Wx, Wy, Wz);
     std::cerr << "debug writing\n";
     BC.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
@@ -104,7 +105,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
      big_matrix Q(BC, 16);
      big_matrix A(BC, 7);
-/*
+
  #ifdef DLOG
      std::cout << "creating A\n";
  #endif
@@ -116,7 +117,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      //making Q
      make_Q(Q, p, BC.norms);
-
+/*
  #ifdef DLOG
      std::cout << "setting velocity IC\n";
  #endif

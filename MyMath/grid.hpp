@@ -213,9 +213,9 @@ struct grid {
     }
 
     [[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept {
-        const auto end_x = !has_left(ind) || !has_right(ind);
-        const auto end_y = !has_down(ind) || !has_up(ind);
-        const auto end_z = !has_front(ind) || !has_back(ind);
+        const auto end_x = !has_left(ind) && !has_right(ind);
+        const auto end_y = !has_down(ind) && !has_up(ind);
+        const auto end_z = !has_front(ind) && !has_back(ind);
         return end_x && end_y && end_z;
     }
 

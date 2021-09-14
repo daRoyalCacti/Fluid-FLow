@@ -8,18 +8,21 @@
 #include <Eigen/Sparse>
 #include <iostream>
 
+#include "../Fluid_flow/boundary_conditions.hpp"
+
 struct big_matrix{
     Eigen::SparseMatrix<double,Eigen::RowMajor> m;
+    unsigned long temp_size;
 
     big_matrix() = delete;
     big_matrix(const boundary_conditions &b, const unsigned no_data) noexcept {
         m.resize(static_cast<long>(b.global_grid.size()), static_cast<long>(b.global_grid.size())  );
         m.reserve(Eigen::VectorXi::Constant(static_cast<long>(b.global_grid.size() ), static_cast<int>(no_data) ) );
-        //m.reserve( 8 * (N+1)*(M+1)*(P+1) ); //the amount of room to reserve --- overestimated
-                                            // (7* is the default at non-boundary points
+        temp_size = b.global_grid.size();
     };
 
     void add_elm(const unsigned index1, const unsigned index2, const double elm) noexcept {
+        //std::cerr << index2 << "/" << temp_size-1 << "\n";
         m.insert(index1, index2) = elm;
     }
 

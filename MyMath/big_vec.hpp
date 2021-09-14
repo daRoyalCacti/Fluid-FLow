@@ -51,7 +51,7 @@ struct big_vec {
     }
 
 
-    virtual unsigned long size() {
+    virtual unsigned long size() const {
 #ifndef NDEBUG
         std::cerr << "virtual size function of big_vec called. This should never happen\n";
 #endif
@@ -92,6 +92,9 @@ struct big_vec {
         if (curr_ind == -1) {
             std::cerr << "index is -1. This should never happen.\n";
         }
+        if (curr_ind >= size()) {
+            std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+        }
 #endif
 
         if (x > 0) {
@@ -100,7 +103,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "x move failed. current x : " << i << "/" << x-1 << "\n";
+                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
                 }
 #endif
             }
@@ -110,7 +117,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "x move failed. current x : " << i << "/" << x-1 << "\n";
+                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
                 }
 #endif
             }
@@ -121,7 +132,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "y move failed. current x : " << j << "/" << y-1 << "\n";
+                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
                 }
 #endif
             }
@@ -131,7 +146,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "y move failed. current x : " << j << "/" << y-1 << "\n";
+                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
                 }
 #endif
             }
@@ -142,7 +161,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "z move failed. current x : " << k << "/" << z-1 << "\n";
+                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
                 }
 #endif
             }
@@ -152,7 +175,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "z move failed. current x : " << k << "/" << z-1 << "\n";
+                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                }
+                if (curr_ind >= size()) {
+                    std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
                 }
 #endif
             }
@@ -184,7 +211,7 @@ struct big_vec_d final : public big_vec<double> {
         return *this;
     }
 
-    unsigned long size() override {
+    unsigned long size() const override {
         return v.size();
     }
 
@@ -222,7 +249,7 @@ struct big_vec_v final : public big_vec<vec3> {
         zv.clear();
     }
 
-    unsigned long size() override {
+    unsigned long size() const override {
         return xv.size();
     }
 

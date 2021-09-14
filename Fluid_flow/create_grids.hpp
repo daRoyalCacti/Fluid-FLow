@@ -145,20 +145,11 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
 
             //setting boundary points
             auto ind_cpy = inds1;
-            for (unsigned i = static_cast<unsigned>(inds1[axis]) + 1; i < inds2[axis]; i++) {
+            for (auto i = static_cast<unsigned>(inds1[axis]); i <= inds2[axis]; i++) {
                 ind_cpy[axis] = i;
                 const auto insert_ind = g.convert_indices_unif(ind_cpy);
-                /*if (inside_indices.contains(g.convert_indices_unif(ind_cpy)) ) {
-                    std::cerr << "\taaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
-                }*/
-                if (!boundary_indices.contains(insert_ind)) {   //points already determined to be on the boundary (by rays shot from a different direction)
-                    inside_indices.insert( insert_ind );
-                }
+                inside_indices.insert( insert_ind );
             }
-
-            /*if (inside_indices.contains(ind1) || inside_indices.contains(ind2)) {
-                std::cerr << "\ta2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
-            }*/
 
             //setting normals
             norms.add_point(ind1, norm1);
@@ -169,10 +160,6 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
 
             v_points.add_point(ind1, vel1);
             v_points.add_point(ind2, vel2);
-
-            /*if (inside_indices.contains(ind1) || inside_indices.contains(ind2)) {
-                std::cerr << "aaaahhh\n";
-            }*/
 
         }
 
@@ -233,9 +220,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
             if (inside_indices.contains(r[index_counter].down)) { r[index_counter].down = -1; }
             if (inside_indices.contains(r[index_counter].up)) { r[index_counter].up = -1; }
             if (inside_indices.contains(r[index_counter].front)) { r[index_counter].front = -1; }
-            if (inside_indices.contains(r[index_counter].back)) { r[index_counter].back -1; }
+            if (inside_indices.contains(r[index_counter].back)) { r[index_counter].back = -1; }
             old_new.insert({i, index_counter});
-            index_counter++;
+            index_counter++;    //only gets incremented if not inside boundary
         }
 
     }
@@ -244,11 +231,33 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     z.shrink_to_fit();
     r.shrink_to_fit();
 
+    /*for (unsigned i = 0; i < g.x.size(); i++) {
+        if (i != old_new.at(i)) {
+            std::cerr << i << " " << old_new.at(i) << "\t" << g.x.size() << "\n";
+        }
+        //std::cerr << i << " " << old_new.at(i) << "\t" << g.x.size() << "\n";
+    }*/
+
+    for (auto& e : r) {
+        if (e.left != -1) { e.left = old_new.at(e.left); }
+        if (e.right != -1) { e.right = old_new.at(e.right); }
+        if (e.down != -1) { e.down = old_new.at(e.down); }
+        if (e.up != -1) { e.up = old_new.at(e.up); }
+        if (e.front != -1) {
+            //std::cerr << e.front << "\t";
+            e.front = old_new.at(e.front);
+            //std::cerr << e.front << "\n";
+            //std::cerr << "\t" << e.front << "\t" << old_new.at(e.front) << "\n";
+        }
+        if (e.back != -1) { e.back = old_new.at(e.back); }
+    }
+
 
     g.x = std::move(x);
     g.y = std::move(y);
     g.z = std::move(z);
     g.r = std::move(r);
+
 
 
     boundary_normals norms_c(norms.size());
