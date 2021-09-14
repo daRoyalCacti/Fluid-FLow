@@ -32,7 +32,7 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
                 std::cerr << "norms does not contain " << i  << "\n";
             }
 #endif
-const auto norm = norms.normal(i);
+            const auto norm = norms.normal(i);
             //picking the direction
             unsigned big_dir = 0;
             if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {

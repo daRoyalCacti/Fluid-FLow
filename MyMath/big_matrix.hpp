@@ -22,7 +22,6 @@ struct big_matrix{
     };
 
     void add_elm(const unsigned index1, const unsigned index2, const double elm) noexcept {
-        //std::cerr << index2 << "/" << temp_size-1 << "\n";
         m.insert(index1, index2) = elm;
     }
 

@@ -220,6 +220,22 @@ struct grid {
     }
 
 
+    void DEBUG_write_boundary_points() const {
+        std::ofstream output("../DEBUG/boundary_points.txt");
+        if (output.is_open()) {
+            const auto inds = get_middle_inds();
+            for (const auto ind : inds) {
+                output << x[ind] << " " << y[ind] << " " << is_boundary(ind) << "\n";
+            }
+
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
+
 };
 
 #endif //CODE_GRID_HPP

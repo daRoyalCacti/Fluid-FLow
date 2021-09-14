@@ -75,7 +75,8 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
     //boundary_conditions BC(dx, dy, dz, Wx, Wy, Wz);
     std::cerr << "debug writing\n";
-    BC.DEBUG_write_boundary_points();
+    //BC.DEBUG_write_boundary_points();
+    BC.global_grid.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
 
 

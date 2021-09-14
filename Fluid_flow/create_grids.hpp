@@ -203,7 +203,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     z.reserve(g.z.size());
     std::vector<grid_relation> r;
     r.reserve(g.r.size());
-    std::map<unsigned, int> old_new;
+    std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     unsigned index_counter = 0;
     for (unsigned i = 0; i < g.x.size(); i++) {
@@ -215,12 +215,12 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
             z.push_back(g.z[i]);
             r.push_back(g.r[i]);
 
-            if (inside_indices.contains(r[index_counter].left)) { r[index_counter].left = -1; }
-            if (inside_indices.contains(r[index_counter].right)) { r[index_counter].right = -1; }
-            if (inside_indices.contains(r[index_counter].down)) { r[index_counter].down = -1; }
-            if (inside_indices.contains(r[index_counter].up)) { r[index_counter].up = -1; }
-            if (inside_indices.contains(r[index_counter].front)) { r[index_counter].front = -1; }
-            if (inside_indices.contains(r[index_counter].back)) { r[index_counter].back = -1; }
+            if (inside_indices.contains(r[index_counter].left) && !boundary_indices.contains(r[index_counter].left)) { r[index_counter].left = -1; }
+            if (inside_indices.contains(r[index_counter].right) && !boundary_indices.contains(r[index_counter].right)) { r[index_counter].right = -1; }
+            if (inside_indices.contains(r[index_counter].down) && !boundary_indices.contains(r[index_counter].down)) { r[index_counter].down = -1; }
+            if (inside_indices.contains(r[index_counter].up) && !boundary_indices.contains(r[index_counter].up)) { r[index_counter].up = -1; }
+            if (inside_indices.contains(r[index_counter].front) && !boundary_indices.contains(r[index_counter].front)) { r[index_counter].front = -1; }
+            if (inside_indices.contains(r[index_counter].back) && !boundary_indices.contains(r[index_counter].back)) { r[index_counter].back = -1; }
             old_new.insert({i, index_counter});
             index_counter++;    //only gets incremented if not inside boundary
         }
