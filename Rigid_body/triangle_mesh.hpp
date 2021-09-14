@@ -25,7 +25,7 @@ struct triangle_mesh {
 
     std::vector<triangle, no_init_alloc<triangle>> tris;    //custom allocator because vector is filled immediately after resizing it
 
-    triangle_mesh() = delete;
+    triangle_mesh() = default;
     explicit triangle_mesh(const mesh *m) {
         tris.resize(m->indices.size() / 3);
         for (unsigned i = 0; i < tris.size(); i++) {

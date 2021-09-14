@@ -29,6 +29,8 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
     g.z.resize(s);
     g.r.resize(s);
 
+    g.create_no_points_unif();
+
     unsigned counter = 0;
     for (int k = 0; k < sz; k++) {
         for (int j = 0; j < sy; j++) {
@@ -41,44 +43,47 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
 
                 int left, right, up, down, front, back;
                 if (i != 0) {
-                    left = i - 1;
+                    left = static_cast<int>( g.convert_indices_unif(vec3(i-1,j,k)) );
                 } else {
                     left = -1;
                 }
                 if (i != sx-1) {
-                    right = i + 1;
+                    right = static_cast<int>( g.convert_indices_unif(vec3(i+1,j,k)) );
                 } else {
                     right = -1;
                 }
 
                 if (j != 0) {
-                    down = j - 1;
+                    down = static_cast<int>( g.convert_indices_unif(vec3(i,j-1,k)) );
                 } else {
                     down = -1;
                 }
                 if (j != sy-1) {
-                    up = j + 1;
+                    up = static_cast<int>( g.convert_indices_unif(vec3(i,j+1,k)) );
                 } else {
                     up = -1;
                 }
 
                 if (k != 0) {
-                    front = k - 1;
+                    front = static_cast<int>( g.convert_indices_unif(vec3(i,j,k-1)) );
                 } else {
-                    back = -1;
+                    front = -1;
                 }
                 if (k != sz-1) {
-                    front = k + 1;
+                    back = static_cast<int>( g.convert_indices_unif(vec3(i,j,k+1)) );
                 } else {
                     back = -1;
                 }
 
+                //std::cerr << left << "\n";
                 g.r[counter] = {left, right, down, up, front, back};
+                //std::cerr << g.r[counter].left << "\n";
 
                 counter++;
             }
         }
     }
+    //std::cerr << g.r[0].left << "\n";
 
 }
 

@@ -86,6 +86,40 @@ struct big_vec {
         return a;
     }
 
+protected:
+    [[nodiscard]] unsigned get_move_ind(const unsigned ind, const int x, const int y, const int z) const noexcept {
+        auto curr_ind = ind;
+
+        if (x > 0) {
+            for (unsigned i = 0; i < x; i++) {
+                curr_ind = g->r[curr_ind].right;
+            }
+        } else {
+            for (int i = x; i < 0; i++) {
+                curr_ind = g->r[curr_ind].left;
+            }
+        }
+        if (y > 0) {
+            for (unsigned j = 0; j < y; j++) {
+                curr_ind = g->r[curr_ind].up;
+            }
+        } else {
+            for (int j = y; j < 0; j++) {
+                curr_ind = g->r[curr_ind].down;
+            }
+        }
+        if (z > 0) {
+            for (unsigned k = 0; k < z; k++) {
+                curr_ind = g->r[curr_ind].back;
+            }
+        } else {
+            for (int k = z; k < 0; k++) {
+                curr_ind = g->r[curr_ind].front;
+            }
+        }
+
+        return curr_ind;
+    }
 };
 
 
@@ -123,37 +157,9 @@ struct big_vec_d final : public big_vec<double> {
 
 
     [[nodiscard]] inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
-        auto curr_ind = ind;
+        const auto new_ind = get_move_ind(ind, x, y, z);
 
-        if (x > 0) {
-            for (unsigned i = 0; i < x; i++) {
-                curr_ind = g->r[curr_ind].left;
-            }
-        } else {
-            for (unsigned i = -x; i < 0; i++) {
-                curr_ind = g->r[curr_ind].right;
-            }
-        }
-        if (y > 0) {
-            for (unsigned j = 0; j < y; j++) {
-                curr_ind = g->r[curr_ind].up;
-            }
-        } else {
-            for (unsigned j = -y; j < 0; j++) {
-                curr_ind = g->r[curr_ind].down;
-            }
-        }
-        if (z > 0) {
-            for (unsigned k = 0; k < z; k++) {
-                curr_ind = g->r[curr_ind].front;
-            }
-        } else {
-            for (unsigned k = -z; k < 0; k++) {
-                curr_ind = g->r[curr_ind].back;
-            }
-        }
-
-        return v[curr_ind];
+        return v[new_ind];
     }
 
     [[nodiscard]] double& operator()(const unsigned ind) noexcept override { return v(ind); }
@@ -191,37 +197,9 @@ struct big_vec_v final : public big_vec<vec3> {
 
 
     [[nodiscard]] inline vec3 move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
-        auto curr_ind = ind;
+        const auto new_ind = get_move_ind(ind, x, y, z);
 
-        if (x > 0) {
-            for (unsigned i = 0; i < x; i++) {
-                curr_ind = g->r[curr_ind].left;
-            }
-        } else {
-            for (unsigned i = -x; i < 0; i++) {
-                curr_ind = g->r[curr_ind].right;
-            }
-        }
-        if (y > 0) {
-            for (unsigned j = 0; j < y; j++) {
-                curr_ind = g->r[curr_ind].up;
-            }
-        } else {
-            for (unsigned j = -y; j < 0; j++) {
-                curr_ind = g->r[curr_ind].down;
-            }
-        }
-        if (z > 0) {
-            for (unsigned k = 0; k < z; k++) {
-                curr_ind = g->r[curr_ind].front;
-            }
-        } else {
-            for (unsigned k = -z; k < 0; k++) {
-                curr_ind = g->r[curr_ind].back;
-            }
-        }
-
-        return {xv.v[curr_ind], yv.v[curr_ind], zv.v[curr_ind]};
+        return {xv.v[new_ind], yv.v[new_ind], zv.v[new_ind]};
     }
 
     //not ideal, should make it so () can return a reference

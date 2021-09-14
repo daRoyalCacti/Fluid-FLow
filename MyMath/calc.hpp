@@ -429,7 +429,6 @@ double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
 }
 
 //D(L(v_{ind}))
-template <unsigned N, unsigned M, unsigned P>
 double divergence_laplacian(const big_vec_v& v, const unsigned ind) noexcept {
     const auto vxxx = smart_deriv<3,0,0>(v.xv,ind);
     const auto vxyy = smart_deriv<1,2,0>(v.xv,ind);

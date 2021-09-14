@@ -25,6 +25,7 @@
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
 #include "../MyMath/boundary.hpp"
+#include "../MyMath/big_vec.hpp"
 
 #define DLOG    //detailed logging
 

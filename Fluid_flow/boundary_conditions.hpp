@@ -55,6 +55,20 @@ struct boundary_conditions {
 
     }
 
+    //should never be used in real flow, only used for testing derivatives
+    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm{} {
+        std::cerr << "making entire grid\n";
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
+        //global_grid.create_no_points_unif();  //now called in make_entire grid
+
+        std::cerr << "setting boundary normals\n";
+        norms = boundary_normals(no_wall_points());
+        std::cerr << "creating wall normals\n";
+        create_wall_normals();
+        std::cerr << "updating velocities at wall\n";
+        update_velocity_wall_BC();
+    }
+
 
     unsigned no_wall_points() const {
         const auto dims = global_grid.no_points_unif;
@@ -578,7 +592,6 @@ void boundary_conditions::create_wall_normals() {
     const auto N = static_cast<unsigned>(dims.x()-1);
     const auto M = static_cast<unsigned>(dims.y()-1);
     const auto P = static_cast<unsigned>(dims.z()-1);
-
 
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
