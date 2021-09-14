@@ -15,8 +15,8 @@
 #include "make_mats.hpp"
 //#include "make_vecs.hpp"
 
-//#include "solver.hpp"
-//#include "../MyMath/boundary.hpp"
+#include "solver.hpp"
+#include "../MyMath/boundary.hpp"
 //#include "flow_env.hpp"
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
