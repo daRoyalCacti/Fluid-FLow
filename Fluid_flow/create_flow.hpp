@@ -158,7 +158,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #ifdef DLOG
      std::cout << "Enforcing pressure boundary conditions\n";
  #endif
-     BC.update_pressure_BC(p_c);
+     update_pressure_BC(BC, p_c);
      p += p_c;
 
 
@@ -168,7 +168,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "making b\n";
  #endif
      //then make b
-     make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
+     make_b_first(b, Re, dt, v_n, p, BC);
 
  #ifdef DLOG
      std::cout << "solving for v\n";
@@ -182,7 +182,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "enforcing pressure BC\n";
  #endif
      //enforcing BC
-     BC.enforce_velocity_BC(v_n);
+     enforce_velocity_BC(BC, v_n);
 
      if constexpr (write_all_times) {
          write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
@@ -223,7 +223,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
          timer.set_start(std::chrono::high_resolution_clock::now());
          //solve for p for the next timestep
          solve(Q, s, p_c);
-         BC.update_pressure_BC(p_c);
+         update_pressure_BC(BC, p_c);
          p += p_c;
          timer.set_end(std::chrono::high_resolution_clock::now());
          timer.save_p_solve_time();
@@ -233,7 +233,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
          timer.set_start(std::chrono::high_resolution_clock::now());
          //then make b
-         make_b(b, Re, dt, v_n, v_n1, p, BC.vel_bc);
+         make_b(b, Re, dt, v_n, v_n1, p, BC);
          timer.set_end(std::chrono::high_resolution_clock::now());
          timer.save_b_create_time();
 
@@ -261,7 +261,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
 
          //enforcing BC
-         BC.enforce_velocity_BC(v_n);
+         enforce_velocity_BC(BC, v_n);
 
 
          ++counter;

@@ -295,7 +295,8 @@ void write_vec(const T& v, const char* file_loc) noexcept {
     if (output.is_open()) {
         const auto inds = v.g->get_middle_inds();
         for (const auto ind : inds) {
-            output << v.g[ind].x() << " " << v.g[ind].y() << " " << v(ind) << "\n";
+            const auto g = *v.g;
+            output << g[ind].x() << " " << g[ind].y() << " " << v(ind) << "\n";
 
         }
     } else {
