@@ -15,8 +15,8 @@ const double Re = 150;
 
 
 int main() {
-    big_veg_derivs_ex();
-    //calc_derivs_ex();
+    //big_veg_derivs_ex();
+    calc_derivs_ex();
 
 /*
     constexpr output_settings o{};

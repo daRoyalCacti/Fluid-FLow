@@ -8,6 +8,7 @@
 #include "../MyMath/calc.hpp"
 #include "../MyMath/boundary.hpp"
 
+//#define BCD_DLOG   //bvec example derivating detailed logging
 
 void calc_derivs_ex() {
 
@@ -39,6 +40,9 @@ void calc_derivs_ex() {
     }
 
     for (unsigned i = 0; i < v.size(); i++) {
+#ifdef BCD_DLOG
+        std::cerr << i+1 << "/" << v.size() << "\n";
+#endif
         const auto x = BC.global_grid.x[i];
         const auto y = BC.global_grid.y[i];
         const auto z = BC.global_grid.z[i];
@@ -97,5 +101,9 @@ void calc_derivs_ex() {
 
     std::cout << "testing complete\n";
 }
+
+#ifdef BCD_DLOG
+    #undef BCD_DLOG
+#endif
 
 #endif //CODE_CALC_DERIVS_HPP
