@@ -152,7 +152,6 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
     //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)
     for (unsigned i = 0; i < v.g->size(); i++) {
-        //std::cerr << i << "/" << v.g->size()-1 << " " << v.is_boundary(i) << "\n";
         if (v.is_boundary(i)) {
             A.add_elm(i, i,  1);
         } else {
@@ -160,19 +159,12 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
             const auto Rdydy = Re*v.dy(i)*v.dy(i);
             const auto Rdzdz = Re*v.dz(i)*v.dz(i);
 
-           // std::cerr << "next\n";
             A.add_elm(i,  i,  1/dt + 1/Rdxdx + 1/Rdydy + 1/Rdzdz );
-            //std::cerr << "\tmoving left\n";
             A.add_elm(i,  v.get_move_ind(i, 1,0,0),  -1/(2*Rdxdx));
-            //std::cerr << "\tmoving right\n";
             A.add_elm(i,  v.get_move_ind(i, -1,0,0),  -1/(2*Rdxdx));
-            //std::cerr << "\tmoving up\n";
             A.add_elm(i,  v.get_move_ind(i, 0,1,0),  -1/(2*Rdydy));
-            //std::cerr << "\tmoving down\n";
             A.add_elm(i,  v.get_move_ind(i, 0,-1,0),  -1/(2*Rdydy));
-            //std::cerr << "\tmoving forward\n";
-            A.add_elm(i,  v.get_move_ind(i, 0,0,1),  -1/(2*Rdzdz)); //failing
-            //std::cerr << "\tmoving backward\n";
+            A.add_elm(i,  v.get_move_ind(i, 0,0,1),  -1/(2*Rdzdz));
             A.add_elm(i,  v.get_move_ind(i, 0,0,-1),  -1/(2*Rdzdz));
         }
 

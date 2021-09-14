@@ -231,24 +231,13 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     z.shrink_to_fit();
     r.shrink_to_fit();
 
-    /*for (unsigned i = 0; i < g.x.size(); i++) {
-        if (i != old_new.at(i)) {
-            std::cerr << i << " " << old_new.at(i) << "\t" << g.x.size() << "\n";
-        }
-        //std::cerr << i << " " << old_new.at(i) << "\t" << g.x.size() << "\n";
-    }*/
 
     for (auto& e : r) {
         if (e.left != -1) { e.left = old_new.at(e.left); }
         if (e.right != -1) { e.right = old_new.at(e.right); }
         if (e.down != -1) { e.down = old_new.at(e.down); }
         if (e.up != -1) { e.up = old_new.at(e.up); }
-        if (e.front != -1) {
-            //std::cerr << e.front << "\t";
-            e.front = old_new.at(e.front);
-            //std::cerr << e.front << "\n";
-            //std::cerr << "\t" << e.front << "\t" << old_new.at(e.front) << "\n";
-        }
+        if (e.front != -1) {e.front = old_new.at(e.front);}
         if (e.back != -1) { e.back = old_new.at(e.back); }
     }
 
