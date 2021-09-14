@@ -49,9 +49,9 @@ struct solver {
 
 //solves Ax=b for x
 void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x) noexcept {
-    viennacl::compressed_matrix<double>  vcl_sparse_matrix( b.g->size(), b.g->size() );
+    viennacl::compressed_matrix<double>  vcl_sparse_matrix( b.size(), b.size() );
     //viennacl::coordinate_matrix<double>  vcl_sparse_matrix( (N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1) );
-    viennacl::vector<double> vcl_rhs( b.g->size() );
+    viennacl::vector<double> vcl_rhs( b.size() );
 
     //copying data into viennacl
     viennacl::copy(A.m, vcl_sparse_matrix);

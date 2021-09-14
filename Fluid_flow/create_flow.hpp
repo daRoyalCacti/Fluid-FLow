@@ -17,7 +17,7 @@
 
 #include "solver.hpp"
 #include "../MyMath/boundary.hpp"
-//#include "flow_env.hpp"
+#include "flow_env.hpp"
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
 //#include "update_mesh.hpp"
