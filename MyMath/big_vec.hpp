@@ -86,35 +86,75 @@ struct big_vec {
         return a;
     }
 
-protected:
     [[nodiscard]] unsigned get_move_ind(const unsigned ind, const int x, const int y, const int z) const noexcept {
         auto curr_ind = ind;
+#ifndef NDEBUG
+        if (curr_ind == -1) {
+            std::cerr << "index is -1. This should never happen.\n";
+        }
+#endif
 
         if (x > 0) {
             for (unsigned i = 0; i < x; i++) {
                 curr_ind = g->r[curr_ind].right;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "x move failed. current x : " << i << "/" << x-1 << "\n";
+                }
+#endif
             }
         } else {
             for (int i = x; i < 0; i++) {
                 curr_ind = g->r[curr_ind].left;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "x move failed. current x : " << i << "/" << x-1 << "\n";
+                }
+#endif
             }
         }
         if (y > 0) {
             for (unsigned j = 0; j < y; j++) {
                 curr_ind = g->r[curr_ind].up;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "y move failed. current x : " << j << "/" << y-1 << "\n";
+                }
+#endif
             }
         } else {
             for (int j = y; j < 0; j++) {
                 curr_ind = g->r[curr_ind].down;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "y move failed. current x : " << j << "/" << y-1 << "\n";
+                }
+#endif
             }
         }
         if (z > 0) {
             for (unsigned k = 0; k < z; k++) {
                 curr_ind = g->r[curr_ind].back;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "z move failed. current x : " << k << "/" << z-1 << "\n";
+                }
+#endif
             }
         } else {
             for (int k = z; k < 0; k++) {
                 curr_ind = g->r[curr_ind].front;
+#ifndef NDEBUG
+                if (curr_ind == -1) {
+                    std::cerr << "current index is -1. This should never happen.\n";
+                    std::cerr << "z move failed. current x : " << k << "/" << z-1 << "\n";
+                }
+#endif
             }
         }
 
