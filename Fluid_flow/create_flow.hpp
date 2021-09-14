@@ -26,6 +26,7 @@
 #include "../Rigid_body/triangle_mesh.hpp"
 #include "../MyMath/boundary.hpp"
 #include "../MyMath/big_vec.hpp"
+#include "../MyMath/big_matrix.hpp"
 
 #define DLOG    //detailed logging
 
@@ -55,9 +56,9 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     //creating timer
     flow_timer timer(os.time_file_name.data() );
 
-#ifdef DLOG
-    std::cout << "creating global grid\n";
-#endif
+//#ifdef DLOG
+//    std::cout << "creating global grid\n";
+//#endif
     /*grid global_grid;
     std::cerr << "making entire grid\n";
     make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz);
@@ -68,40 +69,42 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     remove_inside_boundary_unif(global_grid, triangle_mesh(&rb->model), bn, mp, vp);
     std::cerr << "done\n";*/
 
+#ifdef DLOG
+    std::cout << "setting boundary conditions\n";
+ #endif
     boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
     std::cerr << "debug writing\n";
     BC.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
-    /*
 
- #ifdef DLOG
-     std::cout << "setting boundary conditions\n";
- #endif
-     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
-     BC.DEBUG_write_boundary_points();
+
+
+     //boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
+     //BC.DEBUG_write_boundary_points();
      //BC.DEBUG_write_normal_vectors();
 
 
      //std::cerr << "Returning early for testing\n";
      //return;
 
+
  #ifdef DLOG
  std::cout << "constructing matrices and vectors\n";
  #endif
-     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at the current time-step
-     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
-     big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
-     big_vec<N,M,P,double> p_c(dx, dy, dz, &BC.bound);    //pressure correction vector
+     big_vec_v v_n(BC);    //velocity at the current time-step
+     big_vec_v v_n1(BC);   //velocity at the previous time-step
+     big_vec_d p(BC);    //pressure vector
+     big_vec_d p_c(BC);    //pressure correction vector
 
 
 
-     big_vec<N,M,P,vec3> b(dx, dy, dz, &BC.bound);
-     big_vec<N,M,P,double> s(dx, dy, dz, &BC.bound);
+     big_vec_v b(BC);
+     big_vec_d s(BC);
 
 
-     big_matrix<N,M,P> Q(16);
-     big_matrix<N,M,P> A(7);
-
+     big_matrix Q(BC, 16);
+     big_matrix A(BC, 7);
+/*
  #ifdef DLOG
      std::cout << "creating A\n";
  #endif

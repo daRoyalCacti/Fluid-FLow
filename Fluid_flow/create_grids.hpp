@@ -184,13 +184,13 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     std::unordered_set<unsigned> inside_indices;
     std::unordered_set<unsigned> boundary_indices;
 
-    /*std::cerr << "rays from the z direction\n";
+    std::cerr << "rays from the z direction\n";
     for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
         for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
             const ray r(vec3(x+g.dx/2, y+g.dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
             get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
         }
-    }*/
+    }
 
     std::cerr << "rays from the y direction\n";
     for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {

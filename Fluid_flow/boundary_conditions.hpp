@@ -30,7 +30,7 @@ struct boundary_conditions {
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm(m) {
         std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
-        global_grid.create_no_points_unif();
+        //global_grid.create_no_points_unif();  //now called in make_entire grid
 
         std::cerr << "setting boundary normals\n";
         //set_wall_points();
@@ -52,7 +52,6 @@ struct boundary_conditions {
         /*
         update_mesh_boundary();
          */
-
     }
 
     //should never be used in real flow, only used for testing derivatives
