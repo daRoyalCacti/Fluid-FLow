@@ -79,7 +79,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
-    /*bc.enforce_velocity_BC(v_n);*/
+    enforce_velocity_BC(bc, v_n);
     //bc.enforce_pressure_BC(p);
 }
 

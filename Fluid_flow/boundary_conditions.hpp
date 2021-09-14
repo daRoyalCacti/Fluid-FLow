@@ -87,21 +87,8 @@ struct boundary_conditions {
         extrapolate(v.yv);
         extrapolate(v.zv);
     }
+    */
 
-    //v is vector to enforce the conditions on
-    void enforce_velocity_BC(big_vec<N,M,P,vec3> &v) {
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                for (unsigned k = 0; k <= P; k++) {
-                    if (bound.is_boundary(i,j,k)) {
-                        v.add_elm(i,j,k, vel_bc(i,j,k));
-                    }
-
-                }
-            }
-        }
-    }
-     */
 
 
     void DEBUG_write_boundary_points() const {

@@ -8,6 +8,21 @@
 #include "boundary_conditions.hpp"
 #include "../MyMath/big_vec.hpp"
 
+
+//v is vector to enforce the conditions on
+void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
+    for (unsigned i = 0; i < v.size(); i++) {
+        if (v.is_boundary(i)) {
+            v.add_elm(i, BC.v_points.get_vel(i));
+        }
+
+    }
+
+
+}
+
+
+
 void update_pressure_BC(const boundary_conditions &BC, big_vec_d &p) {
         for (unsigned i = 0; i < p.size(); i++) {
             if (p.is_boundary(i)) {
