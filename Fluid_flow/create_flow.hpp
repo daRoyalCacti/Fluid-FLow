@@ -13,7 +13,7 @@
 #include <ratio>
 
 #include "make_mats.hpp"
-//#include "make_vecs.hpp"
+#include "make_vecs.hpp"
 
 #include "solver.hpp"
 #include "../MyMath/boundary.hpp"
