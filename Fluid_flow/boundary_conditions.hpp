@@ -10,6 +10,7 @@
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
 #include "../MyMath/grid.hpp"
+//#include "../MyMath/big_vec.hpp"
 #include "create_grids.hpp"
 #include <cmath>
 
@@ -141,9 +142,8 @@ struct boundary_conditions {
         output.close();
     }
 
-    /*
-    void update_pressure_BC(big_vec<N,M,P, double> &p);
-     */
+
+
     void update_velocity_wall_BC();
 
 private:
@@ -424,133 +424,11 @@ void boundary_conditions<N,M,P>::set_wall_points() {
         }
     }
 }
-
-
-
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
-    for (unsigned i = 0; i <= N; i++) {
-        for (unsigned j = 0; j <= M; j++) {
-            for (unsigned k = 0; k <= P; k++) {
-                if (p.is_boundary(i,j,k)) {
-#ifndef NDEBUG
-                    if (!norms.contains(i,j,k)) {
-                        std::cerr << "norms does not contain (" << i << ", " << j << ", " << k << ")\n";
-                    }
-#endif
-
-                    const auto norm = norms.normal(i,j,k);
-
-                    //this occurs when inside a boundary
-                    if (norm == vec3(0) ) {
-                        p(i,j,k) = 0;
-                        continue;   //rest of the code will only error
-                    }
-
-                    const auto nx = norm.x();
-                    const auto ny = norm.y();
-                    const auto nz = norm.z();
-
-                    const auto dx = p.dx(i,j,k);
-                    const auto dy = p.dy(i,j,k);
-                    const auto dz = p.dz(i,j,k);
-
-                    //picking the direction
-                    unsigned big_dir = 0;
-                    if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {
-                        big_dir = 1;
-                    }
-                    if (std::abs(norm.z()) > std::abs(norm[big_dir]) ) {
-                        big_dir = 2;
-                    }
-
-
-
-                    if (big_dir == 0) { //x direction biggest
-                        if (!p.has_left(i,j,k)) {   //forward difference
-                            p(i,j,k) = ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i+2,j,k)/3 + 4*p(i+1,j,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_right(i,j,k)) {   //backward difference
-                            p(i,j,k) =-ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i-2,j,k)/3 + 4*p(i-1,j,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {    //central difference
-                            p(i+1,j,k) = -ny/nx * smart_deriv<0,1,0>(p, i,j,k)*dx - nz/nx * smart_deriv<0,0,1>(p, i,j,k)*dx + p(i-1,j,k);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i+1,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-                    } else if (big_dir == 1) {  //y direction biggest
-                        if (!p.has_down(i, j, k)) { //forward difference
-                            p(i,j,k) = nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j+2,k)/3 + 4*p(i,j+1,k)/3;
- #ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_up(i, j, k)) {  //backward difference
-                            p(i,j,k) =-nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j-2,k)/3 + 4*p(i,j-1,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {  //central difference
-                            p(i,j+1,k) = -nx/ny * smart_deriv<1,0,0>(p, i,j,k)*dy - nz/ny * smart_deriv<0,0,1>(p, i,j,k)*dy + p(i,j-1,k);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j+1,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-                    } else {    //z direction
-#ifndef NDEBUG
-                        if (big_dir > 2) {
-                            std::cerr << "the biggest direction cannot be larger than 2\n";
-                        }
-#endif
-                    if (!p.has_front(i,j,k)) {  //forward difference
-                            p(i,j,k) = ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k+2)/3 + 4*p(i,j,k+1)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_back(i,j,k)) { //backward difference
-                            p(i,j,k) =-ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k-2)/3 + 4*p(i,j,k-1)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {
-                            p(i,j,k+1) = -ny/nz * smart_deriv<0,1,0>(p, i,j,k)*dz - nx/nz * smart_deriv<1,0,0>(p, i,j,k)*dz + p(i,j,k-1);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k+1))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-
-
-                    }
-
-                }
-
-            }
-        }
-    }
-}
 */
+
+
+
+
 
 void boundary_conditions::update_velocity_wall_BC()  {
     const auto dims = global_grid.no_points_unif;
