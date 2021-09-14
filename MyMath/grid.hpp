@@ -57,44 +57,19 @@ struct grid {
 
     [[nodiscard]] inline auto get_ind(const vec3& p) const noexcept {
         //finds the index of the grid that p is in
-        constexpr double inf = std::numeric_limits<double>::max();
-        double min_x = inf, min_y = inf, min_z = inf;
-
-        constexpr unsigned long init_ind = std::numeric_limits<unsigned long>::max(); //some stupid number
-        unsigned long best_ind = init_ind;
-
         for (unsigned long i = 0; i < x.size(); i++) {
-            const double dist_x = p.x() - x[i];
-            if (dist_x < 0) {   //because the grid ranges from x[i],x[i]+dx being to the left of x[i] means the point is not in the grid
-                continue;
+            if (  x[i] <= p.x() && x[i]+dx >= p.x() //within the x bounds of the grid
+            &&  y[i] <= p.y() && y[i]+dy >= p.y() //within the y bounds
+            && z[i] <= p.z() && z[i]+dz >= p.z()) { //within the z bounds
+                return i;
             }
-            const double dist_y = p.y() - y[i];
-            if (dist_y < 0) {
-                continue;
-            }
-            const double dist_z = p.z() - z[i];
-            if (dist_z < 0) {
-                continue;
-            }
-
-            if (dist_x < min_x || dist_y < min_y || dist_z < min_z) {
-                min_x = dist_x;
-                min_y = dist_y;
-                min_z = dist_z;
-                best_ind = i;
-            }
-
         }
 
 #ifndef NDEBUG
-        if (best_ind == init_ind) {
-            std::cerr << "point is to the left of the entire grid\n\tpoint = " << p << "\n";
-        } else if (p.x() > x[best_ind]+dx || p.y() > y[best_ind]+dy || p.z() > z[best_ind] + dz ) { //must be an else if because x[best_ind] will error otherwise
-            std::cerr << "point is outside of grid\n\tpoint = " << p << "\n";
-        }
+        std::cerr << "index was not found for the point\n";
 #endif
+        return std::numeric_limits<unsigned long>::max();   //some stupid value
 
-        return best_ind;
 
     }
 

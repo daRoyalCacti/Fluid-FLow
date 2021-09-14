@@ -72,230 +72,230 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     std::cerr << "debug writing\n";
     BC.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
-   /*
+    /*
 
-#ifdef DLOG
-    std::cout << "setting boundary conditions\n";
-#endif
-    boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
-    BC.DEBUG_write_boundary_points();
-    //BC.DEBUG_write_normal_vectors();
-
-
-    //std::cerr << "Returning early for testing\n";
-    //return;
-
-#ifdef DLOG
-std::cout << "constructing matrices and vectors\n";
-#endif
-    big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at hte current time-step
-    big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
-    big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
-    big_vec<N,M,P,double> p_c(dx, dy, dz, &BC.bound);    //pressure correction vector
+ #ifdef DLOG
+     std::cout << "setting boundary conditions\n";
+ #endif
+     boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
+     BC.DEBUG_write_boundary_points();
+     //BC.DEBUG_write_normal_vectors();
 
 
+     //std::cerr << "Returning early for testing\n";
+     //return;
 
-    big_vec<N,M,P,vec3> b(dx, dy, dz, &BC.bound);
-    big_vec<N,M,P,double> s(dx, dy, dz, &BC.bound);
-
-
-    big_matrix<N,M,P> Q(16);
-    big_matrix<N,M,P> A(7);
-
-#ifdef DLOG
-    std::cout << "creating A\n";
-#endif
-    //initially creating matrices
-    make_A(A, v_n, dt, Re);
-
-#ifdef DLOG
-    std::cout << "creating Q\n";
-#endif
-    //making Q
-    make_Q(Q, p, BC.norms);
-
-#ifdef DLOG
-    std::cout << "setting velocity IC\n";
-#endif
-    //first set IC
-    v_IC(v_n);
-    if constexpr (write_all_times) {
-        write_vec(v_n, (std::string(os.vel_file_loc) + "0000.txt").data());
-        write_vec(p, (std::string(os.pres_file_loc) + "0000.txt").data());
-        rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
-    }
-
-    v_n1 = v_n;
-
-#ifdef DLOG
-    std::cout << "updating pressure BC\n";
-#endif
-    //then create the s matrix
-    //BC.update_pressure_BC();
-#ifdef DLOG
-    std::cout << "setting the mesh boundary conditions\n";
-#endif
-    update_mesh(BC, rb, v_n, v_n1, p, dt, 0);
-
-#ifdef DLOG
-    std::cout << "making s\n";
-#endif
-    make_s_first(s, Re, dt, v_n, p);
-
-#ifdef DLOG
-    std::cout << "Solving pressure\n";
-#endif
-    //solve for p for the first timestep
-    solve(Q, s, p_c);
-    //enforce_PBC(p_c, BC.norms);
-
-#ifdef DLOG
-    std::cout << "Enforcing pressure boundary conditions\n";
-#endif
-    BC.update_pressure_BC(p_c);
-    p += p_c;
+ #ifdef DLOG
+ std::cout << "constructing matrices and vectors\n";
+ #endif
+     big_vec<N,M,P,vec3> v_n(dx, dy, dz, &BC.bound);    //velocity at the current time-step
+     big_vec<N,M,P,vec3> v_n1(dx, dy, dz, &BC.bound);   //velocity at the previous time-step
+     big_vec<N,M,P,double> p(dx, dy, dz, &BC.bound);    //pressure vector
+     big_vec<N,M,P,double> p_c(dx, dy, dz, &BC.bound);    //pressure correction vector
 
 
-    //setting BC vector
-    //BC.update_velocity_BC();
-#ifdef DLOG
-    std::cout << "making b\n";
-#endif
-    //then make b
-    make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
 
-#ifdef DLOG
-    std::cout << "solving for v\n";
-#endif
-    //and solve for v at the first timestep
-    solve(A, b.xv, v_n.xv);
-    solve(A, b.yv, v_n.yv);
-    solve(A, b.zv, v_n.zv);
-
-#ifdef DLOG
-    std::cout << "enforcing pressure BC\n";
-#endif
-    //enforcing BC
-    BC.enforce_velocity_BC(v_n);
-
-    if constexpr (write_all_times) {
-        write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
-        write_vec(p, (std::string(os.pres_file_loc) + "0001.txt").data());
-        rb->write_pos((std::string(os.body_file_loc) + "0001.txt").data());
-    }
+     big_vec<N,M,P,vec3> b(dx, dy, dz, &BC.bound);
+     big_vec<N,M,P,double> s(dx, dy, dz, &BC.bound);
 
 
-    unsigned counter = 1;
+     big_matrix<N,M,P> Q(16);
+     big_matrix<N,M,P> A(7);
 
-    for (double t = dt; t < max_t; t+=dt) {
-        const auto start_loop = std::chrono::high_resolution_clock::now();
-        const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
-        char time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
-        if (std::strftime(time_human, sizeof(time_human), "%T", std::localtime(&start_time))) {
-            std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
-        } else {
-            std::cerr << "Timing error\n";
-        }
+ #ifdef DLOG
+     std::cout << "creating A\n";
+ #endif
+     //initially creating matrices
+     make_A(A, v_n, dt, Re);
 
-        //updating the mesh
-        timer.set_start(std::chrono::high_resolution_clock::now());
+ #ifdef DLOG
+     std::cout << "creating Q\n";
+ #endif
+     //making Q
+     make_Q(Q, p, BC.norms);
 
-        update_mesh(BC, rb, v_n, v_n1, p, dt, t);
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_mesh_update_time();
+ #ifdef DLOG
+     std::cout << "setting velocity IC\n";
+ #endif
+     //first set IC
+     v_IC(v_n);
+     if constexpr (write_all_times) {
+         write_vec(v_n, (std::string(os.vel_file_loc) + "0000.txt").data());
+         write_vec(p, (std::string(os.pres_file_loc) + "0000.txt").data());
+         rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
+     }
 
+     v_n1 = v_n;
 
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        //first make the s matrix
-        //BC.update_pressure_BC();
-        make_s(s, Re, dt, v_n, v_n1, p);
+ #ifdef DLOG
+     std::cout << "updating pressure BC\n";
+ #endif
+     //then create the s matrix
+     //BC.update_pressure_BC();
+ #ifdef DLOG
+     std::cout << "setting the mesh boundary conditions\n";
+ #endif
+     update_mesh(BC, rb, v_n, v_n1, p, dt, 0);
 
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_s_create_time();
+ #ifdef DLOG
+     std::cout << "making s\n";
+ #endif
+     make_s_first(s, Re, dt, v_n, p);
 
+ #ifdef DLOG
+     std::cout << "Solving pressure\n";
+ #endif
+     //solve for p for the first timestep
+     solve(Q, s, p_c);
+     //enforce_PBC(p_c, BC.norms);
 
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        //solve for p for the next timestep
-        solve(Q, s, p_c);
-        BC.update_pressure_BC(p_c);
-        p += p_c;
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_p_solve_time();
-
-        //setting BC vector
-        //BC.update_velocity_BC();
-
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        //then make b
-        make_b(b, Re, dt, v_n, v_n1, p, BC.vel_bc);
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_b_create_time();
-
-
-        //shuffling of variables
-        v_n1 = v_n;
-
-
-        //solve for v for the next time step
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        solve(A, b.xv, v_n.xv);
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_vx_solve_time();
-
-
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        solve(A, b.yv, v_n.yv);
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_vy_solve_time();
-
-        timer.set_start(std::chrono::high_resolution_clock::now());
-        solve(A, b.zv, v_n.zv);
-        timer.set_end(std::chrono::high_resolution_clock::now());
-        timer.save_vz_solve_time();
+ #ifdef DLOG
+     std::cout << "Enforcing pressure boundary conditions\n";
+ #endif
+     BC.update_pressure_BC(p_c);
+     p += p_c;
 
 
-        //enforcing BC
-        BC.enforce_velocity_BC(v_n);
+     //setting BC vector
+     //BC.update_velocity_BC();
+ #ifdef DLOG
+     std::cout << "making b\n";
+ #endif
+     //then make b
+     make_b_first(b, Re, dt, v_n, p, BC.vel_bc);
+
+ #ifdef DLOG
+     std::cout << "solving for v\n";
+ #endif
+     //and solve for v at the first timestep
+     solve(A, b.xv, v_n.xv);
+     solve(A, b.yv, v_n.yv);
+     solve(A, b.zv, v_n.zv);
+
+ #ifdef DLOG
+     std::cout << "enforcing pressure BC\n";
+ #endif
+     //enforcing BC
+     BC.enforce_velocity_BC(v_n);
+
+     if constexpr (write_all_times) {
+         write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
+         write_vec(p, (std::string(os.pres_file_loc) + "0001.txt").data());
+         rb->write_pos((std::string(os.body_file_loc) + "0001.txt").data());
+     }
 
 
-        ++counter;
-        std::string file_name;
-        if constexpr (write_all_times) {
-            if (counter < 10) {
-                file_name = "000" + std::to_string(counter);
-            } else if (counter < 100) {
-                file_name = "00" + std::to_string(counter);
-            } else if (counter < 1000) {
-                file_name = "0" + std::to_string(counter);
-            } else {
-                file_name = std::to_string(counter);
-            }
+     unsigned counter = 1;
+
+     for (double t = dt; t < max_t; t+=dt) {
+         const auto start_loop = std::chrono::high_resolution_clock::now();
+         const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
+         char time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
+         if (std::strftime(time_human, sizeof(time_human), "%T", std::localtime(&start_time))) {
+             std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
+         } else {
+             std::cerr << "Timing error\n";
+         }
+
+         //updating the mesh
+         timer.set_start(std::chrono::high_resolution_clock::now());
+
+         update_mesh(BC, rb, v_n, v_n1, p, dt, t);
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_mesh_update_time();
 
 
-            write_vec(v_n, (std::string(os.vel_file_loc) + file_name + ".txt").data());
-            write_vec(p, (std::string(os.pres_file_loc) + file_name + ".txt").data());
-            rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
-        }
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         //first make the s matrix
+         //BC.update_pressure_BC();
+         make_s(s, Re, dt, v_n, v_n1, p);
 
-        const auto end_loop = std::chrono::high_resolution_clock::now();
-        const std::chrono::duration<double> dur_loop = end_loop - start_loop;
-        std::cout << "\ttimestep took : " << dur_loop.count() << "s";
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_s_create_time();
 
-        if constexpr (write_all_times) {
-            std::cout << "\tfile written : " << file_name << "\n";
-        } else {
-            std::cout << "\n";
-        }
 
-        timer.write_times(t);
-    }
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         //solve for p for the next timestep
+         solve(Q, s, p_c);
+         BC.update_pressure_BC(p_c);
+         p += p_c;
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_p_solve_time();
 
-    if constexpr (!write_all_times) {
-        write_vec(v_n, os.final_vel_name.data());
-        write_vec(p, os.final_pres_name.data());
-    }
+         //setting BC vector
+         //BC.update_velocity_BC();
 
-     */
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         //then make b
+         make_b(b, Re, dt, v_n, v_n1, p, BC.vel_bc);
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_b_create_time();
+
+
+         //shuffling of variables
+         v_n1 = v_n;
+
+
+         //solve for v for the next time step
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         solve(A, b.xv, v_n.xv);
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_vx_solve_time();
+
+
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         solve(A, b.yv, v_n.yv);
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_vy_solve_time();
+
+         timer.set_start(std::chrono::high_resolution_clock::now());
+         solve(A, b.zv, v_n.zv);
+         timer.set_end(std::chrono::high_resolution_clock::now());
+         timer.save_vz_solve_time();
+
+
+         //enforcing BC
+         BC.enforce_velocity_BC(v_n);
+
+
+         ++counter;
+         std::string file_name;
+         if constexpr (write_all_times) {
+             if (counter < 10) {
+                 file_name = "000" + std::to_string(counter);
+             } else if (counter < 100) {
+                 file_name = "00" + std::to_string(counter);
+             } else if (counter < 1000) {
+                 file_name = "0" + std::to_string(counter);
+             } else {
+                 file_name = std::to_string(counter);
+             }
+
+
+             write_vec(v_n, (std::string(os.vel_file_loc) + file_name + ".txt").data());
+             write_vec(p, (std::string(os.pres_file_loc) + file_name + ".txt").data());
+             rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
+         }
+
+         const auto end_loop = std::chrono::high_resolution_clock::now();
+         const std::chrono::duration<double> dur_loop = end_loop - start_loop;
+         std::cout << "\ttimestep took : " << dur_loop.count() << "s";
+
+         if constexpr (write_all_times) {
+             std::cout << "\tfile written : " << file_name << "\n";
+         } else {
+             std::cout << "\n";
+         }
+
+         timer.write_times(t);
+     }
+
+     if constexpr (!write_all_times) {
+         write_vec(v_n, os.final_vel_name.data());
+         write_vec(p, os.final_pres_name.data());
+     }
+
+      */
 
 
 }
