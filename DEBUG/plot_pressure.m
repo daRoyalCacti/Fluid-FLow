@@ -1,10 +1,10 @@
-function p_r = plot_pressure(file_loc)
+function p_n = plot_pressure(file_loc)
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
     x = data(1:3:end);
     y = data(2:3:end); 
-    p_r = data(3:3:end);
+    p = data(3:3:end);
     
     axis([min(x), max(x), min(y), max(y)])
     
@@ -12,12 +12,17 @@ function p_r = plot_pressure(file_loc)
     dx = x_sort(2)-x_sort(1);
     y_sort = sort(unique(y));
     dy = y_sort(2)-y_sort(1);
-    
-    p_n = ( p_r - min(p_r) ) / (max(p_r) - min(p_r) );
-    
+   
+    if ( max(p) - min(p) > 0.00000001)
+        p_n = ( p - min(p) ) / (max(p) - min(p) );
+    else
+        p_n = zeros(size(p));
+    end
+
     
     for ii = 1:(length(x)-1)
-        rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 0 p_n(ii)],'EdgeColor',[0 0 p_n(ii)],'LineWidth',0.001)
+%         rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 0 p_n(ii)],'EdgeColor',[0 0 p_n(ii)],'LineWidth',0.001)
+        rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 p_n(ii) 0],'EdgeColor',[0 p_n(ii) 0],'LineWidth',0.001)
     end
 
 %     l = length(p_r);

@@ -3,18 +3,18 @@ All_v_files = dirPlus('velocity_data');   %https://stackoverflow.com/questions/2
 All_p_files = dirPlus('pressure_data'); 
 All_b_files = dirPlus('rigid_body_data');
 
-no_files = length(All_v_files);
+% no_files = length(All_v_files);
+fprintf('no_files has been changed for testing\n')
+no_files = 218;
 
 fprintf("Reading files\n")
 data = struct;
 for ii = 1:no_files
     [data(ii).x, data(ii).y , data(ii).vx , data(ii).vy , data(ii).vz ] = read_v_data( cell2mat(All_v_files(ii)) );
     
-    data(ii).p = read_p_data( cell2mat(All_p_files(ii)) );
+    [data(ii).p, data(ii).dx, data(ii).dy] = read_p_data( cell2mat(All_p_files(ii)) );
     [data(ii).bx, data(ii).by, data(ii).bz] = read_b_data( cell2mat(All_b_files(ii)) );
 end
-
-
 
 
 fprintf("Finding mins and maxs\n")
@@ -67,12 +67,10 @@ for frame = 1:no_files
 
     
     subplot(2,2,2)
-    heatmap(unique(data(frame).x),unique(data(frame).y), flip(data(frame).p), 'GridVisible', 'off', 'ColorLimits', [min_p, max_p]);
-    
-    %turning off axes
-    Ax = gca;
-    Ax.XDisplayLabels = nan(size(Ax.XDisplayData));
-    Ax.YDisplayLabels = nan(size(Ax.YDisplayData));
+    for ii = 1:(length(x)-1)
+        rectangle('Position',[data(frame).x(ii),data(frame).y(ii),data(frame).dx,data(frame).dy],'FaceColor',...
+            [0 data(frame).p(ii) 0],'EdgeColor',[0 data(frame).p(ii) 0],'LineWidth',0.001)
+    end
     
     subplot(2,2,3)
     quiver(data(frame).x, data(frame).y, data(frame).vx./sqrt( data(frame).vx.^2 + data(frame).vy.^2), data(frame).vy./sqrt( data(frame).vx.^2 + data(frame).vy.^2))
@@ -110,26 +108,25 @@ function [x,y, vx, vy, vz] = read_v_data(file_loc)
 end
 
 
-function p = read_p_data(file_loc)
+function [p_n, dx, dy] = read_p_data(file_loc)
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
-    %x = data(1:3:end);
-    %y = data(2:3:end); 
-    p_r = data(3:3:end);
+    x = data(1:3:end);
+    y = data(2:3:end); 
+    p = data(3:3:end);
     
-%     p = data;
-    l = length(p_r);
-    if ( sqrt(l) ~= floor(sqrt(l)))
-        error("assumption that grid is a square failed")
-    end
+    axis([min(x), max(x), min(y), max(y)])
     
-    p = zeros(sqrt(l), sqrt(l));
-    
-    for ii = 1:sqrt(l)
-        for jj = 1:sqrt(l)
-            p(ii,jj) = p_r(ii + sqrt(l)*(jj-1) );
-        end
+    x_sort = sort(unique(x));
+    dx = x_sort(2)-x_sort(1);
+    y_sort = sort(unique(y));
+    dy = y_sort(2)-y_sort(1);
+   
+    if ( max(p) - min(p) > 0.00000001)
+        p_n = ( p - min(p) ) / (max(p) - min(p) );
+    else
+        p_n = zeros(size(p));
     end
 
 end
