@@ -63,7 +63,7 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
 
 //TODO : test to see if gives right output
 void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n, const big_vec_d &p) noexcept {
-//#pragma omp parallel for
+    #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
         //std::cerr << i << " " << p.is_boundary(i) << "\n";
         if (p.is_boundary(i)) {
