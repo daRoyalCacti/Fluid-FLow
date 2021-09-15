@@ -79,7 +79,6 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     //BC.DEBUG_write_boundary_points();
     BC.global_grid.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
-    return;
 
 
 
@@ -152,9 +151,9 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 #endif
      v_n1 = v_n;
 
- #ifdef DLOG
-     std::cout << "updating pressure BC\n";
- #endif
+ //#ifdef DLOG
+ //    std::cout << "updating pressure BC\n";
+ //#endif
      //then create the s matrix
      //BC.update_pressure_BC();
  #ifdef DLOG
@@ -198,14 +197,30 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      solve(A, b.zv, v_n.zv);
 
  #ifdef DLOG
-     std::cout << "enforcing pressure BC\n";
+     std::cout << "enforcing velocity BC\n";
  #endif
      //enforcing BC
      enforce_velocity_BC(BC, v_n);
 
+ #ifdef DLOG
+     std::cout << "writing first timestep\n";
+ #endif
      if constexpr (write_all_times) {
-         write_vec(v_n, (std::string(os.vel_file_loc) + "0001.txt").data());
-         write_vec(p, (std::string(os.pres_file_loc) + "0001.txt").data());
+ #ifdef DLOG
+         std::cout << "\tGetting indices\n";
+ #endif
+         const auto inds = v_n.g->get_middle_inds();
+#ifdef DLOG
+         std::cout << "\tWriting v\n";
+ #endif
+         write_vec(v_n,inds, (std::string(os.vel_file_loc) + "0001.txt").data());
+ #ifdef DLOG
+         std::cout << "\tWriting p\n";
+ #endif
+         write_vec(p, inds,(std::string(os.pres_file_loc) + "0001.txt").data());
+ #ifdef DLOG
+         std::cout << "\tWriting r\n";
+ #endif
          rb->write_pos((std::string(os.body_file_loc) + "0001.txt").data());
      }
 
@@ -296,9 +311,9 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
                  file_name = std::to_string(counter);
              }
 
-
-             write_vec(v_n, (std::string(os.vel_file_loc) + file_name + ".txt").data());
-             write_vec(p, (std::string(os.pres_file_loc) + file_name + ".txt").data());
+             const auto inds = v_n.g->get_middle_inds();
+             write_vec(v_n,inds, (std::string(os.vel_file_loc) + file_name + ".txt").data());
+             write_vec(p,inds, (std::string(os.pres_file_loc) + file_name + ".txt").data());
              rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
          }
 
