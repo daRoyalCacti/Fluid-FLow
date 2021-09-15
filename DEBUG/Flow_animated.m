@@ -67,7 +67,7 @@ for frame = 1:no_files
 
     
     subplot(2,2,2)
-    for ii = 1:(length(x)-1)
+    for ii = 1:(length(x))
         rectangle('Position',[data(frame).x(ii),data(frame).y(ii),data(frame).dx,data(frame).dy],'FaceColor',...
             [0 data(frame).p(ii) 0],'EdgeColor',[0 data(frame).p(ii) 0],'LineWidth',0.001)
     end
