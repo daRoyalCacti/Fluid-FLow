@@ -125,12 +125,30 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      //first set IC
      v_IC(v_n);
+#ifdef DLOG
+     std::cout << "writing velocity IC\n";
+ #endif
      if constexpr (write_all_times) {
-         write_vec(v_n, (std::string(os.vel_file_loc) + "0000.txt").data());
-         write_vec(p, (std::string(os.pres_file_loc) + "0000.txt").data());
+ #ifdef DLOG
+         std::cout << "\tGetting indices\n";
+ #endif
+         const auto inds = v_n.g->get_middle_inds();
+#ifdef DLOG
+         std::cout << "\tWriting v\n";
+ #endif
+         write_vec(v_n,inds, (std::string(os.vel_file_loc) + "0000.txt").data());
+ #ifdef DLOG
+         std::cout << "\tWriting p\n";
+ #endif
+         write_vec(p, inds,(std::string(os.pres_file_loc) + "0000.txt").data());
+ #ifdef DLOG
+         std::cout << "\tWriting r\n";
+ #endif
          rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
      }
-
+#ifdef DLOG
+    std::cout << "copying vector\n";
+#endif
      v_n1 = v_n;
 
  #ifdef DLOG

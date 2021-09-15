@@ -211,7 +211,7 @@ struct big_vec_d final : public big_vec<double> {
         return *this;
     }
 
-    unsigned long size() const override {
+    [[nodiscard]] unsigned long size() const override {
         return v.size();
     }
 
@@ -297,7 +297,21 @@ void write_vec(const T& v, const char* file_loc) noexcept {
         for (const auto ind : inds) {
             const auto g = *v.g;
             output << g[ind].x() << " " << g[ind].y() << " " << v(ind) << "\n";
+        }
+    } else {
+        std::cerr << "failed to open file\n";
+    }
 
+    output.close();
+}
+
+void write_vec(const auto& v, const auto& inds, const char* file_loc) noexcept {
+    std::ofstream output(file_loc);
+    if (output.is_open()) {
+        for (const auto ind : inds) {
+            const grid& g = *v.g;
+            const auto pos = g[ind];
+            output << pos.x() << " " << pos.y() << " " << v(ind) << "\n";
         }
     } else {
         std::cerr << "failed to open file\n";
