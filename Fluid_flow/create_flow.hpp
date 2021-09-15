@@ -79,6 +79,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     //BC.DEBUG_write_boundary_points();
     BC.global_grid.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
+    return;
 
 
 
@@ -107,7 +108,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
      big_matrix Q(BC, 16);
      big_matrix A(BC, 7);
-
+     //return;
  #ifdef DLOG
      std::cout << "creating A\n";
  #endif

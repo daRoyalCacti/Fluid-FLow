@@ -197,6 +197,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
 
     //removing points
     //======================================================
+    std::cerr << "removing points\n";
     std::vector<double> x, y, z;
     x.reserve(g.x.size());
     y.reserve(g.y.size());
@@ -231,7 +232,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     z.shrink_to_fit();
     r.shrink_to_fit();
 
-
+    std::cerr << "recalibrating r\n";
     for (auto& e : r) {
         if (e.left != -1) { e.left = old_new.at(e.left); }
         if (e.right != -1) { e.right = old_new.at(e.right); }
@@ -250,7 +251,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
 
 
     boundary_normals norms_c(norms.size());
-    std::cerr << "removing norms\n";
+    std::cerr << "recalibrating norms\n";
     for (const auto & n : norms.m) {
 
 #ifndef NDEBUG
@@ -265,7 +266,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     norms = std::move(norms_c);
 
     mesh_points m_points_c(m_points.size());
-    std::cerr << "removing points\n";
+    std::cerr << "recalibrating points\n";
     for (const auto & n : m_points.m) {
 #ifndef NDEBUG
         m_points_c.add_point( old_new.at(n.first), n.second  );
@@ -280,7 +281,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
     m_points = std::move(m_points_c);
 
     vel_points v_points_c(v_points.size());
-    std::cerr << "removing vels\n";
+    std::cerr << "recalibrating vels\n";
     for (const auto & n : v_points.m) {
 
 #ifndef NDEBUG
@@ -293,6 +294,25 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
 #endif
     }
     v_points = std::move(v_points_c);
+
+#ifndef NDEBUG
+        std::cerr << "checking results\n";
+        //checking that all normals below to a boundary point
+        for (const auto & n : norms.m) {
+            if ( !g.is_boundary(n.first) ) {
+                std::cerr << "normal at index " << n.first << " is not on a boundary point\n";
+            }
+        }
+
+        //checking that all boundary points have a normal
+        for (unsigned i = 0; i < g.r.size(); i++) {
+            if (g.is_boundary(i) && !norms.contains(i)) {
+                std::cerr << "boundary point at index " << i << " does not have a normal\n";
+            }
+        }
+
+#endif
+
 
 }
 

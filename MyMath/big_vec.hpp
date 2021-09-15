@@ -44,9 +44,8 @@ struct big_vec {
     [[nodiscard]] constexpr inline double dx(const unsigned ind) const noexcept {return g->dx;}
     [[nodiscard]] constexpr inline double dy(const unsigned ind) const noexcept {return g->dy;}
     [[nodiscard]] constexpr inline double dz(const unsigned ind) const noexcept {return g->dz;}
-    [[nodiscard]] inline vec3 get_pos(const unsigned ind) const noexcept {
-        return (*g)[ind];}
-        [[nodiscard]] inline unsigned get_inds(const vec3& p) const noexcept {    std::cerr << "calling get_inds for big vec --- function is very slow\n";
+    [[nodiscard]] inline vec3 get_pos(const unsigned ind) const noexcept {return (*g)[ind];}
+    [[nodiscard]] inline unsigned get_inds(const vec3& p) const noexcept {    std::cerr << "calling get_inds for big vec --- function is very slow\n";
         return g->get_ind(p);
     }
 

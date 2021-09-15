@@ -206,10 +206,68 @@ struct grid {
     }
 
     [[nodiscard]] inline bool is_boundary(const unsigned ind) const noexcept {
-        const auto end_x = !has_left(ind) || !has_right(ind);
-        const auto end_y = !has_down(ind) || !has_up(ind);
-        const auto end_z = !has_front(ind) || !has_back(ind);
-        return end_x || end_y || end_z;
+        //do smarter
+        // - check 3by3by region first
+        // - then check above and below these points
+        //or maybe just list out all the indices
+        // - make should to check coordinate axis first before small diagonals before big digaonals
+        //only in debug do we check that ind itself is not a boundary (i.e. ind!=-1)
+#ifndef NDEBUG
+        if (ind==-1) {
+            std::cerr << "trying to find if boundary of ind=-1. This should never happen\n";
+            return true;
+        }
+#endif
+        if (r[ind].left== -1) {return true;}
+        if (r[ind].right== -1) {return true;}
+        if (r[ind].down== -1) {return true;}
+        if (r[ind].up== -1) {return true;}
+        if (r[ind].front== -1) {return true;}
+        if (r[ind].back== -1) {return true;}
+
+        if ( r[r[ind].left].up== -1) {return true;}
+        if ( r[r[ind].left].down== -1) {return true;}
+        if ( r[r[ind].left].front== -1) {return true;}
+        if ( r[r[ind].left].back== -1) {return true;}
+
+        if ( r[r[ind].right].up== -1) {return true;}
+        if ( r[r[ind].right].down== -1) {return true;}
+        if ( r[r[ind].right].front== -1) {return true;}
+        if ( r[r[ind].right].back== -1) {return true;}
+
+        if ( r[r[r[ind].left].up].front == -1 ) {return true;}
+        if ( r[r[r[ind].left].up].back == -1 ) {return true;}
+        if ( r[r[r[ind].left].down].front == -1 ) {return true;}
+        if ( r[r[r[ind].left].down].back == -1 ) {return true;}
+
+        if ( r[r[r[ind].right].up].front == -1 ) {return true;}
+        if ( r[r[r[ind].right].up].back == -1 ) {return true;}
+        if ( r[r[r[ind].right].down].front == -1 ) {return true;}
+        if ( r[r[r[ind].right].down].back == -1 ) {return true;}
+
+        if ( r[r[ind].up].front== -1) {return true;}
+        if ( r[r[ind].up].back== -1) {return true;}
+        if ( r[r[ind].down].front== -1) {return true;}
+        if ( r[r[ind].down].back== -1) {return true;}
+
+        /*const bool ends = !has_left(ind) || !has_right(ind) || !has_down(ind) || !has_up(ind) || !has_front(ind) || !has_back(ind);
+        if (ends) {
+            return true;
+        }
+
+        const auto ind_d1 = r[ind].left;
+        const auto ind_d2 = r[ind].right;
+
+        const std::array<int, 4> inds_ddiag = { r[r[ind].left].up, r[r[ind].left].down, r[r[ind].right].up, r[r[ind].right].down };
+        for (const auto i : inds_ddiag) {
+            const bool ddiags = !has_front(i) || !has_back(i);
+            if (ddiags) {
+                return true;
+            }
+        }*/
+
+        //return end_x || end_y || end_z;
+        return false;
     }
 
     [[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept {
