@@ -20,7 +20,7 @@ function p_n = plot_pressure(file_loc)
     end
 
     
-    for ii = 1:(length(x)-1)
+    for ii = 1:(length(x))
 %         rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 0 p_n(ii)],'EdgeColor',[0 0 p_n(ii)],'LineWidth',0.001)
         rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 p_n(ii) 0],'EdgeColor',[0 p_n(ii) 0],'LineWidth',0.001)
     end
