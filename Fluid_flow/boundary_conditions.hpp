@@ -134,7 +134,7 @@ struct boundary_conditions {
     void update_velocity_wall_BC();
 
 private:
-    void set_wall_points();
+    //void set_wall_points();
     void create_wall_normals();
     /*
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned j) noexcept;
