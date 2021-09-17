@@ -113,8 +113,8 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             //const auto ind1 = *inds.begin();
             //const auto ind2 = *(--inds.end());
 
-            const auto inds1 = vec3( floor(col1.x()/g.dx), floor(col1.y()/g.dy),floor(col1.z()/g.dz) );
-            const auto inds2 = vec3( floor(col2.x()/g.dx), floor(col2.y()/g.dy),floor(col2.z()/g.dz) );
+            const auto inds1 = g.get_ind_unif(col1);
+            const auto inds2 = g.get_ind_unif(col2);
 
 
             const auto ind1 = g.convert_indices_unif(inds1);
@@ -301,6 +301,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
         for (const auto & n : norms.m) {
             if ( !g.is_boundary(n.first) ) {
                 std::cerr << "normal at index " << n.first << " is not on a boundary point\n";
+                std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
             }
         }
 
@@ -308,6 +309,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
         for (unsigned i = 0; i < g.r.size(); i++) {
             if (g.is_boundary(i) && !norms.contains(i)) {
                 std::cerr << "boundary point at index " << i << " does not have a normal\n";
+                std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
 
