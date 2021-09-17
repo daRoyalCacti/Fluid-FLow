@@ -74,8 +74,6 @@ struct grid {
 
     }
 
-
-
     [[nodiscard]] inline auto get_inds(vec3 p1, vec3 p2) const noexcept {
         //find the axis to look along
         unsigned axis1 = 4, axis2, axis3;
@@ -171,6 +169,11 @@ struct grid {
 
     [[nodiscard]] auto convert_indices_unif(const vec3 &inds) const {
         return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
+    }
+
+    [[nodiscard]] inline vec3 get_ind_unif(vec3 p) const noexcept {
+        p -= mins;
+        return {floor(p.x()/dx), floor(p.y()/dy),floor(p.z()/dz)};
     }
 
 
