@@ -41,19 +41,10 @@ struct mesh final{
         velocities.resize(vertices_.size());
         //filling the initial velocities based off the cm velocity and angular velocity
         vec3 pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);
-        double minx=std::numeric_limits<double>::max(), miny=std::numeric_limits<double>::max(), minz=std::numeric_limits<double>::max();
-        double maxx=std::numeric_limits<double>::min(), maxy=std::numeric_limits<double>::min(), maxz=std::numeric_limits<double>::min();
         for (size_t i = 0; i < velocities.size(); i++) {
             velocities[i] = v_ + cross( (vertices_[i] - pos_cm), w_);
-
-            if (vertices_[i].x() < maxx) {maxx = vertices_[i].x();}
-            if (vertices_[i].x() > minx) {minx = vertices_[i].x();}
-            if (vertices_[i].y() < maxy) {maxy = vertices_[i].y();}
-            if (vertices_[i].y() > miny) {miny = vertices_[i].y();}
-            if (vertices_[i].z() < maxz) {maxz = vertices_[i].z();}
-            if (vertices_[i].z() > minz) {minz = vertices_[i].z();}
         }
-        bounds = bounding_box{ {minx, miny, minz}, {maxx, maxy, maxz} };
+        update_bounding_box();
 
 
 #ifndef NDEBUG
@@ -67,6 +58,20 @@ struct mesh final{
             std::cerr << "having less indices that vertices doesn't make sense\n";
         }
 #endif
+    }
+
+    void update_bounding_box() {
+        double minx=std::numeric_limits<double>::max(), miny=std::numeric_limits<double>::max(), minz=std::numeric_limits<double>::max();
+        double maxx=std::numeric_limits<double>::min(), maxy=std::numeric_limits<double>::min(), maxz=std::numeric_limits<double>::min();
+        for (auto &vert : vertices) {
+            if (vert.x() < maxx) {maxx = vert.x();}
+            if (vert.x() > minx) {minx = vert.x();}
+            if (vert.y() < maxy) {maxy = vert.y();}
+            if (vert.y() > miny) {miny = vert.y();}
+            if (vert.z() < maxz) {maxz = vert.z();}
+            if (vert.z() > minz) {minz = vert.z();}
+        }
+        bounds = bounding_box{ {minx, miny, minz}, {maxx, maxy, maxz} };
     }
 
     [[nodiscard]] const vec3& get_vertice_index( const unsigned i) const noexcept {
