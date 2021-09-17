@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <limits>
+#include <set>
 #include "../MyMath/vec3.hpp"
 
 //stores the neighbours of a grid point
@@ -155,7 +156,7 @@ struct grid {
         std::vector<unsigned long> ret_vec;
         ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
         for (unsigned long i = 0; i < z.size(); i++) {
-            if ( z[i] < middle_z && z[i]+dz > middle_z ) {
+            if ( z[i] <= middle_z && z[i]+dz > middle_z ) {
                 ret_vec.push_back(i);
             }
         }
