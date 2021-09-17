@@ -47,7 +47,7 @@ struct boundary_conditions {
 
 
         std::cerr << "removing inside points\n";
-        remove_inside_boundary_unif(global_grid, tm, norms, m_points, v_points);
+        remove_inside_boundary_unif(global_grid, tm, *m, norms, m_points, v_points);
 
         //needs to be called after vel_bc is set because it uses dx, dy, dz from it
         /*

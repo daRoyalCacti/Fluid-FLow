@@ -75,15 +75,12 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
                     back = -1;
                 }
 
-                //std::cerr << left << "\n";
                 g.r[counter] = {left, right, down, up, front, back};
-                //std::cerr << g.r[counter].left << "\n";
 
                 counter++;
             }
         }
     }
-    //std::cerr << g.r[0].left << "\n";
 
 }
 
@@ -93,7 +90,6 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
                              boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::unordered_set<unsigned> &boundary_indices) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
-
         for (auto h = hits.begin(); h != hits.end(); ++(++h)) {
             auto th = h;
             const auto col1 = th->second.v1;
@@ -105,13 +101,6 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const auto norm2 = th->second.v2;
             const auto vel2 = th->second.v3;
 
-            //std::cerr << col1 << " " << col2 << "\n";
-
-
-            //const auto ind1 = g.get_ind(col1);
-            //const auto ind2 = g.get_ind(col2);
-            //const auto ind1 = *inds.begin();
-            //const auto ind2 = *(--inds.end());
 
             const auto inds1 = g.get_ind_unif(col1);
             const auto inds2 = g.get_ind_unif(col2);
@@ -120,25 +109,29 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const auto ind1 = g.convert_indices_unif(inds1);
             const auto ind2 = g.convert_indices_unif(inds2);
 
-            boundary_indices.insert(ind1);
-            boundary_indices.insert(ind2);
 
             unsigned axis;
             if (r.dir.x() == 1) {
                 axis = 0;
+#ifndef NDEBUG
                 if (inds1.x() == inds2.x()) {
-                    std::cerr << "bac\n";
+                    std::cerr << "ray hit the same point twice\n";
                 }
+#endif
             } if (r.dir.y() == 1) {
                 axis = 1;
+#ifndef NDEBUG
                 if (inds1.y() == inds2.y()) {
-                    std::cerr << "bac\n";
+                    std::cerr << "ray hit the same point twice\n";
                 }
+#endif
             } if (r.dir.z() == 1) {
                 axis = 2;
+#ifndef NDEBUG
                 if (inds1.z() == inds2.z()) {
-                    std::cerr << "bac\n";
+                    std::cerr << "ray hit the same point twice\n";
                 }
+#endif
             }
 
 
@@ -161,36 +154,65 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             v_points.add_point(ind1, vel1);
             v_points.add_point(ind2, vel2);
 
+            boundary_indices.insert(ind1);
+            boundary_indices.insert(ind2);
+
         }
 
     }
 }
 
 //moves points inside boundary on a boring grid
-void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_normals &norms, mesh_points &m_points, vel_points &v_points) {
+void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m, boundary_normals &norms, mesh_points &m_points, vel_points &v_points) {
     std::unordered_set<unsigned> inside_indices;
     std::unordered_set<unsigned> boundary_indices;
 
+    constexpr unsigned test = 1;
+
+    const auto minp = m.bounds.min;
+    const auto maxp = m.bounds.max;
+
+    const auto dims = ceil( (maxp - minp) / vec3(g.dx, g.dy, g.dz) );
+    const auto Nx = static_cast<unsigned>(dims.x()) * test;
+    const auto Ny = static_cast<unsigned>(dims.y()) * test;
+    const auto Nz = static_cast<unsigned>(dims.z()) * test;
+
+
+    const double dx = ( maxp.x() - minp.x() ) / ceil( ( maxp.x() - minp.x() ) /g.dx );
+    const double dy = ( maxp.y() - minp.y() ) / ceil( ( maxp.y() - minp.y() ) /g.dy );
+    const double dz = ( maxp.z() - minp.z() ) / ceil( ( maxp.z() - minp.z() ) /g.dz );
+
     std::cerr << "rays from the z direction\n";
-    for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
-        for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
-            const ray r(vec3(x+g.dx/2, y+g.dy/2, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
+    //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
+        //for (double y = minp.y(); y <= maxp.y(); y += g.dy/test) {
+    for (unsigned i = 0; i <= Nx; i++) {
+        for (unsigned j = 0; j <= Ny; j++) {
+            const double x = minp.x() + i*dx/test;
+            const double y = minp.y() + j*dy/test;
+
+            const ray r(vec3(x, y, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
             get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
         }
     }
 
     std::cerr << "rays from the y direction\n";
-    for (double x = g.mins.x(); x < g.maxs.x(); x += g.dx) {
-        for (double z = g.mins.z(); z < g.maxs.z(); z += g.dz) {
-            const ray r(vec3(x+g.dx/2, 0, z + g.dz/2), vec3(0,1,0) );
+    //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
+     //   for (double z = minp.z(); z <= maxp.z(); z += g.dz/test) {
+     for (unsigned i = 0; i <= Nx; i++) {
+         for (unsigned k = 0; k <= Nz; k++) {
+             const double x = minp.x() + i*dx/test;
+             const double z = minp.z() + k*dz/test;
+            const ray r(vec3(x, 0, z), vec3(0,1,0) );
             get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
         }
     }
 
     std::cerr << "rays from the x direction\n";
-    for (double y = g.mins.y(); y < g.maxs.y(); y += g.dy) {
-        for (double z = g.mins.z(); z < g.maxs.z(); z += g.dz) {
-            const ray r(vec3(0, y+g.dy/2, z + g.dz/2), vec3(1,0,0) );
+     for (unsigned j = 0; j <= Ny; j++) {
+         for (unsigned k = 0; k <= Nz; k++) {
+             const double y = minp.y() + j*dy/test;
+             const double z = minp.z() + k*dz/test;
+            const ray r(vec3(0, y, z), vec3(1,0,0) );
             get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
         }
     }
@@ -312,7 +334,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, boundary_norm
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
-
+        std::cerr << "finished checking results\n";
 #endif
 
 
