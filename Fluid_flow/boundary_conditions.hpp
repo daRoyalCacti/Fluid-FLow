@@ -120,8 +120,26 @@ struct boundary_conditions {
                 }
                 output << "\n";
             }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
 
+        output.close();
+    }
 
+    void DEBUG_write_normal_vectors_at_x(const double xp) const {
+        std::ofstream output("../DEBUG/normal_vectors.txt");
+        if (output.is_open()) {
+            const auto inds = global_grid.get_some_x_inds(xp);
+            for (const auto ind : inds) {
+                output << global_grid[ind].y() << " " << global_grid[ind].z() << " ";
+                if (norms.contains(ind)) {
+                    output << norms.normal(ind);
+                } else {
+                    output << vec3(0);
+                }
+                output << "\n";
+            }
         } else {
             std::cerr << "failed to open file\n";
         }

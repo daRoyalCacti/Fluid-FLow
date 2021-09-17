@@ -158,9 +158,18 @@ struct grid {
                 ret_vec.push_back(i);
             }
         }
-
         return ret_vec;
+    }
 
+    [[nodiscard]] inline auto get_some_x_inds(const double xp) const noexcept {
+        std::vector<unsigned long> ret_vec;
+        ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
+        for (unsigned long i = 0; i < x.size(); i++) {
+            if ( x[i] <= xp && x[i]+dx > xp ) {
+                ret_vec.push_back(i);
+            }
+        }
+        return ret_vec;
     }
 
     void create_no_points_unif() {
@@ -296,6 +305,22 @@ struct grid {
 
         output.close();
     }
+
+    void DEBUG_write_boundary_points_at_x(const double xp) const {
+        std::ofstream output("../DEBUG/boundary_points.txt");
+        if (output.is_open()) {
+            const auto inds = get_some_x_inds(xp);
+            for (const auto ind : inds) {
+                output << y[ind] << " " << z[ind] << " " << is_boundary(ind) << "\n";
+            }
+
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
 
 
 };
