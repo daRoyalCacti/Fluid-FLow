@@ -170,4 +170,8 @@ constexpr vec3 round(const vec3 &v) noexcept {
     return {round(v.x()), round(v.y()), round(v.z())};
 }
 
+constexpr vec3 ceil(const vec3 &v) noexcept {
+    return {ceil(v.x()), ceil(v.y()), ceil(v.z())};
+}
+
 #endif //CODE_VEC3_HPP
