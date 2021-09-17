@@ -64,12 +64,12 @@ struct mesh final{
         double minx=std::numeric_limits<double>::max(), miny=std::numeric_limits<double>::max(), minz=std::numeric_limits<double>::max();
         double maxx=std::numeric_limits<double>::min(), maxy=std::numeric_limits<double>::min(), maxz=std::numeric_limits<double>::min();
         for (auto &vert : vertices) {
-            if (vert.x() < maxx) {maxx = vert.x();}
-            if (vert.x() > minx) {minx = vert.x();}
-            if (vert.y() < maxy) {maxy = vert.y();}
-            if (vert.y() > miny) {miny = vert.y();}
-            if (vert.z() < maxz) {maxz = vert.z();}
-            if (vert.z() > minz) {minz = vert.z();}
+            if (vert.x() > maxx) {maxx = vert.x();}
+            if (vert.x() < minx) {minx = vert.x();}
+            if (vert.y() > maxy) {maxy = vert.y();}
+            if (vert.y() < miny) {miny = vert.y();}
+            if (vert.z() > maxz) {maxz = vert.z();}
+            if (vert.z() < minz) {minz = vert.z();}
         }
         bounds = bounding_box{ {minx, miny, minz}, {maxx, maxy, maxz} };
     }
