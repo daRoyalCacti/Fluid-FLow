@@ -70,6 +70,10 @@ struct big_vec {
         return T{};
     }
 
+    [[nodiscard]] inline T move(const unsigned ind, const vec3&v) const noexcept {
+        return move(ind, v.x(), v.y(), v.z());
+    }
+
     [[nodiscard]] virtual T operator()(const unsigned ind) const noexcept {
 #ifndef NDEBUG
         std::cerr << "virtual () overload of big_vec called. This should never happen\n";
