@@ -144,15 +144,42 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
                 inside_indices.insert( insert_ind );
             }
 
-            //setting normals
-            norms.add_point(ind1, norm1);
-            norms.add_point(ind2, norm2);
+            //copying the data into the required data structures
+            //===============================================================
 
+            //if 2 rays collide with the mesh at the same point, take the average of the normals
+            // - if more than 2 rays hits, the averaging weights the earlier hits weaker than the later hits (not desirable)
+            // - doesn't seem to be working correctly
+            if (norms.contains(ind1)) {
+                norms.add_point(ind1, (norms.normal(ind1) + norm1)/2 );
+            } else {
+                norms.add_point(ind1, norm1);
+            }
+
+            if (norms.contains(ind2)) {
+                norms.add_point(ind1, (norms.normal(ind2) + norm2)/2 );
+            } else {
+                norms.add_point(ind2, norm2);
+            }
+
+
+
+            //don't want to average collision point
+            // - want to be sure it is on the mesh
             m_points.add_point(ind1, col1);
             m_points.add_point(ind2, col2);
 
-            v_points.add_point(ind1, vel1);
-            v_points.add_point(ind2, vel2);
+            if (v_points.contains(ind1)) {
+                v_points.add_point(ind1, (v_points.get_vel(ind1) + vel1)/2 );
+            } else {
+                v_points.add_point(ind1, vel1);
+            }
+
+            if (v_points.contains(ind2)) {
+                v_points.add_point(ind1, (v_points.get_vel(ind2) + vel2)/2 );
+            } else {
+                v_points.add_point(ind2, vel2);
+            }
 
             boundary_indices.insert(ind1);
             boundary_indices.insert(ind2);
