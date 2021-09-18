@@ -106,11 +106,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
                 }
 #endif
             }
@@ -120,11 +120,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "x move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
                 }
 #endif
             }
@@ -135,11 +135,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
                 }
 #endif
             }
@@ -149,11 +149,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "y move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
                 }
 #endif
             }
@@ -164,11 +164,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
                 }
 #endif
             }
@@ -178,11 +178,11 @@ struct big_vec {
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "z move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
                 }
 #endif
             }
@@ -191,8 +191,73 @@ struct big_vec {
         return curr_ind;
     }
 
-    [[nodiscard]] unsigned get_move_ind(const unsigned ind, const vec3&  v) const noexcept {
+    [[nodiscard]] auto get_move_ind(const unsigned ind, const vec3&  v) const noexcept {
         return get_move_ind(ind, v.x(), v.y(), v.z());
+    }
+
+
+    [[nodiscard]] bool can_move(const unsigned ind, const int x, const int y, const int z) const noexcept {
+        auto curr_ind = ind;
+#ifndef NDEBUG
+        if (curr_ind == -1) {
+            std::cerr << "index is -1. This should never happen.\n";
+        }
+        if (curr_ind >= size()) {
+            std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+        }
+#endif
+
+        if (x > 0) {
+            for (unsigned i = 0; i < x; i++) {
+                curr_ind = g->r[curr_ind].right;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int i = x; i < 0; i++) {
+                curr_ind = g->r[curr_ind].left;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+        if (y > 0) {
+            for (unsigned j = 0; j < y; j++) {
+                curr_ind = g->r[curr_ind].up;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int j = y; j < 0; j++) {
+                curr_ind = g->r[curr_ind].down;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+        if (z > 0) {
+            for (unsigned k = 0; k < z; k++) {
+                curr_ind = g->r[curr_ind].back;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int k = z; k < 0; k++) {
+                curr_ind = g->r[curr_ind].front;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] auto can_move(const unsigned ind, const vec3&  v) const noexcept {
+        return can_move(ind, v.x(), v.y(), v.z());
     }
 
 };
