@@ -1,5 +1,5 @@
 %plots the flow for a give time
-function [vx, vy, vz] = plot_flow_normalized(file_loc)
+function [vx, vy, vz,x,y] = plot_flow_normalized(file_loc)
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f %f %f');
     fclose(fileID);
@@ -10,7 +10,14 @@ function [vx, vy, vz] = plot_flow_normalized(file_loc)
     vy = data(4:5:end);
     vz = data(5:5:end);
     
-%     figure
-    quiver(x,y, vx./sqrt(vx.^2+vy.^2), vy./sqrt(vx.^2+vy.^2))
+    vx_n = vx./sqrt(vx.^2+vy.^2);
+    vy_n = vy./sqrt(vx.^2+vy.^2);
+    
+    vx_n(~isfinite(vx_n)) = zeros(1, sum(~isfinite(vx_n)));
+    vy_n(~isfinite(vy_n)) = zeros(1, sum(~isfinite(vy_n)));
+    
+    
+    figure
+    quiver(x,y, vx_n, vy_n)
     axis([min(x), max(x), min(y), max(y)])
 end

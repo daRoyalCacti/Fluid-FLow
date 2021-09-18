@@ -15,6 +15,11 @@ void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
         //std::cerr << "\t" << i << "/" << v.size() << "\t" << v.is_boundary(i) << "\n";
         if (v.is_boundary(i)) {
             v.add_elm(i, BC.v_points.get_vel(i));
+#ifndef NDEBUG
+            if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())) {
+                std::cerr << "velocity boundary condition returned an infinite value\n";
+            }
+#endif
         }
 
     }
@@ -35,11 +40,11 @@ void update_pressure_BC(const boundary_conditions &BC, big_vec_d &p) {
 
                 const auto norm = BC.norms.normal(i);
 
-                //this occurs when inside a boundary
+#ifndef NDEBUG
                 if (norm == vec3(0) ) {
-                    p(i) = 0;
-                    continue;   //rest of the code will only error
+                    std::cerr << "normal vector is the 0 vector. This should never happen!\n";
                 }
+#endif
 
                 const auto nx = norm.x();
                 const auto ny = norm.y();
@@ -112,7 +117,7 @@ void update_pressure_BC(const boundary_conditions &BC, big_vec_d &p) {
                         std::cerr << "the biggest direction cannot be larger than 2\n";
                     }
 #endif
-if (!p.has_front(i)) {  //forward difference
+                    if (!p.has_front(i)) {  //forward difference
                         p(i) = ny/nz* smart_deriv<0,1,0>(p, i)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p, i)*2*dz/3 - p.move(i,0,0,2)/3 + 4*p.move(i,0,0,1)/3;
 #ifndef NDEBUG
                         if (!std::isfinite(p(i))) {

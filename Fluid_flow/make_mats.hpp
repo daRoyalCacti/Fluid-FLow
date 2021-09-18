@@ -23,7 +23,7 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
 
 //#pragma omp parallel for
     //shared(Q, p, dxdx, dydy, dzdz) default(none)
-    for (unsigned i = 0; i < p.g->size(); i++) {
+    for (unsigned i = 0; i < p.size(); i++) {
         double diag = 0.0;
 
         if (p.is_boundary(i)) {
@@ -60,7 +60,7 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
                     std::cerr << "the biggest direction cannot be larger than 2\n";
                 }
 #endif
-if (p.has_front(i) && p.has_back(i)) {
+            if (p.has_front(i) && p.has_back(i)) {
                     Q.add_elm(i, p.get_move_ind(i,0,0,1),1);
                 } else {
                     Q.add_elm(i, i,1);

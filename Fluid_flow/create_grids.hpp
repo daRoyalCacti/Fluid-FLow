@@ -229,6 +229,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     unsigned index_counter = 0;
+
     for (unsigned i = 0; i < g.x.size(); i++) {
         if (inside_indices.contains(i) && !boundary_indices.contains(i)) {
             old_new.insert({i, -1});

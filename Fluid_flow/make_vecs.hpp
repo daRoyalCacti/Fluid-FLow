@@ -47,7 +47,7 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
 #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
         if (p.is_boundary(i)) {
-            s(i) =0;
+            s(i) = p(i);
         } else {
             s(i) = divergence(v_n, i) / dt - 3/2 * divergence_advection(v_n, i) + 1/2 *
                     divergence_advection(v_n1, i) + 3/(2*Re) *
@@ -66,7 +66,7 @@ void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_
     #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
         if (p.is_boundary(i)) {
-            s(i) = 0;
+            s(i) = p(i);
         } else {
             s(i) = divergence(v_n, i) / dt - divergence_advection(v_n, i) + 1 / Re *
                     divergence_laplacian(v_n, i) - laplacian(p, i);
