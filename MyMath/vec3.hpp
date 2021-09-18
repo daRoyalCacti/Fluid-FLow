@@ -174,4 +174,29 @@ constexpr vec3 ceil(const vec3 &v) noexcept {
     return {ceil(v.x()), ceil(v.y()), ceil(v.z())};
 }
 
+//used in smart derivative
+template <unsigned axis, int val1>
+constexpr vec3 make_vec() {
+    static_assert(axis < 3, "Axis should be 0,1,2");
+
+    if constexpr(axis == 0) {
+        return {val1,0,0};
+    } else if constexpr (axis==1) {
+        return {0,val1,0};
+    } else {
+        return {0,0,val1};
+    }
+
+}
+
+
+template <unsigned axis1, int val1, unsigned axis2, int val2>
+constexpr vec3 make_vec() {
+    vec3 ret_vec = vec3(0);
+    ret_vec[axis1] = val1;
+    ret_vec[axis2] = val2;
+
+    return ret_vec;
+}
+
 #endif //CODE_VEC3_HPP

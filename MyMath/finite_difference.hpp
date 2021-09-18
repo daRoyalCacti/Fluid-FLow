@@ -92,6 +92,7 @@ inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t i
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
 
+
     if constexpr(axis1 == axis2) {
         return central_difference_2nd<axis1>(data, index);
     } else if constexpr( (axis1 == 0 && axis2 == 1) || (axis1 == 1 && axis2 == 0) ) {  //d^/dxdy
