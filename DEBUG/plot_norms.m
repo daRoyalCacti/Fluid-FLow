@@ -11,6 +11,6 @@
     vy = data(4:5:end);
     %vz = data(5:5:end);
     
-%     figure
+    figure
     quiver(x,y,vx,vy)
 % end
