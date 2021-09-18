@@ -190,6 +190,11 @@ struct big_vec {
 
         return curr_ind;
     }
+
+    [[nodiscard]] unsigned get_move_ind(const unsigned ind, const vec3&  v) const noexcept {
+        return get_move_ind(ind, v.x(), v.y(), v.z());
+    }
+
 };
 
 
