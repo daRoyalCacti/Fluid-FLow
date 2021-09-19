@@ -1,5 +1,5 @@
 %plots the flow for a give time
-function plot_norms()
+% function plot_norms()
     file_loc = "normal_vectors.txt";
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f %f %f');
@@ -11,6 +11,6 @@ function plot_norms()
     vy = data(4:5:end);
     %vz = data(5:5:end);
     
-%     figure
+    figure
     quiver(x,y,vx,vy)
-end
+% end

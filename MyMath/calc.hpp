@@ -12,9 +12,9 @@
 
 
 //nx,ny,nz denote the derivative. e.g. <1,1,0> corresponds to d^2/dxdy
-//i,j,k corresponds to where the derivative is to take place
+//ind corresponds to where the derivative is to take place
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned k) noexcept  {
+auto smart_deriv(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( !( (nx==1) && (ny==1) && (nz==1) ), "d^3/dxdydz is not currently supported" );
@@ -24,333 +24,291 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
     constexpr auto s = nx + ny + nz;
 
     if constexpr (s==1) {   //first order derivative
-        if constexpr(nx==1) {   //d/dx
-            if (!v.has_left(i,j,k)) {    //at left boundary --- forward difference needed
-                return forward_difference_1st<0>(v, i, j, k);
-            } else if (!v.has_right(i,j,k))  {   //at right boundary --- need backward difference
-                return backward_difference_1st<0>(v, i, j, k);
-            } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<0>(v, i, j, k);
-            }
-        } else if constexpr(ny==1) {    //d/dy
-            if (!v.has_down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                return forward_difference_1st<1>(v, i, j, k);
-            } else if (!v.has_up(i,j,k))  {   //at top boundary --- need backward difference
-                return backward_difference_1st<1>(v, i, j, k);
-            } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<1>(v, i, j, k);
-            }
-        } else if constexpr(nz==1) {    //d/dz
-            if (!v.has_front(i,j,k)) {    //at front boundary --- forward difference needed
-                return forward_difference_1st<2>(v, i, j, k);
-            } else if (!v.has_back(i,j,k))  {   //at back boundary --- need backward difference
-                return backward_difference_1st<2>(v, i, j, k);
-            } else {    //nowhere special --- can just use central difference
-                return central_difference_1st<2>(v, i, j, k);
-            }
+        constexpr unsigned axis = nx == 1 ? 0 : ny == 1 ? 1 : 2;
+
+        constexpr vec3 move_vec1 = make_vec<axis, 1>();
+        constexpr vec3 move_vec2 = make_vec<axis, -1>();
+        constexpr vec3 move_vec3 = make_vec<axis, 2>();
+
+        if (v.can_move(ind, move_vec1) && v.can_move(ind, move_vec2) ) {
+            return central_difference_1st<axis>(v, ind);
+        } else if (v.can_move(ind, move_vec3) ) {
+            return forward_difference_1st<axis>(v, ind);
+        } else {
+            return backward_difference_1st<axis>(v, ind);
         }
+
     }
     else if constexpr(s==2) { //second order derivative
         if constexpr(m==2) {    //pure derivative
-            if constexpr(nx==2) {   //d^2/dx^2
-                if (!v.has_left(i,j,k)) {    //at left boundary --- forward difference needed
-                    return forward_difference_2nd<0>(v, i, j, k);
-                } else if (!v.has_right(i,j,k))  {   //at right boundary --- need backward difference
-                    return backward_difference_2nd<0>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    //return forward_difference_2nd<0>(v, i, j, k);
-                    return central_difference_2nd<0>(v, i, j, k);
-                }
-            } else if constexpr(ny==2) {    //d^2/dy^2
-                if (!v.has_down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                    return forward_difference_2nd<1>(v, i, j, k);
-                } else if (!v.has_up(i,j,k))  {   //at top boundary --- need backward difference
-                    return backward_difference_2nd<1>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    return central_difference_2nd<1>(v, i, j, k);
-                }
-            } else if constexpr(nz==2) {    //d^2/dz^2
-                if (!v.has_front(i,j,k)) {    //at front boundary --- forward difference needed
-                    return forward_difference_2nd<2>(v, i, j, k);
-                } else if (!v.has_back(i,j,k))  {   //at back boundary --- need backward difference
-                    return backward_difference_2nd<2>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    return central_difference_2nd<2>(v, i, j, k);
-                }
+            constexpr unsigned axis = nx == 2 ? 0 : ny == 2 ? 1 : 2;
+
+            constexpr vec3 move_vec1 = make_vec<axis, 1>();
+            constexpr vec3 move_vec2 = make_vec<axis, -1>();
+            constexpr vec3 move_vec3 = make_vec<axis, 3>();
+
+            if (v.can_move(ind, move_vec1) && v.can_move(ind, move_vec2) ) {
+                return central_difference_2nd<axis>(v, ind);
+            } else if ( v.can_move(ind, move_vec3) ) {
+                return forward_difference_2nd<axis>(v, ind);
+            } else {
+                return backward_difference_2nd<axis>(v, ind);
             }
+
         }
         else {    //mixed derivative
-            if constexpr( (nx==1) && (ny==1)) { //d^2/dxdy
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<0, 1>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<0, 1>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_2nd_mixed<1,0>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<1, 0>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<0,1>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_2nd_mixed<1,0>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_down(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<0,1>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<0,1>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_2nd_mixed<0,1>(v, i, j, k);
-                    }
-                }
-            } else if constexpr( (nx==1) && (nz==1)) {  //d^2/dxdz
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<0, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<0, 2>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_2nd_mixed<2,0>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<2, 0>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<0,2>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_2nd_mixed<2,0>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<0,2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<0,2>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_2nd_mixed<0,2>(v, i, j, k);
-                    }
-                }
-            } else if constexpr( (ny==1) && (nz==1)) {  //d^2/dydz
-                if (!v.has_down(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_2nd_mixed<1, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_2nd_mixed<1, 2>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_2nd_mixed<2,1>(v, i, j, k);
-                    }
-                } else if (!v.has_up(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_2nd_mixed<2, 1>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_2nd_mixed<1,2>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_2nd_mixed<2,1>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_2nd_mixed<1,2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_2nd_mixed<1,2>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_2nd_mixed<1,2>(v, i, j, k);
-                    }
-                }
+            constexpr unsigned axis1 = nx == 1 ? 0 : ny == 1 ? 1 : 2;
+            constexpr unsigned axis2 = (ny == 1 && axis1!=1) ? 1 : 2;
+
+            constexpr vec3 move_vec_c1 = make_vec<axis1, 1, axis2, 1>();
+            constexpr vec3 move_vec_c2 = make_vec<axis1, -1, axis2, 1>();
+            constexpr vec3 move_vec_c3 = make_vec<axis1, 1, axis2, -1>();
+            constexpr vec3 move_vec_c4 = make_vec<axis1, -1, axis2, -1>();
+
+            constexpr vec3 move_vec_f1_1 = make_vec<axis1, 1, axis2, 2>();
+            //constexpr vec3 move_vec_f2_1 = make_vec<axis1, 1, axis2, 1>();
+            //constexpr vec3 move_vec_f3_1 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_f4_1 = make_vec<axis1, -1, axis2, 2>();
+            //constexpr vec3 move_vec_f5_1 = make_vec<axis1, -1, axis2, 1>();
+            //constexpr vec3 move_vec_f6_1 = make_vec<axis1, -1, axis2, 0>();
+
+            constexpr vec3 move_vec_f1_2 = make_vec<axis2, 1, axis1, 2>();
+            constexpr vec3 move_vec_f2_2 = make_vec<axis2, 1, axis1, 1>();
+            constexpr vec3 move_vec_f3_2 = make_vec<axis2, 1, axis1, 0>();
+            constexpr vec3 move_vec_f4_2 = make_vec<axis2, -1, axis1, 2>();
+            constexpr vec3 move_vec_f5_2 = make_vec<axis2, -1, axis1, 1>();
+            constexpr vec3 move_vec_f6_2 = make_vec<axis2, -1, axis1, 0>();
+
+            constexpr vec3 move_vec_b1_1 = make_vec<axis1, 1, axis2, -2>();
+            //constexpr vec3 move_vec_b2_1 = make_vec<axis1, 1, axis2, -1>();
+            //constexpr vec3 move_vec_b3_1 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_b4_1 = make_vec<axis1, -1, axis2, -2>();
+            //constexpr vec3 move_vec_b5_1 = make_vec<axis1, -1, axis2, -1>();
+            //constexpr vec3 move_vec_b6_1 = make_vec<axis1, -1, axis2, 0>();
+
+            constexpr vec3 move_vec_b1_2 = make_vec<axis2, 1, axis1, -2>();
+            constexpr vec3 move_vec_b2_2 = make_vec<axis2, 1, axis1, -1>();
+            constexpr vec3 move_vec_b3_2 = move_vec_f3_2;//make_vec<axis2, 1, axis1, 0>();
+            constexpr vec3 move_vec_b4_2 = make_vec<axis2, -1, axis1, -2>();
+            constexpr vec3 move_vec_b5_2 = make_vec<axis2, -1, axis1, -1>();
+            constexpr vec3 move_vec_b6_2 = move_vec_f6_2; //make_vec<axis2, -1, axis1, 0>();
+
+            constexpr vec3 move_vec_fb1_1 = make_vec<axis1, 2, axis2, -2>();
+            constexpr vec3 move_vec_fb2_1 = make_vec<axis1, 1, axis2, -2>();
+            constexpr vec3 move_vec_fb3_1 = make_vec<axis1, 0, axis2, -2>();
+            //constexpr vec3 move_vec_fb4_1 = make_vec<axis1, 2, axis2, -1>();
+            //constexpr vec3 move_vec_fb5_1 = make_vec<axis1, 1, axis2, -1>();
+            //constexpr vec3 move_vec_fb6_1 = make_vec<axis1, 0, axis2, -1>();
+            //constexpr vec3 move_vec_fb7_1 = make_vec<axis1, 2, axis2, 0>();
+            //constexpr vec3 move_vec_fb8_1 = make_vec<axis1, 1, axis2, 0>();
+
+            constexpr vec3 move_vec_fb1_2 = make_vec<axis2, 2, axis1, -2>();
+            //constexpr vec3 move_vec_fb2_2 = make_vec<axis2, 2, axis1, -1>();
+            constexpr vec3 move_vec_fb3_2 = make_vec<axis2, 2, axis1, 0>();
+            constexpr vec3 move_vec_fb4_2 = make_vec<axis2, 1, axis1, -2>();
+            //constexpr vec3 move_vec_fb5_2 = make_vec<axis2, 1, axis1, -1>();
+            //constexpr vec3 move_vec_fb6_2 = make_vec<axis2, 1, axis1, 0>();
+            //constexpr vec3 move_vec_fb7_2 = make_vec<axis2, 0, axis1, -1>();
+            constexpr vec3 move_vec_fb8_2 = make_vec<axis2, 0, axis1, -2>();
+
+            constexpr vec3 move_vec_ff1 = make_vec<axis1, 2, axis2, 2>();
+            constexpr vec3 move_vec_ff2 = make_vec<axis1, 1, axis2, 2>();
+            constexpr vec3 move_vec_ff3 = make_vec<axis1, 0, axis2, 2>();
+            //constexpr vec3 move_vec_ff4 = make_vec<axis1, 2, axis2, 1>();
+            //constexpr vec3 move_vec_ff5 = make_vec<axis1, 1, axis2, 1>();
+            //constexpr vec3 move_vec_ff6 = make_vec<axis1, 0, axis2, 1>();
+            //constexpr vec3 move_vec_ff7 = make_vec<axis1, 2, axis2, 0>();
+            //constexpr vec3 move_vec_ff8 = make_vec<axis1, 1, axis2, 0>();
+
+            /*constexpr vec3 move_vec_bb1 = make_vec<axis1, -2, axis2, -2>();
+            constexpr vec3 move_vec_bb2 = make_vec<axis1, -1, axis2, -2>();
+            constexpr vec3 move_vec_bb3 = make_vec<axis1, 0, axis2, -2>();*/
+            //constexpr vec3 move_vec_bb4 = make_vec<axis1, -2, axis2, -1>();
+            //constexpr vec3 move_vec_bb5 = make_vec<axis1, -1, axis2, -1>();
+            //constexpr vec3 move_vec_bb6 = make_vec<axis1, 0, axis2, -1>();
+            //constexpr vec3 move_vec_bb7 = make_vec<axis1, -2, axis2, 0>();
+            //constexpr vec3 move_vec_bb8 = make_vec<axis1, -1, axis2, 0>();
+
+
+
+            if (v.can_move(ind, move_vec_c1) && v.can_move(ind, move_vec_c2)
+            && v.can_move(ind, move_vec_c3) && v.can_move(ind, move_vec_c4)) {
+                return central_difference_2nd_mixed<axis1, axis2>(v, ind);
+            } else if ( v.can_move(ind, move_vec_f1_1) && v.can_move(ind, move_vec_f4_1) ) {
+                return central_forward_difference_2nd_mixed<axis1, axis2>(v, ind);
+            }else if ( v.can_move(ind, move_vec_f1_2) && v.can_move(ind, move_vec_f2_2) && v.can_move(ind, move_vec_f3_2)
+             && v.can_move(ind, move_vec_f4_2) && v.can_move(ind, move_vec_f5_2) && v.can_move(ind, move_vec_f6_2)) {
+                return central_forward_difference_2nd_mixed<axis2, axis1>(v, ind);
+            } else if ( v.can_move(ind, move_vec_b1_1) && v.can_move(ind, move_vec_b4_1) ) {
+                return central_backward_difference_2nd_mixed<axis1, axis2>(v, ind);
+            }else if ( v.can_move(ind, move_vec_b1_2) && v.can_move(ind, move_vec_b2_2) && v.can_move(ind, move_vec_b3_2)
+            && v.can_move(ind, move_vec_b4_2) && v.can_move(ind, move_vec_b5_2) && v.can_move(ind, move_vec_b6_2)) {
+                return central_backward_difference_2nd_mixed<axis2, axis1>(v, ind);
+            } else if ( v.can_move(ind, move_vec_fb1_1) && v.can_move(ind, move_vec_fb2_1)  && v.can_move(ind, move_vec_fb3_1) ) {
+                return forward_backward_difference_2nd_mixed<axis1, axis2>(v, ind);
+            } else if ( v.can_move(ind, move_vec_fb1_2) && v.can_move(ind, move_vec_fb3_2)
+            && v.can_move(ind, move_vec_fb4_2)  && v.can_move(ind, move_vec_fb8_2) ) {
+                return forward_backward_difference_2nd_mixed<axis2, axis1>(v, ind);
+            } else if ( v.can_move(ind, move_vec_ff1) && v.can_move(ind, move_vec_ff2)  && v.can_move(ind, move_vec_ff3) ) {
+                return forward_difference_2nd_mixed<axis1, axis2>(v, ind);
+            } else {//if ( v.can_move(ind, move_vec_bb1) && v.can_move(ind, move_vec_bb2)  && v.can_move(ind, move_vec_bb3) ) {
+                return backward_difference_2nd_mixed<axis1, axis2>(v, ind);
             }
+
+
         }
 
     }
     else if constexpr(s==3) { //third order derivative
         if constexpr(m==3) {    //pure derivative
-            if constexpr(nx==3) {   //d^3/dx^3
-                if (!v.has_2left(i,j,k)) {    //at left boundary --- forward difference needed
-                    return forward_difference_3rd<0>(v, i, j, k);
-                } else if (!v.has_2right(i,j,k))  {   //at right boundary --- need backward difference
-                    return backward_difference_3rd<0>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<0>(v, i, j, k);
-                }
-            } else if constexpr(ny==3) {    //d^3/dy^3
-                if (!v.has_2down(i,j,k)) {    //at bottom boundary --- forward difference needed
-                    return forward_difference_3rd<1>(v, i, j, k);
-                } else if (!v.has_2up(i,j,k))  {   //at top boundary --- need backward difference
-                    return backward_difference_3rd<1>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<1>(v, i, j, k);
-                }
-            } else if constexpr(nz==3) {    //d^3/dz^3
-                if (!v.has_2front(i,j,k)) {    //at front boundary --- forward difference needed
-                    return forward_difference_3rd<2>(v, i, j, k);
-                } else if (!v.has_2back(i,j,k))  {   //at back boundary --- need backward difference
-                    return backward_difference_3rd<2>(v, i, j, k);
-                } else {    //nowhere special --- can just use central difference
-                    return central_difference_3rd<2>(v, i, j, k);
-                }
+            constexpr unsigned axis = nx == 3 ? 0 : ny == 3 ? 1 : 2;
+
+            constexpr vec3 move_vec_c1 = make_vec<axis, 2>();
+            constexpr vec3 move_vec_c2 = make_vec<axis, -2>();
+            constexpr vec3 move_vec_f = make_vec<axis, 4>();
+
+            if (v.can_move(ind, move_vec_c1) && v.can_move(ind, move_vec_c2)) {
+                return central_difference_3rd<axis>(v, ind);
+            } else if (v.can_move(ind, move_vec_f)) {
+                return forward_difference_3rd<axis>(v, ind);
+            } else {
+                return backward_difference_3rd<axis>(v, ind);
             }
+
         } else {    //mixed derivative
-            if constexpr( (nx==2) && (ny==1) ) {    //d^3/dx^2dy
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else {    //forward central
-                        return forward_central_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else {    //backward central
-                        return backward_central_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_down(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<0, 1>(v, i, j, k);
-                    }
-                }
-            }
-            else if constexpr( (nx==1) && (ny==2) ) { //d^3/dy^2dx
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_down(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_down(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else if (!v.has_up(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<1, 0>(v, i, j, k);
-                    }
-                }
-            }
-            else if constexpr( (nx==2) && (nz==1) ) { //d^3/dx^2dz
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else {    //forward central
-                        return forward_central_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else {    //backward central
-                        return backward_central_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<0, 2>(v, i, j, k);
-                    }
-                }
-            }
-            else if constexpr( (nx==1) && (nz==2) ) { //d^3/dz^2dx
-                if (!v.has_left(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    }
-                } else if (!v.has_right(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<2, 0>(v, i, j, k);
-                    }
-                }
-            }
-            else if constexpr( (nz==2) && (ny==1) ) { //d^3/dz^2dy
-                if (!v.has_down(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return backward_forward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else {    //forward central
-                        return central_forward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    }
-                } else if (!v.has_up(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return forward_backward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else {    //backward central
-                        return central_backward_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return forward_central_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return backward_central_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<2, 1>(v, i, j, k);
-                    }
-                }
-            }
-            else if constexpr( (nz==1) && (ny==2) ) { //d^3/dy^2dz
-                if (!v.has_down(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //forward forward
-                        return forward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //forward backward
-                        return forward_backward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else {    //forward central
-                        return forward_central_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    }
-                } else if (!v.has_up(i,j,k)) {
-                    if (!v.has_front(i,j,k)) { //backward forward
-                        return backward_forward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //backward backward
-                        return backward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else {    //backward central
-                        return backward_central_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    }
-                } else {
-                    if (!v.has_front(i,j,k)) { //central forward
-                        return central_forward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else if (!v.has_back(i,j,k)) {    //central backward
-                        return central_backward_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    } else {    //central central
-                        return central_difference_3rd_mixed<1, 2>(v, i, j, k);
-                    }
-                }
+            constexpr unsigned axis1 = nx == 1 ? 0 : ny == 1 ? 1 : 2;
+            constexpr unsigned axis2 = nx == 2 ? 0 : ny == 2 ? 1 : 2;
+
+            constexpr vec3 move_vec_cc1 = make_vec<axis1, 1, axis2, 1>();
+            constexpr vec3 move_vec_cc2 = make_vec<axis1, 0, axis2, 1>();
+            constexpr vec3 move_vec_cc3 = make_vec<axis1, -1, axis2, 1>();
+            constexpr vec3 move_vec_cc4 = make_vec<axis1, 1, axis2, -1>();
+            constexpr vec3 move_vec_cc5 = make_vec<axis1, 0, axis2, -1>();
+            constexpr vec3 move_vec_cc6 = make_vec<axis1, -1, axis2, -1>();
+
+            constexpr vec3 move_vec_ff1 = make_vec<axis1, 2, axis2, 3>();
+            constexpr vec3 move_vec_ff2 = make_vec<axis1, 2, axis2, 2>();
+            constexpr vec3 move_vec_ff3 = make_vec<axis1, 2, axis2, 1>();
+            constexpr vec3 move_vec_ff4 = make_vec<axis1, 2, axis2, 0>();
+            constexpr vec3 move_vec_ff5 = make_vec<axis1, 1, axis2, 3>();
+            constexpr vec3 move_vec_ff6 = make_vec<axis1, 1, axis2, 2>();
+            constexpr vec3 move_vec_ff7 = make_vec<axis1, 1, axis2, 1>();
+            constexpr vec3 move_vec_ff8 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_ff9 = make_vec<axis1, 0, axis2, 3>();
+            constexpr vec3 move_vec_ff10 = make_vec<axis1, 0, axis2, 2>();
+            constexpr vec3 move_vec_ff11 = make_vec<axis1, 0, axis2, 1>();
+
+            constexpr vec3 move_vec_bb1 = make_vec<axis1, -2, axis2, -3>();
+            constexpr vec3 move_vec_bb2 = make_vec<axis1, -2, axis2, -2>();
+            constexpr vec3 move_vec_bb3 = make_vec<axis1, -2, axis2, -1>();
+            constexpr vec3 move_vec_bb4 = make_vec<axis1, -2, axis2, -0>();
+            constexpr vec3 move_vec_bb5 = make_vec<axis1, -1, axis2, -3>();
+            constexpr vec3 move_vec_bb6 = make_vec<axis1, -1, axis2, -2>();
+            constexpr vec3 move_vec_bb7 = make_vec<axis1, -1, axis2, -1>();
+            constexpr vec3 move_vec_bb8 = make_vec<axis1, -1, axis2, 0>();
+            constexpr vec3 move_vec_bb9 = make_vec<axis1, 0, axis2, -3>();
+            constexpr vec3 move_vec_bb10 = make_vec<axis1, 0, axis2, -2>();
+            constexpr vec3 move_vec_bb11 = make_vec<axis1, 0, axis2, -1>();
+
+            constexpr vec3 move_vec_cf1 = make_vec<axis1, 2, axis2, 1>();
+            constexpr vec3 move_vec_cf2 = make_vec<axis1, 2, axis2, 0>();
+            constexpr vec3 move_vec_cf3 = make_vec<axis1, 2, axis2, -1>();
+            constexpr vec3 move_vec_cf4 = make_vec<axis1, 1, axis2, 1>();
+            constexpr vec3 move_vec_cf5 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_cf6 = make_vec<axis1, 1, axis2, -1>();
+            constexpr vec3 move_vec_cf7 = make_vec<axis1, 0, axis2, 1>();
+            constexpr vec3 move_vec_cf8 = make_vec<axis1, 0, axis2, -1>();
+
+            constexpr vec3 move_vec_cb1 = make_vec<axis1, -2, axis2, 1>();
+            constexpr vec3 move_vec_cb2 = make_vec<axis1, -2, axis2, 0>();
+            constexpr vec3 move_vec_cb3 = make_vec<axis1, -2, axis2, -1>();
+            constexpr vec3 move_vec_cb4 = make_vec<axis1, -1, axis2, 1>();
+            constexpr vec3 move_vec_cb5 = make_vec<axis1, -1, axis2, 0>();
+            constexpr vec3 move_vec_cb6 = make_vec<axis1, -1, axis2, -1>();
+            constexpr vec3 move_vec_cb7 = make_vec<axis1, 0, axis2, 1>();
+            constexpr vec3 move_vec_cb8 = make_vec<axis1, 0, axis2, -1>();
+
+            constexpr vec3 move_vec_fc1 = make_vec<axis1, 1, axis2, 3>();
+            constexpr vec3 move_vec_fc2 = make_vec<axis1, 1, axis2, 2>();
+            constexpr vec3 move_vec_fc3 = make_vec<axis1, 1, axis2, 1>();
+            constexpr vec3 move_vec_fc4 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_fc5 = make_vec<axis1, -1, axis2, 3>();
+            constexpr vec3 move_vec_fc6 = make_vec<axis1, -1, axis2, 2>();
+            constexpr vec3 move_vec_fc7 = make_vec<axis1, -1, axis2, 1>();
+            constexpr vec3 move_vec_fc8 = make_vec<axis1, -1, axis2, 0>();
+
+            constexpr vec3 move_vec_fb1 = make_vec<axis1, -2, axis2, 3>();
+            constexpr vec3 move_vec_fb2 = make_vec<axis1, -2, axis2, 2>();
+            constexpr vec3 move_vec_fb3 = make_vec<axis1, -2, axis2, 1>();
+            constexpr vec3 move_vec_fb4 = make_vec<axis1, -2, axis2, 0>();
+            constexpr vec3 move_vec_fb5 = make_vec<axis1, -1, axis2, 3>();
+            constexpr vec3 move_vec_fb6 = make_vec<axis1, -1, axis2, 2>();
+            constexpr vec3 move_vec_fb7 = make_vec<axis1, -1, axis2, 1>();
+            constexpr vec3 move_vec_fb8 = make_vec<axis1, -1, axis2, 0>();
+            constexpr vec3 move_vec_fb9 = make_vec<axis1, 0, axis2, 3>();
+            constexpr vec3 move_vec_fb10 = make_vec<axis1, 0, axis2, 2>();
+            constexpr vec3 move_vec_fb11 = make_vec<axis1, 0, axis2, 1>();
+
+            constexpr vec3 move_vec_bc1 = make_vec<axis1, 1, axis2, -3>();
+            constexpr vec3 move_vec_bc2 = make_vec<axis1, 1, axis2, -2>();
+            constexpr vec3 move_vec_bc3 = make_vec<axis1, 1, axis2, -1>();
+            constexpr vec3 move_vec_bc4 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_bc5 = make_vec<axis1, -1, axis2, -3>();
+            constexpr vec3 move_vec_bc6 = make_vec<axis1, -1, axis2, -2>();
+            constexpr vec3 move_vec_bc7 = make_vec<axis1, -1, axis2, -1>();
+            constexpr vec3 move_vec_bc8 = make_vec<axis1, -1, axis2, 0>();
+
+            constexpr vec3 move_vec_bf1 = make_vec<axis1, 2, axis2, -3>();
+            constexpr vec3 move_vec_bf2 = make_vec<axis1, 2, axis2, -2>();
+            constexpr vec3 move_vec_bf3 = make_vec<axis1, 2, axis2, -1>();
+            constexpr vec3 move_vec_bf4 = make_vec<axis1, 2, axis2, 0>();
+            constexpr vec3 move_vec_bf5 = make_vec<axis1, 1, axis2, -3>();
+            constexpr vec3 move_vec_bf6 = make_vec<axis1, 1, axis2, -2>();
+            constexpr vec3 move_vec_bf7 = make_vec<axis1, 1, axis2, -1>();
+            constexpr vec3 move_vec_bf8 = make_vec<axis1, 1, axis2, 0>();
+            constexpr vec3 move_vec_bf9 = make_vec<axis1, 0, axis2, -3>();
+            constexpr vec3 move_vec_bf10 = make_vec<axis1, 0, axis2, -2>();
+            constexpr vec3 move_vec_bf11 = make_vec<axis1, 0, axis2, -1>();
+
+            if (v.can_move(ind, move_vec_cc1) && v.can_move(ind, move_vec_cc2) && v.can_move(ind, move_vec_cc3) &&
+            v.can_move(ind, move_vec_cc4) && v.can_move(ind, move_vec_cc5) && v.can_move(ind, move_vec_cc6) ) {
+                return central_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_cf1) && v.can_move(ind, move_vec_cf2) && v.can_move(ind, move_vec_cf3) &&
+            v.can_move(ind, move_vec_cf4) && v.can_move(ind, move_vec_cf5) && v.can_move(ind, move_vec_cf6) &&
+            v.can_move(ind, move_vec_cf7) && v.can_move(ind, move_vec_cf8) ) {
+                return central_forward_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_cb1) && v.can_move(ind, move_vec_cb2) && v.can_move(ind, move_vec_cb3) &&
+            v.can_move(ind, move_vec_cb4) && v.can_move(ind, move_vec_cb5) && v.can_move(ind, move_vec_cb6) &&
+            v.can_move(ind, move_vec_cb7) && v.can_move(ind, move_vec_cb8) ) {
+                return central_backward_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_fc1) && v.can_move(ind, move_vec_fc2) && v.can_move(ind, move_vec_fc3) &&
+            v.can_move(ind, move_vec_fc4) && v.can_move(ind, move_vec_fc5) && v.can_move(ind, move_vec_fc6) &&
+            v.can_move(ind, move_vec_fc7) && v.can_move(ind, move_vec_fc8)  ) {
+                return forward_central_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_fb1) && v.can_move(ind, move_vec_fb2) && v.can_move(ind, move_vec_fb3) &&
+            v.can_move(ind, move_vec_fb4) && v.can_move(ind, move_vec_fb5) && v.can_move(ind, move_vec_fb6) &&
+            v.can_move(ind, move_vec_fb7) && v.can_move(ind, move_vec_fb8) && v.can_move(ind, move_vec_fb9) &&
+            v.can_move(ind, move_vec_fb10) && v.can_move(ind, move_vec_fb11) ) {
+                return forward_backward_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_bc1) && v.can_move(ind, move_vec_bc2) && v.can_move(ind, move_vec_bc3) &&
+            v.can_move(ind, move_vec_bc4) && v.can_move(ind, move_vec_bc5) && v.can_move(ind, move_vec_bc6) &&
+            v.can_move(ind, move_vec_bc7) && v.can_move(ind, move_vec_bc8) ) {
+                return backward_central_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_ff1) && v.can_move(ind, move_vec_ff2) && v.can_move(ind, move_vec_ff3) &&
+              v.can_move(ind, move_vec_ff4) && v.can_move(ind, move_vec_ff5) && v.can_move(ind, move_vec_ff6) &&
+              v.can_move(ind, move_vec_ff7) && v.can_move(ind, move_vec_ff8) && v.can_move(ind, move_vec_ff9) &&
+              v.can_move(ind, move_vec_ff10) && v.can_move(ind, move_vec_ff11)) {
+                return forward_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else if (v.can_move(ind, move_vec_bb1) && v.can_move(ind, move_vec_bb2) && v.can_move(ind, move_vec_bb3) &&
+            v.can_move(ind, move_vec_bb4) && v.can_move(ind, move_vec_bb5) && v.can_move(ind, move_vec_bb6) &&
+            v.can_move(ind, move_vec_bb7) && v.can_move(ind, move_vec_bb8) && v.can_move(ind, move_vec_bb9) &&
+            v.can_move(ind, move_vec_bb10) && v.can_move(ind, move_vec_bb11) ) {
+                return backward_difference_3rd_mixed<axis2, axis1>(v, ind);
+            } else { //if (v.can_move(ind, move_vec_bf1) && v.can_move(ind, move_vec_bf2) && v.can_move(ind, move_vec_bf3) &&
+            //v.can_move(ind, move_vec_bf4) && v.can_move(ind, move_vec_bf5) && v.can_move(ind, move_vec_bf6) &&
+            //v.can_move(ind, move_vec_bf7) && v.can_move(ind, move_vec_bf8) && v.can_move(ind, move_vec_bf9) &&
+            //v.can_move(ind, move_vec_bf10) && v.can_move(ind, move_vec_bf11) ) {
+                return backward_forward_difference_3rd_mixed<axis2, axis1>(v, ind);
             }
 
         }
@@ -358,69 +316,59 @@ auto smart_deriv(const T& v, const unsigned i, const unsigned j, const unsigned 
 }
 
 
-//H(v_{i,j,k})
-template <unsigned N, unsigned M, unsigned P>
-vec3 advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
-    const auto s_v = v(i,j,k);  //small v
-    return s_v.x() * smart_deriv<1,0,0>(v, i,j,k) + s_v.y() * smart_deriv<0,1,0>(v, i,j,k) + s_v.z() * smart_deriv<0,0,1>(v, i,j,k) ;
+//H(v_{ind})
+vec3 advection(const big_vec_v& v, const unsigned ind) noexcept {
+    const auto s_v = v(ind);  //small v
+    return s_v.x() * smart_deriv<1,0,0>(v, ind) + s_v.y() * smart_deriv<0,1,0>(v, ind) + s_v.z() * smart_deriv<0,0,1>(v, ind) ;
 }
 
-//L(v_{i,j,k})
+//L(v_{ind})
 template <typename T>
-auto laplacian(const T& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
-    return smart_deriv<2,0,0>(v, i,j,k) + smart_deriv<0,2,0>(v, i,j,k) +smart_deriv<0,0,2>(v, i,j,k);
+auto laplacian(const T& v, const unsigned ind) noexcept {
+    return smart_deriv<2,0,0>(v, ind) + smart_deriv<0,2,0>(v, ind) +smart_deriv<0,0,2>(v, ind);
 }
 
 //TODO : Test
-template <unsigned N, unsigned M, unsigned P>
-vec3 gradient(const big_vec<N,M,P, double>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
-    return vec3(smart_deriv<1,0,0>(v, i, j, k), smart_deriv<0,1,0>(v, i, j, k), smart_deriv<0,0,1>(v, i, j, k));
+vec3 gradient(const big_vec_d& v, const unsigned ind) noexcept {
+    return vec3(smart_deriv<1,0,0>(v, ind), smart_deriv<0,1,0>(v, ind), smart_deriv<0,0,1>(v, ind));
 }
 
-//D(v_{i,j,k})
-template <unsigned N, unsigned M, unsigned P>
-double divergence(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept  {
-    return smart_deriv<1,0,0>(v.xv, i, j, k) + smart_deriv<0,1,0>(v.yv, i, j, k) + smart_deriv<0,0,1>(v.zv, i, j, k);
+//D(v_{ind})
+double divergence(const big_vec_v& v, const unsigned ind) noexcept  {
+    return smart_deriv<1,0,0>(v.xv, ind) + smart_deriv<0,1,0>(v.yv, ind) + smart_deriv<0,0,1>(v.zv, ind);
 }
 
-//D(H(v_{i,j,k}))
-template <unsigned N, unsigned M, unsigned P>
-double divergence_advection(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
-    const auto s_v = v(i,j,k);  //small vec
+//D(H(v_{ind}))
+double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
+    const auto s_v = v(ind);  //small vec
 
-    const auto vx_x = smart_deriv<1,0,0>(v.xv,i,j,k);
-    const auto vy_x = smart_deriv<0,1,0>(v.xv,i,j,k);
-    const auto vz_x = smart_deriv<0,0,1>(v.xv,i,j,k);
+    const auto vx_x = smart_deriv<1,0,0>(v.xv,ind);
+    const auto vy_x = smart_deriv<0,1,0>(v.xv,ind);
+    const auto vz_x = smart_deriv<0,0,1>(v.xv,ind);
 
-    const auto vx_y = smart_deriv<1,0,0>(v.yv,i,j,k);
-    const auto vy_y = smart_deriv<0,1,0>(v.yv,i,j,k);
-    const auto vz_y = smart_deriv<0,0,1>(v.yv,i,j,k);
+    const auto vx_y = smart_deriv<1,0,0>(v.yv,ind);
+    const auto vy_y = smart_deriv<0,1,0>(v.yv,ind);
+    const auto vz_y = smart_deriv<0,0,1>(v.yv,ind);
 
-    const auto vx_z = smart_deriv<1,0,0>(v.zv,i,j,k);
-    const auto vy_z = smart_deriv<0,1,0>(v.zv,i,j,k);
-    const auto vz_z = smart_deriv<0,0,1>(v.zv,i,j,k);
-
+    const auto vx_z = smart_deriv<1,0,0>(v.zv,ind);
+    const auto vy_z = smart_deriv<0,1,0>(v.zv,ind);
+    const auto vz_z = smart_deriv<0,0,1>(v.zv,ind);
 
 
-    const auto vxx_x = smart_deriv<2,0,0>(v.xv,i,j,k);
-
-    const auto vyy_y = smart_deriv<0,2,0>(v.yv,i,j,k);
-
-    const auto vzz_z = smart_deriv<0,0,2>(v.zv,i,j,k);
+    const auto vxx_x = smart_deriv<2,0,0>(v.xv,ind);
+    const auto vyy_y = smart_deriv<0,2,0>(v.yv,ind);
+    const auto vzz_z = smart_deriv<0,0,2>(v.zv,ind);
 
 
+    const auto vxy_x = smart_deriv<1,1,0>(v.xv,ind);
 
+    const auto vxz_x = smart_deriv<1,0,1>(v.xv,ind);
 
-    const auto vxy_x = smart_deriv<1,1,0>(v.xv,i,j,k);
-    const auto vxz_x = smart_deriv<1,0,1>(v.xv,i,j,k);
+    const auto vxy_y = smart_deriv<1,1,0>(v.yv,ind);
+    const auto vyz_y = smart_deriv<0,1,1>(v.yv,ind);
 
-    const auto vxy_y = smart_deriv<1,1,0>(v.yv,i,j,k);
-    const auto vyz_y = smart_deriv<0,1,1>(v.yv,i,j,k);
-
-    const auto vxz_z = smart_deriv<1,0,1>(v.zv,i,j,k);
-    const auto vyz_z = smart_deriv<0,1,1>(v.zv,i,j,k);
-
-
+    const auto vxz_z = smart_deriv<1,0,1>(v.zv,ind);
+    const auto vyz_z = smart_deriv<0,1,1>(v.zv,ind);
 
     const auto term1 = vx_x*vx_x + vy_y*vy_y + vz_z*vz_z;
     const auto term2 = 2*vx_y*vy_x + 2*vx_z*vz_x + 2*vy_z*vz_y;
@@ -432,20 +380,19 @@ double divergence_advection(const big_vec<N,M,P, vec3>& v, const unsigned i, con
     return term1 + term2 + term3 + term4 + term5;
 }
 
-//D(L(v_{i,j,k}))
-template <unsigned N, unsigned M, unsigned P>
-double divergence_laplacian(const big_vec<N,M,P, vec3>& v, const unsigned i, const unsigned j, const unsigned k) noexcept {
-    const auto vxxx = smart_deriv<3,0,0>(v.xv,i,j,k);
-    const auto vxyy = smart_deriv<1,2,0>(v.xv,i,j,k);
-    const auto vxzz = smart_deriv<1,0,2>(v.xv,i,j,k);
+//D(L(v_{ind}))
+double divergence_laplacian(const big_vec_v& v, const unsigned ind) noexcept {
+    const auto vxxx = smart_deriv<3,0,0>(v.xv,ind);
+    const auto vxyy = smart_deriv<1,2,0>(v.xv,ind);
+    const auto vxzz = smart_deriv<1,0,2>(v.xv,ind);
 
-    const auto vyxx = smart_deriv<2,1,0>(v.yv,i,j,k);
-    const auto vyyy = smart_deriv<0,3,0>(v.yv,i,j,k);
-    const auto vyzz = smart_deriv<0,1,2>(v.yv,i,j,k);
+    const auto vyxx = smart_deriv<2,1,0>(v.yv,ind);
+    const auto vyyy = smart_deriv<0,3,0>(v.yv,ind);
+    const auto vyzz = smart_deriv<0,1,2>(v.yv,ind);
 
-    const auto vzxx = smart_deriv<2,0,1>(v.zv,i,j,k);
-    const auto vzyy = smart_deriv<0,2,1>(v.zv,i,j,k);
-    const auto vzzz = smart_deriv<0,0,3>(v.zv,i,j,k);
+    const auto vzxx = smart_deriv<2,0,1>(v.zv,ind);
+    const auto vzyy = smart_deriv<0,2,1>(v.zv,ind);
+    const auto vzzz = smart_deriv<0,0,3>(v.zv,ind);
 
     return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
 }

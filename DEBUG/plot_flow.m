@@ -11,5 +11,5 @@ function [vx, vy, vz] = plot_flow(file_loc)
     vz = data(5:5:end);
     
 %     figure
-    q = quiver(x,y,vx,vy, 3);
+    quiver(x,y,vx,vy, 3)
 end

@@ -9,43 +9,75 @@
 #include "../MyMath/boundary.hpp"
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
+#include "../MyMath/grid.hpp"
+//#include "../MyMath/big_vec.hpp"
+#include "create_grids.hpp"
 #include <cmath>
 
-template <unsigned N, unsigned M, unsigned P>
+
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
-    boundary_points<N,M,P> bound;
-    boundary_normals<N,M,P> norms;
-    boundary_normals<N,M,P> norms_prev;
-    mesh_points<N,M,P> points;
+    grid global_grid;
+    boundary_normals norms;
+    mesh_points m_points;
+    vel_points v_points;
 
-    big_vec<N,M,P,vec3> vel_bc;
-    //big_vec<N,M,P,double> p_bc;
 
 
     triangle_mesh tm;
 
 
     boundary_conditions() = delete;
-    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz) : tm(m) {
+    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm(m) {
+        std::cerr << "making entire grid\n";
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
+        //global_grid.create_no_points_unif();  //now called in make_entire grid
 
-        set_wall_points();
-        norms = boundary_normals<N,M,P>(no_wall_points());
+        std::cerr << "setting boundary normals\n";
+        //set_wall_points();
+        norms = boundary_normals(no_wall_points());
+        std::cerr << "creating wall normals\n";
         create_wall_normals();
-
-        //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
-        vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
-
+        std::cerr << "updating velocities at wall\n";
         update_velocity_wall_BC();
 
-        //needs to be called after vel_bc is set because it uses dx, dy, dz from it
-        update_mesh_boundary();
+        //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
+        //vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
+
+
+        std::cerr << "removing inside points\n";
+        remove_inside_boundary_unif(global_grid, tm, *m, norms, m_points, v_points);
+
+        //needs to be called after vel_bc is set because it uses dx, dy, dz from it
+        /*
+        update_mesh_boundary();
+         */
     }
 
-    static unsigned no_wall_points() {
+    //should never be used in real flow, only used for testing derivatives
+    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm{} {
+        std::cerr << "making entire grid\n";
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
+        //global_grid.create_no_points_unif();  //now called in make_entire grid
+
+        std::cerr << "setting boundary normals\n";
+        norms = boundary_normals(no_wall_points());
+        std::cerr << "creating wall normals\n";
+        create_wall_normals();
+        std::cerr << "updating velocities at wall\n";
+        update_velocity_wall_BC();
+    }
+
+
+    unsigned no_wall_points() const {
+        const auto dims = global_grid.no_points_unif;
+        const auto N = static_cast<unsigned>(dims.x()-1);
+        const auto M = static_cast<unsigned>(dims.y()-1);
+        const auto P = static_cast<unsigned>(dims.z()-1);
         return 2*(N+1)*(P+1) + 2*(N-1)*(M+1) + 2*(M-1)*(P-1);
     }
+    /*
 
     void update_mesh_boundary();
 
@@ -55,46 +87,18 @@ struct boundary_conditions {
         extrapolate(v.yv);
         extrapolate(v.zv);
     }
-
-    //v is vector to enforce the conditions on
-    void enforce_velocity_BC(big_vec<N,M,P,vec3> &v) {
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                for (unsigned k = 0; k <= P; k++) {
-                    if (bound.is_boundary(i,j,k)) {
-                        v.add_elm(i,j,k, vel_bc(i,j,k));
-                    }
-
-                }
-            }
-        }
-    }
-
-    /*
-    void enforce_pressure_BC(big_vec<N,M,P,double> &p) {
-        for (unsigned i = 0; i <= N; i++) {
-            for (unsigned j = 0; j <= M; j++) {
-                for (unsigned k = 0; k <= P; k++) {
-                    if (bound.is_boundary(i,j,k)) {
-                        p(i,j,k) = p_bc(i,j,k);
-                    }
-
-                }
-            }
-        }
-    }*/
+    */
 
 
-    void DEBUG_write_boundary_points() {
+
+    void DEBUG_write_boundary_points() const {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
-            constexpr auto k = P/2;
-            for (unsigned i = 0; i <= N; i++) {
-                for (unsigned j = 0; j <= M; j++) {
-                    const auto pos = vel_bc.get_pos(i,j,k);
-                    output << pos.x() << " " << pos.y() << " " << bound.is_boundary(i,j,k) << "\n";
-                }
+            const auto inds = global_grid.get_middle_inds();
+            for (const auto ind : inds) {
+                output << global_grid[ind].x() << " " << global_grid[ind].y() << " " << norms.contains(ind) << "\n";
             }
+
         } else {
             std::cerr << "failed to open file\n";
         }
@@ -102,20 +106,19 @@ struct boundary_conditions {
         output.close();
     }
 
-    void DEBUG_write_normal_vectors() {
+
+    void DEBUG_write_normal_vectors() const {
         std::ofstream output("../DEBUG/normal_vectors.txt");
         if (output.is_open()) {
-            for (unsigned i = 0; i <= N; i++) {
-                for (unsigned j = 0; j <= M; j++) {
-                    output << i * vel_bc.dx << " " << j * vel_bc.dy << " ";
-                    if (norms.contains(i,j,P/2)) {
-                        output << norms.normal(i,j,P/2);
-                    } else {
-                        output << vec3(0);
-                    }
-                    output << "\n";
+            const auto inds = global_grid.get_middle_inds();
+            for (const auto ind : inds) {
+                output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                if (norms.contains(ind)) {
+                    output << norms.normal(ind);
+                } else {
+                    output << vec3(0);
                 }
-
+                output << "\n";
             }
         } else {
             std::cerr << "failed to open file\n";
@@ -124,21 +127,43 @@ struct boundary_conditions {
         output.close();
     }
 
-    void update_pressure_BC(big_vec<N,M,P, double> &p);
+    void DEBUG_write_normal_vectors_at_x(const double xp) const {
+        std::ofstream output("../DEBUG/normal_vectors.txt");
+        if (output.is_open()) {
+            const auto inds = global_grid.get_some_x_inds(xp);
+            for (const auto ind : inds) {
+                output << global_grid[ind].y() << " " << global_grid[ind].z() << " ";
+                if (norms.contains(ind)) {
+                    output << norms.normal(ind);
+                } else {
+                    output << vec3(0);
+                }
+                output << "\n";
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
+
+
     void update_velocity_wall_BC();
 
 private:
-    void set_wall_points();
+    //void set_wall_points();
     void create_wall_normals();
+    /*
     void set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned j) noexcept;
     void set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, unsigned i, unsigned k) noexcept;
     void set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, unsigned j, unsigned k) noexcept;
     void set_matrix_row(unsigned x, unsigned y, unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,  Eigen::Matrix<double, 8, 1> &vec, const big_vec<N,M,P, double> &p, double xi, double yi, double zi);
+    */
 };
 
-
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned j, const unsigned k) noexcept {
+/*
+void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bool> &is_boundary, const unsigned  j, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
 
@@ -180,7 +205,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_x(const ray &r, std::vector<bo
 }
 
 
-template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned k) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
@@ -221,7 +245,6 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_y(const ray &r, std::vector<bo
 }
 
 
-template <unsigned N, unsigned M, unsigned P>
 void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bool> &is_boundary, const unsigned i, const unsigned j) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
@@ -261,7 +284,7 @@ void boundary_conditions<N,M,P>::set_BC_mesh_1dir_z(const ray &r, std::vector<bo
     }
 }
 
-template <unsigned N, unsigned M, unsigned P>
+
 void boundary_conditions<N,M,P>::update_mesh_boundary() {
     //vector over c array so all elements initialised to 0 = false
     norms_prev = norms;
@@ -279,10 +302,7 @@ void boundary_conditions<N,M,P>::update_mesh_boundary() {
     is_boundary.resize((N+1)*(M+1)*(P+1));
 
     //ray r(vec3{}, vec3(0,0,1));
-    /*std::cerr << "update mesh boundary will soon not work --- spacial coordinates will be wrong\n";
-    const auto dx = vel_bc.dxb;
-    const auto dy = vel_bc.dyb;
-    const auto dz = vel_bc.dzb;*/
+
     for (unsigned i = 0; i <= N; ++i) {
         for (unsigned j = 0; j <= M; ++j) {
             const auto pos = vel_bc.get_pos(i,j,0);
@@ -409,184 +429,72 @@ void boundary_conditions<N,M,P>::set_wall_points() {
         }
     }
 }
+*/
 
 
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_pressure_BC(big_vec<N,M,P, double> &p) {
-    for (unsigned i = 0; i <= N; i++) {
-        for (unsigned j = 0; j <= M; j++) {
-            for (unsigned k = 0; k <= P; k++) {
-                if (p.is_boundary(i,j,k)) {
-#ifndef NDEBUG
-                    if (!norms.contains(i,j,k)) {
-                        std::cerr << "norms does not contain (" << i << ", " << j << ", " << k << ")\n";
-                    }
-#endif
-
-                    const auto norm = norms.normal(i,j,k);
-
-                    //this occurs when inside a boundary
-                    if (norm == vec3(0) ) {
-                        p(i,j,k) = 0;
-                        continue;   //rest of the code will only error
-                    }
-
-                    const auto nx = norm.x();
-                    const auto ny = norm.y();
-                    const auto nz = norm.z();
-
-                    const auto dx = p.dx(i,j,k);
-                    const auto dy = p.dy(i,j,k);
-                    const auto dz = p.dz(i,j,k);
-
-                    //picking the direction
-                    unsigned big_dir = 0;
-                    if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {
-                        big_dir = 1;
-                    }
-                    if (std::abs(norm.z()) > std::abs(norm[big_dir]) ) {
-                        big_dir = 2;
-                    }
 
 
+void boundary_conditions::update_velocity_wall_BC()  {
+    const auto dims = global_grid.no_points_unif;
+    const auto N = static_cast<unsigned>(dims.x()-1);
+    const auto M = static_cast<unsigned>(dims.y()-1);
+    const auto P = static_cast<unsigned>(dims.z()-1);
 
-                    if (big_dir == 0) { //x direction biggest
-                        if (!p.has_left(i,j,k)) {   //forward difference
-                            p(i,j,k) = ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i+2,j,k)/3 + 4*p(i+1,j,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_right(i,j,k)) {   //backward difference
-                            p(i,j,k) =-ny/nx* smart_deriv<0,1,0>(p, i,j,k)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(p, i,j,k)*2*dx/3 - p(i-2,j,k)/3 + 4*p(i-1,j,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {    //central difference
-                            p(i+1,j,k) = -ny/nx * smart_deriv<0,1,0>(p, i,j,k)*dx - nz/nx * smart_deriv<0,0,1>(p, i,j,k)*dx + p(i-1,j,k);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i+1,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-                    } else if (big_dir == 1) {  //y direction biggest
-                        if (!p.has_down(i, j, k)) { //forward difference
-                            p(i,j,k) = nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j+2,k)/3 + 4*p(i,j+1,k)/3;
- #ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_up(i, j, k)) {  //backward difference
-                            p(i,j,k) =-nx/ny* smart_deriv<1,0,0>(p, i,j,k)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(p, i,j,k)*2*dy/3 - p(i,j-2,k)/3 + 4*p(i,j-1,k)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {  //central difference
-                            p(i,j+1,k) = -nx/ny * smart_deriv<1,0,0>(p, i,j,k)*dy - nz/ny * smart_deriv<0,0,1>(p, i,j,k)*dy + p(i,j-1,k);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j+1,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-                    } else {    //z direction
-#ifndef NDEBUG
-                        if (big_dir > 2) {
-                            std::cerr << "the biggest direction cannot be larger than 2\n";
-                        }
-#endif
-                    if (!p.has_front(i,j,k)) {  //forward difference
-                            p(i,j,k) = ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k+2)/3 + 4*p(i,j,k+1)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else if (!p.has_back(i,j,k)) { //backward difference
-                            p(i,j,k) =-ny/nz* smart_deriv<0,1,0>(p, i,j,k)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(p, i,j,k)*2*dz/3 - p(i,j,k-2)/3 + 4*p(i,j,k-1)/3;
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        } else {
-                            p(i,j,k+1) = -ny/nz * smart_deriv<0,1,0>(p, i,j,k)*dz - nx/nz * smart_deriv<1,0,0>(p, i,j,k)*dz + p(i,j,k-1);
-#ifndef NDEBUG
-                            if (!std::isfinite(p(i,j,k+1))) {
-                                std::cerr << "pressure boundary condition returned an infinite value\n";
-                            }
-#endif
-                        }
-
-
-                    }
-
-                }
-
-            }
-        }
-    }
-}
-
-
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::update_velocity_wall_BC()  {
     //setting the walls
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
-            vel_bc.add_elm(i,j,0, 0,0,0);
-            vel_bc.add_elm(i,j,P, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,j,0) ), vec3(0) );
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,j,P) ), vec3(0) );
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
-            vel_bc.add_elm(0,j,k, 0,0,0);
-            vel_bc.add_elm(N,j,k, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(0,j,k) ), vec3(0) );
+            v_points.add_point(global_grid.convert_indices_unif(vec3(N,j,k) ), vec3(0) );
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
 #ifdef MOVING_WALL
-            vel_bc.add_elm(i, 0, k, 1, 0, 0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(1,0,0) );
 #else
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0) );
             vel_bc.add_elm(i, 0, k, 0, 0, 0);
 #endif
-            vel_bc.add_elm(i,M,k, 0,0,0);
+            v_points.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0) );
         }
     }
 
 }
 
-template <unsigned N, unsigned M, unsigned P>
-void boundary_conditions<N,M,P>::create_wall_normals() {
+
+void boundary_conditions::create_wall_normals() {
+    const auto dims = global_grid.no_points_unif;
+    const auto N = static_cast<unsigned>(dims.x()-1);
+    const auto M = static_cast<unsigned>(dims.y()-1);
+    const auto P = static_cast<unsigned>(dims.z()-1);
+
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(i,0,k, vec3(0,1,0));
-            norms.add_point(i,M,k, vec3(0,-1,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0,1,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0,-1,0));
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
-            norms.add_point(i,j,0, vec3(0,0,1));
-            norms.add_point(i,j,P, vec3(0,0,-1));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,0) ), vec3(0,0,1));
+            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,P) ), vec3(0,0,-1));
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(0,j,k,vec3(1,0,0));
-            norms.add_point(N,j,k,vec3(-1,0,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(0,j,k) ),vec3(1,0,0));
+            norms.add_point(global_grid.convert_indices_unif(vec3(N,j,k) ),vec3(-1,0,0));
         }
     }
 }
-
+/*
 //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
 // uses linear interpolation to update points that were previously inside a boundary
 // would be quite simple to update to quadratic interpolation
@@ -738,6 +646,6 @@ void boundary_conditions<N,M,P>::set_matrix_row(const unsigned x, const unsigned
     counter++;
 }
 
-
+*/
 
 #endif //CODE_BOUNDARY_CONDITIONS_HPP

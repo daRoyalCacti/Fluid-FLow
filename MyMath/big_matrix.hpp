@@ -8,59 +8,30 @@
 #include <Eigen/Sparse>
 #include <iostream>
 
-template <unsigned N, unsigned M, unsigned P>
+#include "../Fluid_flow/boundary_conditions.hpp"
+
 struct big_matrix{
     Eigen::SparseMatrix<double,Eigen::RowMajor> m;
+    unsigned long temp_size;
 
     big_matrix() = delete;
-    big_matrix(const unsigned no_data) noexcept {
-        m.resize((N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1));
-        m.reserve(Eigen::VectorXi::Constant((N+1)*(M+1)*(P+1),no_data));
-        //m.reserve( 8 * (N+1)*(M+1)*(P+1) ); //the amount of room to reserve --- overestimated
-                                            // (7* is the default at non-boundary points
+    big_matrix(const boundary_conditions &b, const unsigned no_data) noexcept {
+        m.resize(static_cast<long>(b.global_grid.size()), static_cast<long>(b.global_grid.size())  );
+        m.reserve(Eigen::VectorXi::Constant(static_cast<long>(b.global_grid.size() ), static_cast<int>(no_data) ) );
+        temp_size = b.global_grid.size();
     };
 
-    void add_elm(const unsigned i, const unsigned j, const unsigned k,
-                 const unsigned x, const unsigned y, const unsigned z,
-                 const double elm) noexcept {
-        const auto row = get_index(i,j,k);
-        const auto col = get_index(x,y,z);
-
-        m.insert(row, col) = elm;
+    void add_elm(const unsigned index1, const unsigned index2, const double elm) noexcept {
+        m.insert(index1, index2) = elm;
     }
 
-private:
-    [[nodiscard]] constexpr inline unsigned get_index(const unsigned i, const unsigned j, const unsigned k) const noexcept {
-#ifndef NDEBUG
-        if (i < 0) {
-            std::cerr << "trying to access i < 0\n";
-        }
-        if (i > N) {
-            std::cerr << "trying to access i > N\n";
-        }
-        if (j < 0) {
-            std::cerr << "trying to access j < 0\n";
-        }
-        if (j > M) {
-            std::cerr << "trying to access j > M\n";
-        }
-        if (k < 0) {
-            std::cerr << "trying to access k < 0\n";
-        }
-        if (k > P) {
-            std::cerr << "trying to access k > P\n";
-        }
-#endif
-        return i + (N+1)*j + (N+1)*(M+1)*k;
-    }
 
 };
 
 
 //for debugging
 // - for the actual sparse matrix, just std::cout << mat.m
-template <unsigned N, unsigned M, unsigned P>
-std::ostream& operator << (std::ostream &out, const big_matrix<N,M,P> &mat) {
+std::ostream& operator << (std::ostream &out, const big_matrix &mat) {
     Eigen::MatrixXd temp = mat.m;
     return out << temp;
 }

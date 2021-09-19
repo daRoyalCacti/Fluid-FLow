@@ -7,6 +7,7 @@
 
 #include "ray.hpp"
 #include "triangle.hpp"
+#include "mesh.hpp"
 #include <map>
 #include <algorithm>
 
@@ -24,7 +25,7 @@ struct triangle_mesh {
 
     std::vector<triangle, no_init_alloc<triangle>> tris;    //custom allocator because vector is filled immediately after resizing it
 
-    triangle_mesh() = delete;
+    triangle_mesh() = default;
     explicit triangle_mesh(const mesh *m) {
         tris.resize(m->indices.size() / 3);
         for (unsigned i = 0; i < tris.size(); i++) {
@@ -40,7 +41,7 @@ struct triangle_mesh {
     };
 
     //returns if ray collided with mesh
-    std::map<double, d_vec3> get_collision_points(const ray &r) {
+    [[nodiscard]] std::map<double, d_vec3> get_collision_points(const ray &r) const {
         //this does not work if the ray hits the mesh an odd number of times
         // - should only happen when a ray just barely grazes past the mesh
         // - note that hits is stored in order of hit time

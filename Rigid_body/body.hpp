@@ -136,6 +136,8 @@ struct body {
        }
 #endif
 
+        model.update_bounding_box();
+
        //updating all normals
        std::transform(model.normals.begin(), model.normals.end(), model.normals.begin(),
                       [&](const vec3& x)

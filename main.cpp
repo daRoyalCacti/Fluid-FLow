@@ -2,8 +2,8 @@
 
 #include "Fluid_flow/create_flow.hpp"
 
-#include "Examples/calc_derivs.hpp"
-#include "Examples/big_vec_derivs.hpp"
+//#include "Examples/calc_derivs.hpp"
+//#include "Examples/big_vec_derivs.hpp"
 
 const double wx = 3;
 const double wy = 4;
@@ -11,7 +11,12 @@ const double wz = 5;
 const double max_t = 1;
 const double Re = 150;
 
+
+
+
 int main() {
+    //big_veg_derivs_ex();
+    //calc_derivs_ex();
 
 
     constexpr output_settings o{};

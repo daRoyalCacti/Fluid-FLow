@@ -32,6 +32,13 @@ struct vec3 final {
         return *this;
     }
 
+    vec3 &operator-=(const vec3 &v) noexcept {
+        e[0] -= v.e[0];
+        e[1] -= v.e[1];
+        e[2] -= v.e[2];
+        return *this;
+    }
+
     vec3 &operator*=(const double t) noexcept {
         e[0] *= t;
         e[1] *= t;
@@ -39,13 +46,6 @@ struct vec3 final {
         return *this;
     }
 
-    //for testing
-    /*vec3 &operator=(const double d) {
-        e[0] = d;
-        e[1] = d;
-        e[2] = d;
-        return *this;
-    }*/
 
 
     vec3 &operator/=(const double t) noexcept {
@@ -109,6 +109,10 @@ constexpr vec3 operator / (const vec3 &v, const double t) noexcept {
     return (1/t) * v;
 }
 
+constexpr vec3 operator / (const vec3 &u, const vec3 &v) noexcept {
+    return {u.e[0] / v.e[0], u.e[1] / v.e[1], u.e[2] / v.e[2]};
+}
+
 constexpr double dot(const vec3 &u, const vec3 &v) noexcept {
     return u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2];
 }
@@ -160,6 +164,39 @@ constexpr vec3 sqrt(const vec3& v) noexcept {
 
 [[maybe_unused]] constexpr vec3 abs2(const vec3& v)noexcept  {
     return { v.x()*v.x(), v.y()*v.y(), v.z()*v.z()};
+}
+
+constexpr vec3 round(const vec3 &v) noexcept {
+    return {round(v.x()), round(v.y()), round(v.z())};
+}
+
+constexpr vec3 ceil(const vec3 &v) noexcept {
+    return {ceil(v.x()), ceil(v.y()), ceil(v.z())};
+}
+
+//used in smart derivative
+template <unsigned axis, int val1>
+constexpr vec3 make_vec() {
+    static_assert(axis < 3, "Axis should be 0,1,2");
+
+    if constexpr(axis == 0) {
+        return {val1,0,0};
+    } else if constexpr (axis==1) {
+        return {0,val1,0};
+    } else {
+        return {0,0,val1};
+    }
+
+}
+
+
+template <unsigned axis1, int val1, unsigned axis2, int val2>
+constexpr vec3 make_vec() {
+    vec3 ret_vec = vec3(0);
+    ret_vec[axis1] = val1;
+    ret_vec[axis2] = val2;
+
+    return ret_vec;
 }
 
 #endif //CODE_VEC3_HPP
