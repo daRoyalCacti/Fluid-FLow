@@ -24,7 +24,6 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
 //#pragma omp parallel for
     //shared(Q, p, dxdx, dydy, dzdz) default(none)
     for (unsigned i = 0; i < p.size(); i++) {
-        double diag = 0.0;
 
         if (p.is_boundary(i)) {
 #ifndef NDEBUG
@@ -33,41 +32,6 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
             }
 #endif
             Q.add_elm(i, i,1);
-            /*const auto norm = norms.normal(i);
-            //picking the direction
-            unsigned big_dir = 0;
-            if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {
-                big_dir = 1;
-            }
-            if (std::abs(norm.z()) > std::abs(norm[big_dir]) ) {
-                big_dir = 2;
-            }
-
-            if (big_dir == 0) { //x direction biggest
-                if (p.has_left(i) && p.has_right(i)) {
-                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), 1);
-                } else {
-                    Q.add_elm(i, i,1);
-                }
-            } else if (big_dir == 1) {  //y direction biggest
-                if (p.has_down(i) && p.has_up(i)) {
-                    Q.add_elm(i, p.get_move_ind(i, 0, 1, 0),1);
-                } else {
-                    Q.add_elm(i, i,1);
-                }
-            } else {    //z direction
-#ifndef NDEBUG
-                if (big_dir > 2) {
-                    std::cerr << "the biggest direction cannot be larger than 2\n";
-                }
-#endif
-                if (p.has_front(i) && p.has_back(i)) {
-                    Q.add_elm(i, p.get_move_ind(i,0,0,1),1);
-                } else {
-                    Q.add_elm(i, i,1);
-                }
-            }*/
-
         } else {
 
             const auto dxdx = p.dx(i)*p.dx(i);
@@ -75,72 +39,24 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
             const auto dzdz = p.dz(i)*p.dz(i);
 
 
-            //x axis checks
-            if (!p.has_left(i)) {
-                diag += 2 / dxdx;
+            //x-axis
+            Q.add_elm(i, p.get_move_ind(i,1,0,0), 1 / dxdx);
+            Q.add_elm(i, p.get_move_ind(i,-1,0,0), 1 / dxdx);
 
-                Q.add_elm(i, p.get_move_ind(i,3,0,0), -1 / dxdx);
-                Q.add_elm(i, p.get_move_ind(i,2,0,0), 4 / dxdx);
-                Q.add_elm(i, p.get_move_ind(i,1,0,0), -5 / dxdx);
-            } else if (!p.has_right(i)) {
-                diag += 2 / dxdx;
 
-                Q.add_elm(i, p.get_move_ind(i,-1,0,0), -5 / dxdx);
-                Q.add_elm(i, p.get_move_ind(i,-2,0,0), 4 / dxdx);
-                Q.add_elm(i, p.get_move_ind(i,-3,0,0), -1 / dxdx);
-            } else {
-                diag += -2 / dxdx;
+            //y-axis
+            Q.add_elm(i, p.get_move_ind(i,0,1,0), 1 / dydy);
+            Q.add_elm(i, p.get_move_ind(i,0,-1,0), 1 / dydy);
 
-                Q.add_elm(i, p.get_move_ind(i,1,0,0), 1 / dxdx);
-                Q.add_elm(i, p.get_move_ind(i,-1,0,0), 1 / dxdx);
-            }
 
-            //y axis checks
-            if (!p.has_down(i)) {
-                diag += 2 / dydy;
+            //z-axis
+            Q.add_elm(i, p.get_move_ind(i,0,0,1), 1 / dzdz);
+            Q.add_elm(i, p.get_move_ind(i,0,0,-1), 1 / dzdz);
 
-                Q.add_elm(i, p.get_move_ind(i,0,3,0), -1 / dydy);
-                Q.add_elm(i, p.get_move_ind(i,0,2,0), 4 / dydy);
-                Q.add_elm(i, p.get_move_ind(i,0,1,0), -5 / dydy);
-            } else if (!p.has_up(i)) {
-                diag += 2 / dydy;
 
-                Q.add_elm(i, p.get_move_ind(i,0,-1,0), -5 / dydy);
-                Q.add_elm(i, p.get_move_ind(i,0,-2,0), 4 / dydy);
-                Q.add_elm(i, p.get_move_ind(i,0,-3,0), -1 / dydy);
-            } else {
-                diag += -2 / dydy;
-
-                Q.add_elm(i, p.get_move_ind(i,0,1,0), 1 / dydy);
-                Q.add_elm(i, p.get_move_ind(i,0,-1,0), 1 / dydy);
-            }
-
-            //z axis checks
-            if (!p.has_front(i)) {
-                diag += 2 / dzdz;
-
-                Q.add_elm(i, p.get_move_ind(i,0,0,3), -1 / dzdz);
-                Q.add_elm(i, p.get_move_ind(i,0,0,2), 4 / dzdz);
-                Q.add_elm(i, p.get_move_ind(i,0,0,1), -5 / dzdz);
-            } else if (!p.has_back(i)) {
-                diag += 2 / dzdz;
-
-                Q.add_elm(i, p.get_move_ind(i,0,0,-1), -5 / dzdz);
-                Q.add_elm(i, p.get_move_ind(i,0,0,-2), 4 / dzdz);
-                Q.add_elm(i, p.get_move_ind(i,0,0,-3), -1 / dzdz);
-            } else {
-                diag += -2 / dzdz;
-
-                Q.add_elm(i, p.get_move_ind(i,0,0,1), 1 / dzdz);
-                Q.add_elm(i, p.get_move_ind(i,0,0,-1), 1 / dzdz);
-            }
-
-            Q.add_elm(i, i, diag);
+            Q.add_elm(i, i, -2/dxdx - 2/dydy - 2/dzdz);
 
         }
-
-
-
 
     }
 }
