@@ -321,6 +321,8 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
          const std::chrono::duration<double> dur_loop = end_loop - start_loop;
          std::cout << "\ttimestep took : " << dur_loop.count() << "s";
 
+         timer.save_total_time(start_loop, end_loop);
+
          if constexpr (write_all_times) {
              std::cout << "\tfile written : " << file_name << "\n";
          } else {
