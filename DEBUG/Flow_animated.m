@@ -3,9 +3,7 @@ All_v_files = dirPlus('velocity_data');   %https://stackoverflow.com/questions/2
 All_p_files = dirPlus('pressure_data'); 
 All_b_files = dirPlus('rigid_body_data');
 
-% no_files = length(All_v_files);
-fprintf('no_files has been changed for testing\n')
-no_files = 218;
+no_files = length(All_v_files);
 
 fprintf("Reading files\n")
 data = struct;
