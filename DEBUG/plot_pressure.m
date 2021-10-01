@@ -1,4 +1,5 @@
-function p_n = plot_pressure(file_loc)
+% function p_n = plot_pressure(file_loc)
+file_loc = "pressure_data/0020.txt";
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
@@ -18,12 +19,36 @@ function p_n = plot_pressure(file_loc)
     else
         p_n = zeros(size(p));
     end
+            
+    interp_col1 = [100, 100, 100]/100;
+    interp_col2 = [3.5, 43.9, 77.3]/100;
+    
+    interp_func = @(x) interp_col1*x + interp_col2*(1-x);
 
     
     for ii = 1:(length(x))
 %         rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 0 p_n(ii)],'EdgeColor',[0 0 p_n(ii)],'LineWidth',0.001)
-        rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',[0 p_n(ii) 0],'EdgeColor',[0 p_n(ii) 0],'LineWidth',0.001)
+        rectangle('Position',[x(ii),y(ii),dx,dy],'FaceColor',interp_func(p_n(ii)),'EdgeColor', interp_func(p_n(ii)), 'LineWidth',0.001)
     end
+    
+    xlabel('x')
+    ylabel('y')
+    c=colorbar;
+    c.Limits = [0, 1];
+    %setting the colour bar colours
+    map = [linspace(interp_col1(1) ,interp_col2(1) , 100)', linspace(interp_col1(2) ,interp_col2(2) , 100)', linspace(interp_col1(3) ,interp_col2(3) , 100)'];
+    colormap(map)
+    
+    %labelling the colour bar
+    no_ticks = length(c.TickLabels);
+    label_vals = linspace(min(p), max(p), no_ticks);
+    label_vals = round(label_vals*100)/100; %giving the labels only 2 decimal places
+    for ii = 1:no_ticks
+        tick_labels(ii) = {num2str(label_vals(ii))};
+    end
+    c.TickLabels = tick_labels;
+    
+     rectangle('Position',[min(x),min(y),max(x)-min(x),max(y)-min(y)],'EdgeColor', [0,0,0], 'LineWidth',1.5)
 
 %     l = length(p_r);
 %     if ( sqrt(l) ~= floor(sqrt(l)))
@@ -47,4 +72,4 @@ function p_n = plot_pressure(file_loc)
 %     Ax = gca;
 %     Ax.XDisplayLabels = nan(size(Ax.XDisplayData));
 %     Ax.YDisplayLabels = nan(size(Ax.YDisplayData));
-end
+% end
