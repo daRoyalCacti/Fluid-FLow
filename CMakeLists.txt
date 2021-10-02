@@ -6,7 +6,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
 
 
-add_executable(Code main.cpp MyMath/vec3.hpp MyMath/ops.hpp Rigid_body/body.hpp Examples/Rigid_body_ex.hpp MyMath/finite_difference.hpp Examples/derivatives.hpp MyMath/big_vec.hpp Examples/big_vec_derivs.hpp MyMath/calc.hpp Examples/calc_derivs.hpp MyMath/big_matrix.hpp Fluid_flow/make_vecs.hpp Fluid_flow/make_mats.hpp Fluid_flow/create_flow.hpp Fluid_flow/solver.hpp MyMath/boundary.hpp Fluid_flow/flow_env.hpp Fluid_flow/timing.hpp Rigid_body/mesh.hpp Rigid_body/triangle.hpp Rigid_body/ray.hpp Fluid_flow/boundary_conditions.hpp Rigid_body/triangle_mesh.hpp Fluid_flow/update_mesh.hpp MyMath/grid.hpp Fluid_flow/create_grids.hpp Fluid_flow/update_vecs.hpp)
+add_executable(Code main.cpp MyMath/vec3.hpp MyMath/ops.hpp Rigid_body/body.hpp Examples/Rigid_body_ex.hpp MyMath/finite_difference.hpp Examples/derivatives.hpp MyMath/big_vec.hpp Examples/big_vec_derivs.hpp MyMath/calc.hpp Examples/calc_derivs.hpp MyMath/big_matrix.hpp Fluid_flow/make_vecs.hpp Fluid_flow/make_mats.hpp Fluid_flow/create_flow.hpp Fluid_flow/solver.hpp MyMath/boundary.hpp Fluid_flow/flow_env.hpp Fluid_flow/timing.hpp Rigid_body/mesh.hpp Rigid_body/triangle.hpp Rigid_body/ray.hpp Fluid_flow/boundary_conditions.hpp Rigid_body/triangle_mesh.hpp Fluid_flow/update_mesh.hpp MyMath/grid.hpp Fluid_flow/create_grids.hpp Fluid_flow/update_vecs.hpp Examples/interp.hpp)
 
 
 set_target_properties(Code PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
