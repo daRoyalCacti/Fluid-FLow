@@ -6,6 +6,8 @@
 #define CODE_BIG_VEC_HPP
 
 #include <Eigen/Dense>
+//#include <Eigen/SparseLU>
+#include <Eigen/Sparse>
 
 #include <algorithm>
 
@@ -17,10 +19,10 @@
 
 template <typename T>
 struct big_vec {
-    const grid* g;
+    grid* g;
 
     big_vec() : g{} {}
-    explicit big_vec(const boundary_conditions &b) noexcept  : g{&b.global_grid} {}
+    explicit big_vec(boundary_conditions &b) noexcept  : g{&b.global_grid} {}
 
     virtual void move(const double x_off, const double y_off, const double z_off) {
         #ifndef NDEBUG
@@ -274,7 +276,7 @@ struct big_vec_d final : public big_vec<double> {
 
 
     big_vec_d() : v{}, big_vec() {  }
-    explicit big_vec_d(const boundary_conditions &b) noexcept  : big_vec(b) {
+    explicit big_vec_d(boundary_conditions &b) noexcept  : big_vec(b) {
         v.resize( static_cast<long>(g->size()) );
         clear(); //ensuring nothing weird happens
     }
@@ -410,8 +412,11 @@ struct big_vec_d final : public big_vec<double> {
 
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
-            Eigen::Matrix<double, 8, 8> mat;
+            //Eigen::Matrix<double, 8, 8> mat;
             Eigen::Matrix<double, 8, 1> vec;
+            Eigen::SparseMatrix<double> mat(8,8);
+            //Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> >   solver;
+            Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
 
             for (unsigned i = 0; i < 8; i++) {
                 vec[i] = v[interp_indices[i]];
@@ -420,18 +425,29 @@ struct big_vec_d final : public big_vec<double> {
                 const auto y0 = g->y[interp_indices[i]];
                 const auto z0 = g->z[interp_indices[i]];
 
-                mat(i, 0) = 1;
-                mat(i, 1) = x0;
-                mat(i, 2) = y0;
-                mat(i, 3) = z0;
-                mat(i, 4) = x0*y0;
-                mat(i, 5) = x0*z0;
-                mat(i, 6) = y0*z0;
-                mat(i, 7) = x0*y0*z0;
+                mat.insert(i, 0) = 1;
+                mat.insert(i, 1) = x0;
+                mat.insert(i, 2) = y0;
+                mat.insert(i, 3) = z0;
+                mat.insert(i, 4) = x0*y0;
+                mat.insert(i, 5) = x0*z0;
+                mat.insert(i, 6) = y0*z0;
+                mat.insert(i, 7) = x0*y0*z0;
             }
 
+            if (index == 6) {
+                for (unsigned i = 0; i < 8; i++) {
+                    std::cerr << v[interp_indices[i]] << "\t";
+                }
+                std::cerr << "\n";
+            }
             //mat and vec now set, just need to solve for the coefficients
-            const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+            //solver.analyzePattern(mat);
+            //solver.factorize(mat);
+            solver.compute(mat);
+            const Eigen::Matrix<double, 8, 1> a = solver.solve(vec);
+
+            //const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
 
             const auto x = g->x[index] + x_off;
             const auto y = g->y[index] + y_off;
@@ -453,7 +469,7 @@ struct big_vec_v final : public big_vec<vec3> {
 
 
     big_vec_v() : xv{}, yv{}, zv{}, big_vec() {}
-    explicit big_vec_v(const boundary_conditions &b) noexcept : big_vec(b), xv(b), yv(b), zv(b) {}
+    explicit big_vec_v(boundary_conditions &b) noexcept : big_vec(b), xv(b), yv(b), zv(b) {}
 
     void clear() override {
         xv.clear();
