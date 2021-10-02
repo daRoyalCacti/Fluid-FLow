@@ -52,6 +52,18 @@ struct grid {
 #endif
     }
 
+    void update_grid(double x_off, double y_off, double z_off) noexcept {
+        for (auto & x_ : x) {
+            x_ += x_off;
+        }
+        for (auto & y_ : y) {
+            y_ += y_off;
+        }
+        for (auto & z_ : z) {
+            z_ += z_off;
+        }
+    }
+
     [[nodiscard]] auto size() const {
         return x.size();
     }
