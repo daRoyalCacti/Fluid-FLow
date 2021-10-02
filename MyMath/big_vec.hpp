@@ -6,7 +6,6 @@
 #define CODE_BIG_VEC_HPP
 
 #include <Eigen/Dense>
-//#include <Eigen/SparseLU>
 #include <Eigen/Sparse>
 
 #include <algorithm>
@@ -340,79 +339,11 @@ struct big_vec_d final : public big_vec<double> {
         }
 #endif
         constexpr unsigned no_points = 20;
+        #pragma omp parallel for
         for (unsigned index = 0; index < buffer.size(); index++) {
-            //std::cerr << index << "/" << buffer.size() -1 << "\n";
-
             unsigned interp_indices[no_points];
             size_t counter = 0;
-            /*size_t counter = 1;
 
-            interp_indices[0] = index;  //use itself in innterpolation
-
-            //setting the indices along the major axes
-            for (const auto& horiz : {-1,1}) {
-                if (can_move(index, horiz, 0, 0)) {
-                    interp_indices[counter++] = get_move_ind(index, horiz, 0, 0);
-                }
-            }
-            for (const auto& vert : {-1,1}) {
-                if (can_move(index, 0, vert, 0)) {
-                    interp_indices[counter++] = get_move_ind(index, 0, vert, 0);
-                }
-            }
-            for (const auto& in : {-1,1}) {
-                if (can_move(index, 0, 0, in)) {
-                    interp_indices[counter++] = get_move_ind(index, 0, 0, in);
-                }
-            }
-
-
-            //getting end values
-            for (const auto& horiz : {-1,0,1}) {
-                for (const auto& vert : {-1,1}) {
-                    if (can_move(index, horiz, vert, 0)) {
-                        interp_indices[counter++] = get_move_ind(index, horiz, vert, 0);
-                        if (counter == 8) {
-                            goto got_indices;
-                        }
-                    }
-                }
-            }
-
-            for (const auto& horiz : {-1,0,1}) {
-                for (const auto& in : {-1,1}) {
-                    if (can_move(index, horiz, 0, in)) {
-                        interp_indices[counter++] = get_move_ind(index, horiz, 0, in);
-                        if (counter == 8) {
-                            goto got_indices;
-                        }
-                    }
-                }
-            }
-
-            //getting corner values
-            for (const auto& horiz : {-1,0,1}) {
-                for (const auto& vert : {-1,1}) {
-                    for (const auto& in : {-1,1}) {
-                        if (can_move(index, horiz, vert, in)) {
-                            interp_indices[counter++] = get_move_ind(index, horiz, vert, in);
-                            if (counter == 8) {
-                                goto got_indices;
-                            }
-                        }
-                    }
-                }
-            }
-
-
-
-            got_indices:
-#ifndef NDEBUG
-            if (counter != 8) {
-                std::cerr << "move points are needed for interpolation\n";
-            }
-#endif
-             */
             int i = 1;
             while (true) {
                 //std::cerr << "\t" << counter << "\n";
@@ -490,14 +421,11 @@ struct big_vec_d final : public big_vec<double> {
 
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
-            //Eigen::Matrix<double, 8, 8> mat;
             Eigen::Matrix<double, no_points, 1> vec;
             Eigen::SparseMatrix<double> mat(no_points,no_points);
-            //Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> >   solver;
             Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
 
             for (unsigned i = 0; i < no_points; i++) {
-                //std::cerr << i << "\n";
                 vec[i] = v[interp_indices[i]];
 
                 const auto x = g->x[interp_indices[i]];
@@ -527,47 +455,17 @@ struct big_vec_d final : public big_vec<double> {
                 mat.insert(i, 19) = x*y*z*x;
             }
 
-            /*if (index == 565) {//43) {
-                for (unsigned i = 0; i < 8; i++) {
-                    std::cerr << v[interp_indices[i]] << "\t";
-                }
-                std::cerr << "\n";
-
-                for (unsigned i = 0; i < 8; i++) {
-                    std::cerr << g->x[interp_indices[i]] << "\t";
-                }
-                std::cerr << "\t (" << g->x[index] + x_off << ")\n";
-
-                for (unsigned i = 0; i < 8; i++) {
-                    std::cerr << g->y[interp_indices[i]] << "\t";
-                }
-                std::cerr << "\t (" << g->y[index] + y_off << ")\n";
-
-                for (unsigned i = 0; i < 8; i++) {
-                    std::cerr << g->z[interp_indices[i]] << "\t";
-                }
-                std::cerr << "\t (" << g->z[index] + z_off << ")\n";
-                std::cerr << "\n";
-            }*/
             //mat and vec now set, just need to solve for the coefficients
-            //solver.analyzePattern(mat);
-            //solver.factorize(mat);
-            //std::cerr << 1 << "\n";
             solver.compute(mat);
-            //std::cerr << 2 << "\n";
-            const Eigen::Matrix<double, no_points, 1> a = solver.solve(vec);
-
-            //const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+            const decltype(vec) a = solver.solve(vec);
 
             const auto x = g->x[index] + x_off;
             const auto y = g->y[index] + y_off;
             const auto z = g->z[index] + z_off;
-            //std::cerr << 3 << "\n";
             buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
                     a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
                     a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x ;
 
-            //std::cerr << 4 << "\n";
         }
 
         v = std::move(buffer);
