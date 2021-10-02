@@ -1,5 +1,4 @@
-% function p_n = plot_pressure(file_loc)
-file_loc = "pressure_data/0020.txt";
+function p_n = plot_pressure(file_loc)
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
