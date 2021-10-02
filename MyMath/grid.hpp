@@ -52,7 +52,7 @@ struct grid {
 #endif
     }
 
-    void update_grid(double x_off, double y_off, double z_off) noexcept {
+    void update_grid(const double x_off, const double y_off, const double z_off) noexcept {
         for (auto & x_ : x) {
             x_ += x_off;
         }
