@@ -22,6 +22,11 @@ struct big_vec {
     big_vec() : g{} {}
     explicit big_vec(const boundary_conditions &b) noexcept  : g{&b.global_grid} {}
 
+    virtual void move(const double x_off, const double y_off, const double z_off) {
+        #ifndef NDEBUG
+            std::cerr << "virtual move function of big_vec called. This should never happen\n";
+        #endif
+    }
 
     [[nodiscard]] inline bool has_left(const unsigned ind) const noexcept {return g->has_left(ind);}
     [[nodiscard]] inline bool has_right(const unsigned ind) const noexcept {return g->has_right(ind);}
@@ -260,6 +265,7 @@ struct big_vec {
         return can_move(ind, v.x(), v.y(), v.z());
     }
 
+
 };
 
 
@@ -304,6 +310,139 @@ struct big_vec_d final : public big_vec<double> {
 
     [[nodiscard]] double& operator()(const unsigned ind) noexcept override { return v(ind); }
     [[nodiscard]] double operator()(const unsigned ind) const noexcept override { return v(ind); }
+
+
+    //interpolates/extrapolates values based on how much the grid moves
+    //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
+    // would be quite simple to update to quadratic interpolation
+    void move(const double x_off, const double y_off, const double z_off) override {
+        //variable to hold the new interpolated values
+        Eigen::Matrix<double, Eigen::Dynamic, 1> buffer;
+        buffer.resize(static_cast<long>(g->size()));
+
+
+
+
+
+        //finding points to use for interpolation
+        // - assumes the offsets are smaller than the step size
+#ifndef NDEBUG
+        if (x_off > g->dx) {
+            std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+        if (y_off > g->dy) {
+            std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+        if (z_off > g->dz) {
+            std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+#endif
+        for (unsigned index = 0; index < buffer.size(); index++) {
+
+            unsigned interp_indices[8];
+            size_t counter = 1;
+
+            interp_indices[0] = index;  //use itself in innterpolation
+
+            //setting the indices along the major axes
+            for (const auto& horiz : {-1,1}) {
+                if (can_move(index, horiz, 0, 0)) {
+                    interp_indices[counter++] = get_move_ind(index, horiz, 0, 0);
+                }
+            }
+            for (const auto& vert : {-1,1}) {
+                if (can_move(index, 0, vert, 0)) {
+                    interp_indices[counter++] = get_move_ind(index, 0, vert, 0);
+                }
+            }
+            for (const auto& in : {-1,1}) {
+                if (can_move(index, 0, 0, in)) {
+                    interp_indices[counter++] = get_move_ind(index, 0, 0, in);
+                }
+            }
+
+            //getting end values
+            for (const auto& horiz : {-1,0,1}) {
+                for (const auto& vert : {-1,1}) {
+                    if (can_move(index, horiz, vert, 0)) {
+                        interp_indices[counter++] = get_move_ind(index, horiz, vert, 0);
+                        if (counter == 8) {
+                            goto got_indices;
+                        }
+                    }
+                }
+            }
+
+            for (const auto& horiz : {-1,0,1}) {
+                for (const auto& in : {-1,1}) {
+                    if (can_move(index, horiz, 0, in)) {
+                        interp_indices[counter++] = get_move_ind(index, horiz, 0, in);
+                        if (counter == 8) {
+                            goto got_indices;
+                        }
+                    }
+                }
+            }
+
+            //getting corner values
+            for (const auto& horiz : {-1,0,1}) {
+                for (const auto& vert : {-1,1}) {
+                    for (const auto& in : {-1,1}) {
+                        if (can_move(index, horiz, vert, in)) {
+                            interp_indices[counter++] = get_move_ind(index, horiz, vert, in);
+                            if (counter == 8) {
+                                goto got_indices;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            got_indices:
+#ifndef NDEBUG
+            if (counter != 8) {
+                std::cerr << "move points are needed for interpolation\n";
+            }
+#endif
+
+
+
+            //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+            //setting the matrix
+            Eigen::Matrix<double, 8, 8> mat;
+            Eigen::Matrix<double, 8, 1> vec;
+
+            for (unsigned i = 0; i < 8; i++) {
+                vec[i] = v[interp_indices[i]];
+
+                const auto x0 = g->x[interp_indices[i]];
+                const auto y0 = g->y[interp_indices[i]];
+                const auto z0 = g->z[interp_indices[i]];
+
+                mat(i, 0) = 1;
+                mat(i, 1) = x0;
+                mat(i, 2) = y0;
+                mat(i, 3) = z0;
+                mat(i, 4) = x0*y0;
+                mat(i, 5) = x0*z0;
+                mat(i, 6) = y0*z0;
+                mat(i, 7) = x0*y0*z0;
+            }
+
+            //mat and vec now set, just need to solve for the coefficients
+            const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+
+            const auto x = g->x[index] + x_off;
+            const auto y = g->y[index] + y_off;
+            const auto z = g->z[index] + z_off;
+
+            buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
+        }
+
+        v = std::move(buffer);
+
+    }
 };
 
 
@@ -357,6 +496,13 @@ struct big_vec_v final : public big_vec<vec3> {
         return {xv.v[ind], yv.v[ind], zv.v[ind]};
     }
 
+
+    void move(const double x_off, const double y_off, const double z_off) override {
+        xv.move(x_off, y_off, z_off);
+        yv.move(x_off, y_off, z_off);
+        zv.move(x_off, y_off, z_off);
+    }
+
 };
 
 
@@ -393,6 +539,157 @@ void write_vec(const auto& v, const auto& inds, const char* file_loc) noexcept {
     output.close();
 }
 
+/*
+//https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
+// uses linear interpolation to update points that were previously inside a boundary
+// would be quite simple to update to quadratic interpolation
+// uses interpolation instead of an explicit extrapolation procedure is because I can't find any extrapolation procedures
+template <unsigned N, unsigned M, unsigned P>
+void boundary_conditions<N,M,P>::extrapolate(big_vec<N,M,P, double> &p) {
+    //finds the constants in
+    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
 
+    for (unsigned i = 0; i <= N; i++) {
+        for (unsigned j = 0; j <= M; j++) {
+            for (unsigned k = 0; k <=P; k++) {
+                //const bool is_bound = bound.is_boundary(i,j,k);
+                //const bool was_bound = norms.contains(i,j,k) && norms.normal(i,j,k) != vec3(0); //bound_prev.is_boundary(i,j,k);
+
+                const bool is_bound = norms.contains(i,j,k);
+                const bool was_bound = norms_prev.contains(i,j,k) && norms_prev.normal(i,j,k) == vec3(0);
+
+
+                if (!is_bound && was_bound ) {   //was inside mesh but is current outside of the boundary
+                    //the points where the extrapolation is to be used
+                    const unsigned xi = i;
+                    const unsigned yi = j;
+                    const unsigned zi = k;
+
+
+
+
+
+                    Eigen::Matrix<double, 8, 8> mat;
+                    Eigen::Matrix<double, 8, 1> vec;
+
+                    //using values on the faces of ever-increasing cubes
+                    for (int s = 2; s < 80; s+=2) {    //upper bound on s arbitrarily large
+                        std::vector<unsigned> vals_b, vals_s;
+                        vals_b.resize(s+1);
+                        vals_s.resize(s-1);
+                        std::iota(vals_b.begin(), vals_b.end(), -s/2);  //include the entire surface
+                        std::iota(vals_s.begin(), vals_s.end(), -s/2+1);//surface less 1 edge
+
+                        unsigned counter = 0;
+
+                        //moving along the surfaces of the cubes
+                        {
+                            int x = -s/2;
+                            for (const auto &y : vals_b) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int x = s/2;
+                            for (const auto &y : vals_b) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int y = -s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int y = s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &z : vals_b) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int z = -s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &y : vals_s) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+                        {
+                            int z = s/2;
+                            for (const auto &x : vals_s) {
+                                for (const auto &y : vals_s) {
+                                    set_matrix_row(x, y, z, counter, mat, vec, p, xi, yi, zi);
+                                }
+                            }
+                        }
+
+                        if (counter >= 8) {
+                            break;
+                        }
+
+
+                    }   //end s for loop
+
+                    //mat and vec now set, just need to solve for the coefficients
+                    const Eigen::Matrix<double, 8, 1> a = mat.inverse()*vec;
+
+                    //setting the value of p
+                    //y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+                    const auto pos = vel_bc.get_pos(xi,yi,zi);
+                    const auto x = pos.x();
+                    const auto y = pos.y();
+                    const auto z = pos.z();
+                    p(xi, yi, zi) = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z;
+
+                }
+
+            }
+        }
+    }
+
+}
+
+template<typename T>
+void big_vec<T>::set_matrix_row(const unsigned x, const unsigned y, const unsigned z, unsigned &counter, Eigen::Matrix<double, 8, 8> &mat,
+                                                Eigen::Matrix<double, 8, 1> &vec, const big_vec<T> &p, const double xi, const double yi, const double zi) {
+    const auto xp = x+xi;
+    const auto yp = y+yi;
+    const auto zp = z+zi;
+
+    std::cerr << "set matrix row will soon be wrong\n";
+
+
+    //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
+    bool has_normal = norms.contains(xp, yp, zp);
+    if (!has_normal || (norms.normal(xp, yp, zp) != vec3(0))  ) {    //if point not inside a boundary
+        const auto pos = vel_bc.get_pos(xp, yp, zp);
+        const auto x0 = pos.x();
+        const auto y0 = pos.y();
+        const auto z0 = pos.z();
+
+        mat(counter, 0) = 1;
+        mat(counter, 1) = x0;
+        mat(counter, 2) = y0;
+        mat(counter, 3) = z0;
+        mat(counter, 4) = x0*y0;
+        mat(counter, 5) = x0*z0;
+        mat(counter, 6) = y0*z0;
+        mat(counter, 7) = x0*y0*z0;
+
+        vec(counter) = p(xp, yp, zp);
+    }
+
+    counter++;
+}
+*/
 
 #endif //CODE_BIG_VEC_HPP
