@@ -409,6 +409,24 @@ struct big_vec_d final : public big_vec<double> {
                     }
                 }
 
+                //getting the rest of the edge values
+                for (const auto& in : {-i,i}) {
+                    for (const auto& vert : {-i,i}) {
+                        if (can_move(index, 0, vert, in)) {
+                            interp_indices[counter++] = get_move_ind(index, 0, vert, in);
+                            if (counter == no_points) {
+                                goto got_indices;
+                            }
+                        }
+                    }
+                }
+
+                //then include the point itself
+                interp_indices[counter++] = get_move_ind(index, 0, 0, 0);
+                if (counter == no_points) {
+                    goto got_indices;   //could just break here but using goto to be consistent
+                }
+
 
 
                 i++;
