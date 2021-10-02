@@ -17,7 +17,9 @@ function [vx, vy, vz,x,y] = plot_flow_normalized(file_loc)
     vy_n(~isfinite(vy_n)) = zeros(1, sum(~isfinite(vy_n)));
     
     
-    figure
+%     figure
     quiver(x,y, vx_n, vy_n)
     axis([min(x), max(x), min(y), max(y)])
+    xlabel('x')
+    ylabel('y')
 end
