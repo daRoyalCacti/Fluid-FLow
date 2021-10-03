@@ -25,8 +25,12 @@ struct body {
 
     body() = delete;
 
-    explicit body(const mesh &model_) : model(model_), M(std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)),
-            pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
+    explicit body(mesh model_) : model(std::move(model_)), M(std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)),
+            pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {
+        for (const auto & v : model.velocities) {
+            std::cerr << v << "\n";
+        }
+    }
 
 
     //finds the positions of all the particles undergoing forces <forces> after time dt
