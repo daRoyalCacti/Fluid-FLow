@@ -74,7 +74,7 @@ struct body {
         model.w += alpha*dt;
         const vec3 rot_angle_vec = model.w*dt;
 
-        std::cerr << "\n" << a << "\t" << model.v << "\t" << model.w << "\n";
+        //std::cerr << "\n" << a << "\t" << model.v << "\t" << model.w << "\n";
 
 #ifndef NDEBUG
         {

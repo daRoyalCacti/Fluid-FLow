@@ -26,9 +26,11 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double 
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 //counter just for debug
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
-    /*std::vector<vec3> forces, points;
+    std::vector<vec3> forces, points;
+    const auto& g = *v_n.g;
 
-    forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
+    //forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
+    forces.resize( g.size()  );
     points.resize( forces.size() );
 
 #ifndef NDEBUG
@@ -37,15 +39,15 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
         unsigned forces_counter = 0;
 
         for (unsigned i = 0; i < p.size(); i++) {
-            if (i > 1 && i <N-1 && j > 1 && j< M-1 && k>1 && k<P-1) {  //if off the boundary
-                if (bc.norms.contains(i,j,k) && bc.norms.normal(i,j,k) != vec3(0)) {    //if boundary point outside of mesh
-                    points[forces_counter] = bc.points.get_point(i,j,k);    //forces applied at the mesh boundary
+            if (g.off_walls(i)) {  //if off the boundary
+                if (g.is_boundary(i)) {    //if boundary point
+                    points[forces_counter] = bc.m_points.get_point(i);    //forces applied at the mesh boundary
                     //taking the force as pointing against the normal, not sure if this is right
                     if (fluid_moves(t)) {
-                        const auto dx = bc.vel_bc.dx(i,j,k);
-                        const auto dy = bc.vel_bc.dy(i,j,k);
-                        const auto dz = bc.vel_bc.dz(i,j,k);
-                        forces[forces_counter++] = p(i,j,k)*dx*dy*dz * - bc.norms.normal(i,j,k)  +
+                        const auto dx = g.dx;
+                        const auto dy = g.dy;
+                        const auto dz = g.dz;
+                        forces[forces_counter++] = p(i)*dx*dy*dz * - bc.norms.normal(i)  +
                                 global_forces(t); //P=F/A  =>  F=PA
                     } else {
                         forces[forces_counter++] = global_forces(t);
@@ -63,7 +65,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 #endif
 
 
-    b->update_pos(forces, points, dt);*/
+    b->update_pos(forces, points, dt);
 
     //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
     /*bc.extrapolate(v_n);
@@ -81,7 +83,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     p.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
     std::cout << "\tUpdating g\n";
     v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
-    std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
+    //std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
     interpolate_vectors(v_n, v_n1, p, b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
 
 
