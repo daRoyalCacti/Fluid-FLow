@@ -63,6 +63,9 @@ struct grid {
         for (auto & z_ : z) {
             z_ += z_off;
         }
+        const vec3 off(x_off, y_off, z_off);
+        mins+=off;
+        maxs+=off;
     }
 
     [[nodiscard]] auto size() const {
