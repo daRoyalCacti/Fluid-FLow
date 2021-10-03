@@ -68,6 +68,14 @@ struct grid {
         maxs+=off;
     }
 
+    //check to see if an index is away from the walls
+    bool off_walls(const unsigned i) {
+        const bool away_x = (x[i] > mins.x()+2*dx) && (x[i]<maxs.x()-2*dx);
+        const bool away_y = (y[i] > mins.y()+2*dy) && (y[i]<maxs.y()-2*dy);
+        const bool away_z = (z[i] > mins.z()+2*dz) && (z[i]<maxs.z()-2*dz);
+        return away_x && away_y && away_z;
+    }
+
     [[nodiscard]] auto size() const {
         return x.size();
     }
