@@ -286,8 +286,8 @@ struct big_vec_d final : public big_vec<double> {
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
             Eigen::Matrix<double, no_points, 1> vec;
-            Eigen::SparseMatrix<double> mat(no_points,no_points);
-            Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
+            Eigen::Matrix<double, no_points, no_points> mat;
+            Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
 
             for (unsigned i = 0; i < no_points; i++) {
                 vec[i] = v[interp_indices[i]];
@@ -296,27 +296,27 @@ struct big_vec_d final : public big_vec<double> {
                 const auto y = g->y[interp_indices[i]];
                 const auto z = g->z[interp_indices[i]];
 
-                mat.insert(i, 0) = 1;
-                mat.insert(i, 1) = x;
-                mat.insert(i, 2) = y;
-                mat.insert(i, 3) = z;
-                mat.insert(i, 4) = x*y;
-                mat.insert(i, 5) = x*z;
-                mat.insert(i, 6) = y*z;
-                mat.insert(i, 7) = x*y*z;
+                mat(i, 0) = 1;
+                mat(i, 1) = x;
+                mat(i, 2) = y;
+                mat(i, 3) = z;
+                mat(i, 4) = x*y;
+                mat(i, 5) = x*z;
+                mat(i, 6) = y*z;
+                mat(i, 7) = x*y*z;
 
-                mat.insert(i, 8) = x*x;
-                mat.insert(i, 9) = y*y;
-                mat.insert(i, 10) = z*z;
-                mat.insert(i, 11) = x*x*y;
-                mat.insert(i, 12) = x*x*z;
-                mat.insert(i, 13) = y*y*x;
-                mat.insert(i, 14) = y*y*z;
-                mat.insert(i, 15) = x*z*z;
-                mat.insert(i, 16) = y*z*z;
-                mat.insert(i, 17) = x*x*y*z;
-                mat.insert(i, 18) = x*y*y*z;
-                mat.insert(i, 19) = x*y*z*x;
+                mat(i, 8) = x*x;
+                mat(i, 9) = y*y;
+                mat(i, 10) = z*z;
+                mat(i, 11) = x*x*y;
+                mat(i, 12) = x*x*z;
+                mat(i, 13) = y*y*x;
+                mat(i, 14) = y*y*z;
+                mat(i, 15) = x*z*z;
+                mat(i, 16) = y*z*z;
+                mat(i, 17) = x*x*y*z;
+                mat(i, 18) = x*y*y*z;
+                mat(i, 19) = x*y*z*x;
             }
 
             //mat and vec now set, just need to solve for the coefficients

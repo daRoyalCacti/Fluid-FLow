@@ -9,6 +9,7 @@
 #include "../Rigid_body/body.hpp"
 #include "update_vecs.hpp"
 
+
 bool fluid_moves(const double t) {
     return false;
 }
@@ -250,7 +251,9 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         //setting the matrix
         const auto start_filling = std::chrono::high_resolution_clock::now();
         Eigen::Matrix<double, no_points, no_points> mat;
-        Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
+        Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+
+
 
         Eigen::Matrix<double, no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
                                     vn1_vec_x, vn1_vec_y, vn1_vec_z, p_vec;
@@ -297,15 +300,13 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
             mat(i, 19) = x*y*z*x;
         }
 
-        const Eigen::SparseMatrix<double> mat_sparse = mat.sparseView();
-
         const auto end_filling = std::chrono::high_resolution_clock::now();
         time_filling_matrices += static_cast<std::chrono::duration<double>>(end_filling - start_filling).count();
 
         const auto start_solving = std::chrono::high_resolution_clock::now();
 
         //mat and vec now set, just need to solve for the coefficients
-        solver.compute(mat_sparse);
+        solver.compute(mat);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
         const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
         const decltype(vn_vec_z) a_vn_z = solver.solve(vn_vec_z);
@@ -313,6 +314,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         const decltype(vn1_vec_y) a_vn1_y = solver.solve(vn1_vec_y);
         const decltype(vn1_vec_z) a_vn1_z = solver.solve(vn1_vec_z);
         const decltype(p_vec) a_p = solver.solve(p_vec);
+
 
         const auto x = g.x[index] + x_off;
         const auto y = g.y[index] + y_off;
