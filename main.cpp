@@ -4,6 +4,7 @@
 
 //#include "Examples/calc_derivs.hpp"
 //#include "Examples/big_vec_derivs.hpp"
+//#include "Examples/interp.hpp"
 
 const double wx = 3;
 const double wy = 4;
@@ -17,6 +18,7 @@ const double Re = 150;
 int main() {
     //big_veg_derivs_ex();
     //calc_derivs_ex();
+    //interp_ex();
 
 
     constexpr output_settings o{};
@@ -79,7 +81,7 @@ int main() {
     }
 
     //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
-    mesh m(pos, inds, mass, norms, vec3(0.0,0,0), vec3(0,0,0));
+    mesh m(pos, inds, mass, norms, vel_cm, w);
     body b(m);
     solve_flow<1000, 128, 128, 128>(&b, o, max_t, Re, wx, wy, wz);
 

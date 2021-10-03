@@ -18,6 +18,9 @@ vec3 global_forces(const double t) {
     return vec3(0);
 }
 
+//defined below update_mesh
+void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double x_off, double y_off, double z_off);
+
 //updating mesh also requires updating the vectors
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t) {
@@ -68,6 +71,17 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //bc.enforce_velocity_BC(v_n1);
     /*bc.update_mesh_boundary();*/
 
+    /*std::cout << "\tUpdating v_n\n";
+    v_n.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+    std::cout << "\tUpdating v_n1\n";
+    v_n1.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+    std::cout << "\tUpdating p\n";
+    p.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+    std::cout << "\tUpdating g\n";
+    v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
+    interpolate_vectors(v_n, v_n1, p, b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+
+    //std::cout << "\tenforcing boundary conditions\n";
     update_pressure_BC(bc, p);
 
     //updating pressure and wall velocity points
@@ -81,6 +95,237 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
     enforce_velocity_BC(bc, v_n);
     //bc.enforce_pressure_BC(p);
+}
+
+template <typename T>
+double update_buffer(const T& a, const double x, const double y, const double z) {
+    return a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
+             a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
+                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x;
+}
+
+
+void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double x_off, const double y_off, const double z_off) {
+    const auto &g = *v_n.g;
+
+    //variable to hold the new interpolated values
+    Eigen::Matrix<double, Eigen::Dynamic, 1> vn_buff_x, vn_buff_y, vn_buff_z,
+                                                vn1_buff_x, vn1_buff_y, vn1_buff_z, p_buff;
+    vn_buff_x.resize(static_cast<long>(g.size()));
+    vn_buff_y.resize(static_cast<long>(g.size()));
+    vn_buff_z.resize(static_cast<long>(g.size()));
+
+    vn1_buff_x.resize(static_cast<long>(g.size()));
+    vn1_buff_y.resize(static_cast<long>(g.size()));
+    vn1_buff_z.resize(static_cast<long>(g.size()));
+
+    p_buff.resize(static_cast<long>(g.size()));
+
+
+
+
+
+    //finding points to use for interpolation
+    // - assumes the offsets are smaller than the step size
+    #ifndef NDEBUG
+    if (x_off > g.dx) {
+        std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
+    }
+    if (y_off > g.dy) {
+        std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
+    }
+    if (z_off > g.dz) {
+        std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
+    }
+    #endif
+    constexpr unsigned no_points = 20;
+
+    #pragma omp parallel for
+    for (unsigned index = 0; index < g.size(); index++) {
+        unsigned interp_indices[no_points];
+        size_t counter = 0;
+
+        int i = 1;
+        while (true) {
+            //std::cerr << "\t" << counter << "\n";
+            //getting corner values first
+            for (const auto& horiz : {-i,i}) {
+                for (const auto& vert : {-i,i}) {
+                    for (const auto& in : {-i,i}) {
+                        if (g.can_move(index, horiz, vert, in)) {
+                            interp_indices[counter++] = g.get_move_ind(index, horiz, vert, in);
+                            if (counter == no_points) {
+                                goto got_indices;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //then getting edge values
+            for (const auto& horiz : {-i,i}) {
+                for (const auto& vert : {-i,i}) {
+                    if (g.can_move(index, horiz, vert, 0)) {
+                        interp_indices[counter++] = g.get_move_ind(index, horiz, vert, 0);
+                        if (counter == no_points) {
+                            goto got_indices;
+                        }
+                    }
+                }
+
+                for (const auto& in : {-i,i}) {
+                    if (g.can_move(index, horiz, 0, in)) {
+                        interp_indices[counter++] = g.get_move_ind(index, horiz, 0, in);
+                        if (counter == no_points) {
+                            goto got_indices;
+                        }
+                    }
+                }
+            }
+
+
+            //then points along major axes
+            for (const auto& horiz : {-i,i}) {
+                if (g.can_move(index, horiz, 0, 0)) {
+                    interp_indices[counter++] = g.get_move_ind(index, horiz, 0, 0);
+                    if (counter == no_points) {
+                        goto got_indices;
+                    }
+                }
+            }
+            for (const auto& vert : {-i,i}) {
+                if (g.can_move(index, 0, vert, 0)) {
+                    interp_indices[counter++] = g.get_move_ind(index, 0, vert, 0);
+                    if (counter == no_points) {
+                        goto got_indices;
+                    }
+                }
+            }
+            for (const auto& in : {-i,i}) {
+                if (g.can_move(index, 0, 0, in)) {
+                    interp_indices[counter++] = g.get_move_ind(index, 0, 0, in);
+                    if (counter == no_points) {
+                        goto got_indices;
+                    }
+                }
+            }
+
+            //getting the rest of the edge values
+            for (const auto& in : {-i,i}) {
+                for (const auto& vert : {-i,i}) {
+                    if (g.can_move(index, 0, vert, in)) {
+                        interp_indices[counter++] = g.get_move_ind(index, 0, vert, in);
+                        if (counter == no_points) {
+                            goto got_indices;
+                        }
+                    }
+                }
+            }
+
+            //then include the point itself
+            interp_indices[counter++] = g.get_move_ind(index, 0, 0, 0);
+            if (counter == no_points) {
+                goto got_indices;   //could just break here but using goto to be consistent
+            }
+
+
+
+            i++;
+        }
+        got_indices:
+
+
+
+
+
+        //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
+        //setting the matrix
+        Eigen::SparseMatrix<double> mat(no_points,no_points);
+        Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
+
+        Eigen::Matrix<double, no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
+                                    vn1_vec_x, vn1_vec_y, vn1_vec_z, p_vec;
+
+        for (unsigned i = 0; i < no_points; i++) {
+            vn_vec_x[i] = v_n.xv.v[interp_indices[i]];
+            vn_vec_y[i] = v_n.yv.v[interp_indices[i]];
+            vn_vec_z[i] = v_n.zv.v[interp_indices[i]];
+
+            vn1_vec_x[i] = v_n1.xv.v[interp_indices[i]];
+            vn1_vec_y[i] = v_n1.yv.v[interp_indices[i]];
+            vn1_vec_z[i] = v_n1.zv.v[interp_indices[i]];
+
+            p_vec[i] = p.v[interp_indices[i]];
+
+
+
+
+            const auto x = g.x[interp_indices[i]];
+            const auto y = g.y[interp_indices[i]];
+            const auto z = g.z[interp_indices[i]];
+
+            mat.insert(i, 0) = 1;
+            mat.insert(i, 1) = x;
+            mat.insert(i, 2) = y;
+            mat.insert(i, 3) = z;
+            mat.insert(i, 4) = x*y;
+            mat.insert(i, 5) = x*z;
+            mat.insert(i, 6) = y*z;
+            mat.insert(i, 7) = x*y*z;
+
+            mat.insert(i, 8) = x*x;
+            mat.insert(i, 9) = y*y;
+            mat.insert(i, 10) = z*z;
+            mat.insert(i, 11) = x*x*y;
+            mat.insert(i, 12) = x*x*z;
+            mat.insert(i, 13) = y*y*x;
+            mat.insert(i, 14) = y*y*z;
+            mat.insert(i, 15) = x*z*z;
+            mat.insert(i, 16) = y*z*z;
+            mat.insert(i, 17) = x*x*y*z;
+            mat.insert(i, 18) = x*y*y*z;
+            mat.insert(i, 19) = x*y*z*x;
+        }
+
+        //mat and vec now set, just need to solve for the coefficients
+        solver.compute(mat);
+        const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
+        const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
+        const decltype(vn_vec_z) a_vn_z = solver.solve(vn_vec_z);
+        const decltype(vn1_vec_x) a_vn1_x = solver.solve(vn_vec_x);
+        const decltype(vn1_vec_y) a_vn1_y = solver.solve(vn1_vec_y);
+        const decltype(vn1_vec_z) a_vn1_z = solver.solve(vn1_vec_z);
+        const decltype(p_vec) a_p = solver.solve(p_vec);
+
+        const auto x = g.x[index] + x_off;
+        const auto y = g.y[index] + y_off;
+        const auto z = g.z[index] + z_off;
+        /*buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
+                a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
+                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x ;*/
+        vn_buff_x[index] = update_buffer(a_vn_x, x,y,z);
+        vn_buff_y[index] = update_buffer(a_vn_y, x,y,z);
+        vn_buff_z[index] = update_buffer(a_vn_z, x,y,z);
+        vn1_buff_x[index] = update_buffer(a_vn1_x, x,y,z);
+        vn1_buff_y[index] = update_buffer(a_vn1_y, x,y,z);
+        vn1_buff_z[index] = update_buffer(a_vn1_z, x,y,z);
+        p_buff[index] = update_buffer(a_p, x,y,z);
+
+    }
+
+    //v = std::move(buffer);
+    v_n.xv.v = std::move(vn_buff_x);
+    v_n.yv.v = std::move(vn_buff_y);
+    v_n.zv.v = std::move(vn_buff_z);
+
+    v_n1.xv.v = std::move(vn1_buff_x);
+    v_n1.yv.v = std::move(vn1_buff_y);
+    v_n1.zv.v = std::move(vn1_buff_z);
+
+    p.v = std::move(p_buff);
+
+
+    v_n.g->move(x_off, y_off, z_off);
 }
 
 
