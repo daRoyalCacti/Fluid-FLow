@@ -140,11 +140,17 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
     #endif
     constexpr unsigned no_points = 20;
 
-    #pragma omp parallel for
+    double time_finding_indices = 0;
+    double time_filling_matrices = 0;
+    double time_solving = 0;
+    double time_moving = 0;
+
+    //#pragma omp parallel for
     for (unsigned index = 0; index < g.size(); index++) {
         unsigned interp_indices[no_points];
         size_t counter = 0;
 
+        const auto start_indices = std::chrono::high_resolution_clock::now();
         int i = 1;
         while (true) {
             //std::cerr << "\t" << counter << "\n";
@@ -233,6 +239,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
             i++;
         }
         got_indices:
+        const auto end_indices = std::chrono::high_resolution_clock::now();
+        time_finding_indices += static_cast<std::chrono::duration<double>>(end_indices - start_indices).count();
 
 
 
@@ -240,7 +248,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
         //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
         //setting the matrix
-        Eigen::SparseMatrix<double> mat(no_points,no_points);
+        const auto start_filling = std::chrono::high_resolution_clock::now();
+        Eigen::Matrix<double, no_points, no_points> mat;
         Eigen::BiCGSTAB<Eigen::SparseMatrix<double> > solver;
 
         Eigen::Matrix<double, no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
@@ -264,31 +273,39 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
             const auto y = g.y[interp_indices[i]];
             const auto z = g.z[interp_indices[i]];
 
-            mat.insert(i, 0) = 1;
-            mat.insert(i, 1) = x;
-            mat.insert(i, 2) = y;
-            mat.insert(i, 3) = z;
-            mat.insert(i, 4) = x*y;
-            mat.insert(i, 5) = x*z;
-            mat.insert(i, 6) = y*z;
-            mat.insert(i, 7) = x*y*z;
 
-            mat.insert(i, 8) = x*x;
-            mat.insert(i, 9) = y*y;
-            mat.insert(i, 10) = z*z;
-            mat.insert(i, 11) = x*x*y;
-            mat.insert(i, 12) = x*x*z;
-            mat.insert(i, 13) = y*y*x;
-            mat.insert(i, 14) = y*y*z;
-            mat.insert(i, 15) = x*z*z;
-            mat.insert(i, 16) = y*z*z;
-            mat.insert(i, 17) = x*x*y*z;
-            mat.insert(i, 18) = x*y*y*z;
-            mat.insert(i, 19) = x*y*z*x;
+            mat(i, 0) = 1;
+            mat(i, 1) = x;
+            mat(i, 2) = y;
+            mat(i, 3) = z;
+            mat(i, 4) = x*y;
+            mat(i, 5) = x*z;
+            mat(i, 6) = y*z;
+            mat(i, 7) = x*y*z;
+
+            mat(i, 8) = x*x;
+            mat(i, 9) = y*y;
+            mat(i, 10) = z*z;
+            mat(i, 11) = x*x*y;
+            mat(i, 12) = x*x*z;
+            mat(i, 13) = y*y*x;
+            mat(i, 14) = y*y*z;
+            mat(i, 15) = x*z*z;
+            mat(i, 16) = y*z*z;
+            mat(i, 17) = x*x*y*z;
+            mat(i, 18) = x*y*y*z;
+            mat(i, 19) = x*y*z*x;
         }
 
+        const Eigen::SparseMatrix<double> mat_sparse = mat.sparseView();
+
+        const auto end_filling = std::chrono::high_resolution_clock::now();
+        time_filling_matrices += static_cast<std::chrono::duration<double>>(end_filling - start_filling).count();
+
+        const auto start_solving = std::chrono::high_resolution_clock::now();
+
         //mat and vec now set, just need to solve for the coefficients
-        solver.compute(mat);
+        solver.compute(mat_sparse);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
         const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
         const decltype(vn_vec_z) a_vn_z = solver.solve(vn_vec_z);
@@ -311,8 +328,12 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         vn1_buff_z[index] = update_buffer(a_vn1_z, x,y,z);
         p_buff[index] = update_buffer(a_p, x,y,z);
 
+        const auto end_solving = std::chrono::high_resolution_clock::now();
+        time_solving += static_cast<std::chrono::duration<double>>(end_solving - start_solving).count();
+
     }
 
+    const auto start_moving = std::chrono::high_resolution_clock::now();
     //v = std::move(buffer);
     v_n.xv.v = std::move(vn_buff_x);
     v_n.yv.v = std::move(vn_buff_y);
@@ -324,8 +345,14 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
     p.v = std::move(p_buff);
 
-
     v_n.g->move(x_off, y_off, z_off);
+    const auto end_moving = std::chrono::high_resolution_clock::now();
+    time_moving += static_cast<std::chrono::duration<double>>(end_moving - start_moving).count();
+
+    std::cerr << "\n\tTime spent finding indices : " << time_finding_indices << "\n";
+    std::cerr << "\tTime spent filling matrices : " << time_filling_matrices << "\n";
+    std::cerr << "\tTime spent solving system : " << time_solving << "\n";
+    std::cerr << "\tTime spent moving : " << time_moving << "\n";
 }
 
 
