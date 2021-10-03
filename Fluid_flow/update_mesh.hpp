@@ -24,7 +24,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double 
 
 //updating mesh also requires updating the vectors
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
-void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t) {
+//counter just for debug
+void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
     /*std::vector<vec3> forces, points;
 
     forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
@@ -80,7 +81,9 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     p.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
     std::cout << "\tUpdating g\n";
     v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
+    std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
     interpolate_vectors(v_n, v_n1, p, b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+
 
     //std::cout << "\tenforcing boundary conditions\n";
     update_pressure_BC(bc, p);
@@ -96,6 +99,23 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
     enforce_velocity_BC(bc, v_n);
     //bc.enforce_pressure_BC(p);
+
+    std::cerr << "writing i files\n";
+    constexpr output_settings os{};
+    std::string file_name;
+    if (counter < 10) {
+        file_name = "000" + std::to_string(counter);
+    } else if (counter < 100) {
+        file_name = "00" + std::to_string(counter);
+    } else if (counter < 1000) {
+        file_name = "0" + std::to_string(counter);
+    } else {
+        file_name = std::to_string(counter);
+    }
+
+    const auto inds = v_n.g->get_middle_inds();
+    write_vec(v_n,inds, (std::string(os.vel_file_loc) + file_name + "i.txt").data());
+    write_vec(p,inds, (std::string(os.pres_file_loc) + file_name + "i.txt").data());
 }
 
 template <typename T>
@@ -152,8 +172,11 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         size_t counter = 0;
 
         const auto start_indices = std::chrono::high_resolution_clock::now();
+        //include the point itself
+        interp_indices[counter++] = index;
         int i = 1;
         while (true) {
+
             //std::cerr << "\t" << counter << "\n";
             //getting corner values first
             for (const auto& horiz : {-i,i}) {
@@ -229,11 +252,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
                 }
             }
 
-            //then include the point itself
-            interp_indices[counter++] = g.get_move_ind(index, 0, 0, 0);
-            if (counter == no_points) {
-                goto got_indices;   //could just break here but using goto to be consistent
-            }
 
 
 
@@ -306,7 +324,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
         const auto start_solving = std::chrono::high_resolution_clock::now();
 
-        const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+        //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+        const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat);
         //mat and vec now set, just need to solve for the coefficients
         //solver.compute(mat);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);

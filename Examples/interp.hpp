@@ -115,7 +115,7 @@ void interp_ex() {
 
     v.move(x_off, y_off, z_off);
 
-    constexpr double tol = 0.0003;     //tolerance to determine if interpolation is correct
+    constexpr double tol = 0.00045;  //.0003   //tolerance to determine if interpolation is correct
     for (unsigned i = 0; i < v.size(); i++) {
         const auto x = BC.global_grid.x[i] + x_off;
         const auto y = BC.global_grid.y[i] + y_off;

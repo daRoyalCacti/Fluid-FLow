@@ -68,6 +68,7 @@ struct triangle {
     [[nodiscard]] vec3 get_velocity(const vec3& point) const {
          double Bary0, Bary1, Bary2;
          barycentric_coords(point, Bary0, Bary1, Bary2);
+         //std::cerr << *vel0 << "\t" << *vel1 << "\t" << *vel2 << "\n";
          return barycentric_interp(*vel0, *vel1, *vel2, Bary0, Bary1, Bary2);
      }
 

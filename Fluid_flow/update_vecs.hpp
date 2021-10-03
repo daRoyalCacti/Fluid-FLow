@@ -11,9 +11,13 @@
 
 //v is vector to enforce the conditions on
 void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
+    //std::cerr << "testing\n";
     for (unsigned i = 0; i < v.size(); i++) {
         //std::cerr << "\t" << i << "/" << v.size() << "\t" << v.is_boundary(i) << "\n";
         if (v.is_boundary(i)) {
+            //if (BC.v_points.get_vel(i) == vec3(0.75,0,0)) {
+            //    std::cerr << "whasdf\n";
+            //}
             v.add_elm(i, BC.v_points.get_vel(i));
 #ifndef NDEBUG
             if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())) {

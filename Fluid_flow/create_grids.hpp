@@ -362,6 +362,21 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
+
+        for (const auto & n : v_points.m) {
+            if ( !g.is_boundary(n.first) ) {
+                std::cerr << "velocity at index " << n.first << " is not on a boundary point\n";
+                std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
+            }
+        }
+
+        //checking that all boundary points have a normal
+        for (unsigned i = 0; i < g.r.size(); i++) {
+            if (g.is_boundary(i) && !v_points.contains(i)) {
+                std::cerr << "boundary point at index " << i << " does not have a velocity\n";
+                std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
+            }
+        }
         std::cerr << "finished checking results\n";
 #endif
 

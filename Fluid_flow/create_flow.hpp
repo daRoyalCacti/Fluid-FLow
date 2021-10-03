@@ -21,7 +21,7 @@
 #include "timing.hpp"
 #include "boundary_conditions.hpp"
 #include "update_vecs.hpp"
-#include "update_mesh.hpp"
+
 #include "create_grids.hpp"
 #include "../Rigid_body/body.hpp"
 #include "../Rigid_body/triangle_mesh.hpp"
@@ -42,6 +42,7 @@ struct output_settings {
     std::string_view final_pres_name = "../DEBUG/vel_final.txt";
 };
 
+#include "update_mesh.hpp"  //here only for testing purposes
 
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
@@ -240,7 +241,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
          //updating the mesh
          timer.set_start(std::chrono::high_resolution_clock::now());
 
-         update_mesh(BC, rb, v_n, v_n1, p, dt, t);
+         update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
          timer.set_end(std::chrono::high_resolution_clock::now());
          timer.save_mesh_update_time();
 

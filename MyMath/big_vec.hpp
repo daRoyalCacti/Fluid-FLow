@@ -192,7 +192,12 @@ struct big_vec_d final : public big_vec<double> {
 
             int i = 1;
             while (true) {
-                //std::cerr << "\t" << counter << "\n";
+                //include the point itself
+                interp_indices[counter++] = get_move_ind(index, 0, 0, 0);
+                if (counter == no_points) {
+                    goto got_indices;   //could just break here but using goto to be consistent
+                }
+
                 //getting corner values first
                 for (const auto& horiz : {-i,i}) {
                     for (const auto& vert : {-i,i}) {
@@ -267,11 +272,6 @@ struct big_vec_d final : public big_vec<double> {
                     }
                 }
 
-                //then include the point itself
-                interp_indices[counter++] = get_move_ind(index, 0, 0, 0);
-                if (counter == no_points) {
-                    goto got_indices;   //could just break here but using goto to be consistent
-                }
 
 
 

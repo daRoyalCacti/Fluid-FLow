@@ -44,9 +44,7 @@ struct mesh final{
         vec3 pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);
         for (size_t i = 0; i < velocities.size(); i++) {
             velocities[i] = v_ + cross( (vertices_[i] - pos_cm), w_);
-            std::cerr << velocities[i] << "\n";
         }
-        std::cerr << "================\n\n";
         update_bounding_box();
 
 
@@ -94,7 +92,6 @@ struct mesh final{
     }
 
     [[nodiscard]] const vec3& get_velocity_index( const unsigned i) const noexcept {
-        std::cerr << velocities[indices[i]] << "\n";
         return velocities[indices[i]];
     }
 };
