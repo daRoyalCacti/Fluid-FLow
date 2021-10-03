@@ -326,8 +326,10 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
         const auto start_solving = std::chrono::high_resolution_clock::now();
 
-        //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
-        const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+        //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
+        //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
+        const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+
         //mat and vec now set, just need to solve for the coefficients
         //solver.compute(mat);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);

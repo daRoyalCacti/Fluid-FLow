@@ -1,4 +1,4 @@
-#define MOVING_WALL
+//#define MOVING_WALL
 
 #include "Fluid_flow/create_flow.hpp"
 
@@ -6,11 +6,11 @@
 //#include "Examples/big_vec_derivs.hpp"
 #include "Examples/interp.hpp"
 
-const double wx = 3;
-const double wy = 4;
-const double wz = 5;
-const double max_t = 1;
-const double Re = 150;
+constexpr double wx = 7;
+constexpr double wy = 6;
+constexpr double wz = 5;
+constexpr double max_t = 1;
+constexpr double Re = 150;
 
 
 
@@ -30,18 +30,23 @@ int main() {
 
     constexpr double mass1 = 0.01;
 
-    constexpr vec3 vel_cm = vec3(0, 0, 0);//vec3(0.75, 0, 0);
+    constexpr vec3 vel_cm = vec3(0.75, 0, 0);//vec3(0, 0, 0);
     constexpr vec3 w = vec3(0,0,0);
 
     const double z_mid = wz/2;
     const double y_mid = wy/2;
     const double x_mid = wx/2;
 
+
+    constexpr double px = wx*2;
+    constexpr double py = wy*2;
+    constexpr double pz = wz*2;
+
     //left/right rectangles
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             for (int k = 0; k < 2; k++) {
-                pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
+                pos.emplace_back( (2*i-1)*wx/px + x_mid, (2*j-1)*wy/py + y_mid, (2*k-1)*wz/pz + z_mid );
                 mass.push_back(mass1);
                 norms.emplace_back((2*i-1), 0, 0);
             }
@@ -52,7 +57,7 @@ int main() {
     for (int j = 0; j < 2; j++) {
         for (int i = 0; i < 2; i++) {
             for (int k = 0; k < 2; k++) {
-                pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
+                pos.emplace_back( (2*i-1)*wx/px + x_mid, (2*j-1)*wy/py + y_mid, (2*k-1)*wz/pz + z_mid );
                 mass.push_back(mass1);
                 norms.emplace_back(0, (2*j-1), 0);
             }
@@ -63,7 +68,7 @@ int main() {
     for (int k = 0; k < 2; k++) {
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < 2; i++) {
-                pos.emplace_back( (2*i-1)*wx/4 + x_mid, (2*j-1)*wy/4 + y_mid, (2*k-1)*wz/4 + z_mid );
+                pos.emplace_back( (2*i-1)*wx/px + x_mid, (2*j-1)*wy/py + y_mid, (2*k-1)*wz/pz + z_mid );
                 mass.push_back(mass1);
                 norms.emplace_back(0, 0, (2*k-1));
             }

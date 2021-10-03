@@ -460,7 +460,6 @@ void boundary_conditions::update_velocity_wall_BC()  {
             v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(1,0,0) );
 #else
             v_points.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0) );
-            vel_bc.add_elm(i, 0, k, 0, 0, 0);
 #endif
             v_points.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0) );
         }
