@@ -146,7 +146,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
     double time_solving = 0;
     double time_moving = 0;
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (unsigned index = 0; index < g.size(); index++) {
         unsigned interp_indices[no_points];
         size_t counter = 0;
@@ -251,7 +251,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         //setting the matrix
         const auto start_filling = std::chrono::high_resolution_clock::now();
         Eigen::Matrix<double, no_points, no_points> mat;
-        Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+        /*Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+        solver.setTolerance(1e-4);*/
 
 
 
@@ -305,8 +306,9 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
         const auto start_solving = std::chrono::high_resolution_clock::now();
 
+        const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
         //mat and vec now set, just need to solve for the coefficients
-        solver.compute(mat);
+        //solver.compute(mat);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
         const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
         const decltype(vn_vec_z) a_vn_z = solver.solve(vn_vec_z);
@@ -314,6 +316,24 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         const decltype(vn1_vec_y) a_vn1_y = solver.solve(vn1_vec_y);
         const decltype(vn1_vec_z) a_vn1_z = solver.solve(vn1_vec_z);
         const decltype(p_vec) a_p = solver.solve(p_vec);
+
+        /*const decltype(vn_vec_x) a_vn_x = mat.lu().solve(vn_vec_x);
+        const decltype(vn_vec_y) a_vn_y = mat.lu().solve(vn_vec_y);
+        const decltype(vn_vec_z) a_vn_z = mat.lu().solve(vn_vec_z);
+        const decltype(vn1_vec_x) a_vn1_x = mat.lu().solve(vn_vec_x);
+        const decltype(vn1_vec_y) a_vn1_y = mat.lu().solve(vn1_vec_y);
+        const decltype(vn1_vec_z) a_vn1_z = mat.lu().solve(vn1_vec_z);
+        const decltype(p_vec) a_p = mat.lu().solve(p_vec);*/
+
+
+        /*const decltype(mat) mat_inv = mat.inverse();
+        const decltype(vn_vec_x) a_vn_x = mat_inv*(vn_vec_x);
+        const decltype(vn_vec_y) a_vn_y = mat_inv*(vn_vec_y);
+        const decltype(vn_vec_z) a_vn_z = mat_inv*(vn_vec_z);
+        const decltype(vn1_vec_x) a_vn1_x = mat_inv*(vn_vec_x);
+        const decltype(vn1_vec_y) a_vn1_y = mat_inv*(vn1_vec_y);
+        const decltype(vn1_vec_z) a_vn1_z = mat_inv*(vn1_vec_z);
+        const decltype(p_vec) a_p = mat_inv*(p_vec);*/
 
 
         const auto x = g.x[index] + x_off;

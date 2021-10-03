@@ -287,7 +287,9 @@ struct big_vec_d final : public big_vec<double> {
             //setting the matrix
             Eigen::Matrix<double, no_points, 1> vec;
             Eigen::Matrix<double, no_points, no_points> mat;
-            Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+            //Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+            //solver.setTolerance(1e-4);
+
 
             for (unsigned i = 0; i < no_points; i++) {
                 vec[i] = v[interp_indices[i]];
@@ -320,8 +322,11 @@ struct big_vec_d final : public big_vec<double> {
             }
 
             //mat and vec now set, just need to solve for the coefficients
-            solver.compute(mat);
+            Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+            //const decltype(mat) mat_inv = solver.inverse();
+            //solver.compute(mat);
             const decltype(vec) a = solver.solve(vec);
+            //const decltype(vec) a = mat_inv*(vec);
 
             const auto x = g->x[index] + x_off;
             const auto y = g->y[index] + y_off;
