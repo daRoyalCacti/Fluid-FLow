@@ -5,6 +5,7 @@
 #ifndef CODE_MESH_HPP
 #define CODE_MESH_HPP
 
+#include <utility>
 #include <vector>
 #include <numeric>
 #include "../MyMath/vec3.hpp"
@@ -36,14 +37,16 @@ struct mesh final{
 
     mesh() = delete;
 
-    mesh(const std::vector<vec3> &vertices_, const std::vector<unsigned> &indices_, const std::vector<double> &mass_, const std::vector<vec3> &normals_, vec3 v_, vec3 w_) noexcept :
-    vertices(vertices_), indices(indices_), mass(mass_), velocities{}, normals(normals_), v(v_), w(w_) {
+    mesh(const std::vector<vec3> &vertices_, std::vector<unsigned> indices_, std::vector<double> mass_, std::vector<vec3> normals_, vec3 v_, vec3 w_) noexcept :
+    vertices(vertices_), indices(std::move(indices_)), mass(std::move(mass_)), velocities{}, normals(std::move(normals_)), v(v_), w(w_) {
         velocities.resize(vertices_.size());
         //filling the initial velocities based off the cm velocity and angular velocity
         vec3 pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);
         for (size_t i = 0; i < velocities.size(); i++) {
             velocities[i] = v_ + cross( (vertices_[i] - pos_cm), w_);
+            std::cerr << velocities[i] << "\n";
         }
+        std::cerr << "================\n\n";
         update_bounding_box();
 
 
@@ -58,6 +61,14 @@ struct mesh final{
             std::cerr << "having less indices that vertices doesn't make sense\n";
         }
 #endif
+    }
+
+    mesh(const mesh &m) : mass(m.mass), vertices(m.vertices), indices(m.indices), normals(m.normals), v(m.v), w(m.w), bounds(m.bounds)  {
+        velocities.resize(m.velocities.size() );
+        for (size_t i = 0; i < m.velocities.size(); i++) {
+            velocities[i] = m.velocities[i];
+        }
+
     }
 
     void update_bounding_box() {
@@ -83,6 +94,7 @@ struct mesh final{
     }
 
     [[nodiscard]] const vec3& get_velocity_index( const unsigned i) const noexcept {
+        std::cerr << velocities[indices[i]] << "\n";
         return velocities[indices[i]];
     }
 };

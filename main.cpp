@@ -4,7 +4,7 @@
 
 //#include "Examples/calc_derivs.hpp"
 //#include "Examples/big_vec_derivs.hpp"
-//#include "Examples/interp.hpp"
+#include "Examples/interp.hpp"
 
 const double wx = 3;
 const double wy = 4;
@@ -20,7 +20,7 @@ int main() {
     //calc_derivs_ex();
     //interp_ex();
 
-
+//*
     constexpr output_settings o{};
     std::vector<vec3> pos;
     std::vector<unsigned> inds;
@@ -30,8 +30,8 @@ int main() {
 
     constexpr double mass1 = 0.01;
 
-    const vec3 vel_cm = vec3(0.75, 0, 0);
-    const vec3 w{};
+    constexpr vec3 vel_cm = vec3(0.75, 0, 0);//vec3(0, 0, 0);
+    constexpr vec3 w = vec3(0,0,0);
 
     const double z_mid = wz/2;
     const double y_mid = wy/2;
@@ -81,10 +81,10 @@ int main() {
     }
 
     //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
-    mesh m(pos, inds, mass, norms, vel_cm, w);
-    body b(m);
-    solve_flow<1000, 128, 128, 128>(&b, o, max_t, Re, wx, wy, wz);
-
+    mesh m(pos, std::move(inds), std::move(mass), std::move(norms), vel_cm, w);
+    body b(std::move(m));
+    //solve_flow<1000, 128, 128, 128>(&b, o, max_t, Re, wx, wy, wz);
+//*/
 
     return 0;
 }
