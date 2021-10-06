@@ -10,7 +10,7 @@ data = struct;
 for ii = 1:no_files
     [data(ii).x, data(ii).y , data(ii).vx , data(ii).vy , data(ii).vz ] = read_v_data( cell2mat(All_v_files(ii)) );
     
-    [data(ii).p, data(ii).dx, data(ii).dy] = read_p_data( cell2mat(All_p_files(ii)) );
+    [data(ii).p, data(ii).dx, data(ii).dy, data(ii).x_sort, data(ii).y_sort] = read_p_data( cell2mat(All_p_files(ii)) );
     [data(ii).bx, data(ii).by, data(ii).bz] = read_b_data( cell2mat(All_b_files(ii)) );
 end
 
@@ -65,13 +65,33 @@ for frame = 1:no_files
 
     
     subplot(2,2,2)
-    for ii = 1:(length(x))
-        rectangle('Position',[data(frame).x(ii),data(frame).y(ii),data(frame).dx,data(frame).dy],'FaceColor',...
-            [0 data(frame).p(ii) 0],'EdgeColor',[0 data(frame).p(ii) 0],'LineWidth',0.001)
-    end
+    h = heatmap(unique(x),unique(y), flip(data(frame).p), 'GridVisible', 'off');
+    
+    %changing the axes
+    Ax = gca;
+    
+    xlabels = nan(size(Ax.XDisplayData));
+    xlabels(1:10:end) = floor( linspace(data(frame).x_sort(1), data(frame).x_sort(end), length(test(1:10:end)) ) *100 )/100;
+    Ax.XDisplayLabels = xlabels;
+    
+    ylabels = nan(size(Ax.YDisplayData));
+    ylabels(end:-10:1) = floor( linspace(data(frame).y_sort(1), data(frame).y_sort(end), length(test(1:10:end)) ) *100 )/100;
+    Ax.YDisplayLabels = ylabels;
+    
+    Ax.XLabel = 'x';
+    Ax.YLabel = 'y';
+    Ax.MissingDataLabel = '';
+    
+    %rotating x tick labels
+    set(struct(h).NodeChildren(3), 'XTickLabelRotation', 0);
+     
+     
     
     subplot(2,2,3)
     quiver(data(frame).x, data(frame).y, data(frame).vx./sqrt( data(frame).vx.^2 + data(frame).vy.^2), data(frame).vy./sqrt( data(frame).vx.^2 + data(frame).vy.^2))
+%     starty = linspace(min(data(frame).y), max(data(frame).y), 20);
+%     startx = ones(size(starty)) * min(data(frame).x);
+%     streamline(data(frame).x, data(frame).y, data(frame).vx, data(frame).vy, startx, starty)
     axis([minx, maxx, miny, maxy])
     xlabel('x')
     ylabel('y')
@@ -106,25 +126,43 @@ function [x,y, vx, vy, vz] = read_v_data(file_loc)
 end
 
 
-function [p_n, dx, dy] = read_p_data(file_loc)
-    fileID = fopen(file_loc, 'r');
+function [p, dx, dy, x_sort, y_sort] = read_p_data(file_loc)
+fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
     x = data(1:3:end);
     y = data(2:3:end); 
     p = data(3:3:end);
-    
-    axis([min(x), max(x), min(y), max(y)])
-    
+        
     x_sort = sort(unique(x));
     dx = x_sort(2)-x_sort(1);
     y_sort = sort(unique(y));
     dy = y_sort(2)-y_sort(1);
-   
-    if ( max(p) - min(p) > 0.00000001)
-        p_n = ( p - min(p) ) / (max(p) - min(p) );
-    else
-        p_n = zeros(size(p));
+    
+        off = 0;
+    p_r = p;
+    for ii = 1:length(p)-1
+        ind = ii+off;
+        if (x(ii+1) > x(ii))
+            if (x(ii+1) - x(ii) > 1.5*dx)
+                no_points = floor( (x(ii+1) - x(ii))/dx );
+                p_r = [p_r(1:ind); nan*(1:no_points)'; p_r(ind+1:end) ];
+                off = off + no_points;
+            end
+        end
+    end
+    
+    l = length(p_r);
+    if ( sqrt(l) ~= floor(sqrt(l)))
+        error("assumption that grid is a square failed")
+    end
+    
+    p = zeros(sqrt(l), sqrt(l));
+    
+    for ii = 1:sqrt(l)
+        for jj = 1:sqrt(l)
+            p(jj,ii) = p_r(ii + sqrt(l)*(jj-1) );
+        end
     end
 
 end
