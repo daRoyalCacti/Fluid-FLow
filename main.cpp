@@ -10,7 +10,7 @@ constexpr double wx = 7;
 constexpr double wy = 6;
 constexpr double wz = 5;
 constexpr double max_t = 1;
-constexpr double Re = 150;
+constexpr double Re = 7069; //150;  //https://www.grc.nasa.gov/WWW/k-12/airplane/reynolds.html
 
 
 
@@ -30,7 +30,7 @@ int main() {
 
     constexpr double mass1 = 0.01;
 
-    constexpr vec3 vel_cm = vec3(0.75, 0, 0);//vec3(0, 0, 0);
+    constexpr vec3 vel_cm = vec3(0.1, 0, 0);//vec3(0.75, 0, 0);//vec3(0, 0, 0);
     constexpr vec3 w = vec3(0,0,0);
 
     const double z_mid = wz/2;
@@ -88,7 +88,11 @@ int main() {
     //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
     mesh m(pos, std::move(inds), std::move(mass), std::move(norms), vel_cm, w);
     body b(std::move(m));
+#ifdef NDEBUG
     solve_flow<1000, 128, 128, 128>(&b, o, max_t, Re, wx, wy, wz);
+#else
+    solve_flow<1000, 30, 30, 30>(&b, o, max_t, Re, wx, wy, wz);
+#endif
 //*/
 
     return 0;

@@ -26,11 +26,15 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double 
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 //counter just for debug
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
+
+    enforce_velocity_BC(bc, v_n);
+    update_pressure_BC(bc, p);
+
     std::vector<vec3> forces, points;
     const auto& g = *v_n.g;
 
     //forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
-    forces.resize( g.size()  );
+    forces.resize( bc.size() );
     points.resize( forces.size() );
 
 #ifndef NDEBUG
@@ -38,6 +42,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 #endif
         unsigned forces_counter = 0;
 
+        //could be done more efficiently using a range base for loop through bc.m_points
         for (unsigned i = 0; i < p.size(); i++) {
             if (g.off_walls(i)) {  //if off the boundary
                 if (g.is_boundary(i)) {    //if boundary point
@@ -95,7 +100,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //bc.update_velocity_wall_BC();
     //bc.update_pressure_BC(p);
 
-
+    update_wall_velocity(bc, v_n);
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
@@ -103,7 +108,6 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //bc.enforce_pressure_BC(p);
 
     std::cerr << "writing i files\n";
-    constexpr output_settings os{};
     std::string file_name;
     if (counter < 10) {
         file_name = "000" + std::to_string(counter);
@@ -116,8 +120,8 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     }
 
     const auto inds = v_n.g->get_middle_inds();
-    write_vec(v_n,inds, (std::string(os.vel_file_loc) + file_name + "i.txt").data());
-    write_vec(p,inds, (std::string(os.pres_file_loc) + file_name + "i.txt").data());
+    write_vec(v_n,inds, ("../DEBUG/velocity_interpolated/" + file_name + ".txt").data());
+    write_vec(p,inds, ("../DEBUG/pressure_interpolated/" + file_name + ".txt").data());
 }
 
 template <typename T>
@@ -167,6 +171,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
     double time_filling_matrices = 0;
     double time_solving = 0;
     double time_moving = 0;
+    double time_solver = 0;
 
     #pragma omp parallel for
     for (unsigned index = 0; index < g.size(); index++) {
@@ -324,12 +329,17 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         const auto end_filling = std::chrono::high_resolution_clock::now();
         time_filling_matrices += static_cast<std::chrono::duration<double>>(end_filling - start_filling).count();
 
-        const auto start_solving = std::chrono::high_resolution_clock::now();
 
+
+        const auto start_solver = std::chrono::high_resolution_clock::now();
         //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
         //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
         const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
 
+        const auto end_solver = std::chrono::high_resolution_clock::now();
+        time_solver += static_cast<std::chrono::duration<double>>(end_solver - start_solver).count();
+
+        const auto start_solving = std::chrono::high_resolution_clock::now();
         //mat and vec now set, just need to solve for the coefficients
         //solver.compute(mat);
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
@@ -396,6 +406,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
     std::cerr << "\n\tTime spent finding indices : " << time_finding_indices << "\n";
     std::cerr << "\tTime spent filling matrices : " << time_filling_matrices << "\n";
+    std::cerr << "\tTime spent initialising solver : " << time_solver << "\n";
     std::cerr << "\tTime spent solving system : " << time_solving << "\n";
     std::cerr << "\tTime spent moving : " << time_moving << "\n";
 }

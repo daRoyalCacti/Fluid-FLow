@@ -28,8 +28,13 @@
 #include "../MyMath/boundary.hpp"
 #include "../MyMath/big_vec.hpp"
 //#include "../MyMath/big_matrix.hpp"
-
+#include "update_mesh.hpp"
 #define DLOG    //detailed logging
+//#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
+//#define REPEATS
+#ifdef REPEATS
+    constexpr unsigned no_repeats = 3;
+#endif
 
 struct output_settings {
     std::string_view vel_file_loc = "../DEBUG/velocity_data/";
@@ -42,7 +47,6 @@ struct output_settings {
     std::string_view final_pres_name = "../DEBUG/vel_final.txt";
 };
 
-#include "update_mesh.hpp"  //here only for testing purposes
 
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
@@ -240,63 +244,84 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
          //updating the mesh
          timer.set_start(std::chrono::high_resolution_clock::now());
+#ifdef OFFSET_MESH_UPDATE
+         if (counter % 2 == 0) {
+#endif
 
-         update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
+             //only updating mesh every 2nd frame
+             // - solve fluid at old position
+             // - update mesh
+             // - solve fluid at new position
+             // - repeat
+             update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
+#ifdef OFFSET_MESH_UPDATE
+         }
+#endif
          timer.set_end(std::chrono::high_resolution_clock::now());
          timer.save_mesh_update_time();
 
+#ifdef REPEATS
+         for (unsigned i = 0; i < no_repeats; i++) {
+#endif
+             //for (unsigned j = 0; j < 3; j++) {
+                 timer.set_start(std::chrono::high_resolution_clock::now());
+                 //first make the s matrix
+                 //BC.update_pressure_BC();
+                 make_s(s, Re, dt, v_n, v_n1, p);
 
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         //first make the s matrix
-         //BC.update_pressure_BC();
-         make_s(s, Re, dt, v_n, v_n1, p);
-
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_s_create_time();
-
-
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         //solve for p for the next timestep
-         solve(Q, s, p_c);
-         update_pressure_BC(BC, p_c);
-         p += p_c;
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_p_solve_time();
-
-         //setting BC vector
-         //BC.update_velocity_BC();
-
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         //then make b
-         make_b(b, Re, dt, v_n, v_n1, p, BC);
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_b_create_time();
+                 timer.set_end(std::chrono::high_resolution_clock::now());
+                 timer.save_s_create_time();
 
 
-         //shuffling of variables
-         v_n1 = v_n;
+                 timer.set_start(std::chrono::high_resolution_clock::now());
+                 //solve for p for the next timestep
+
+                 solve(Q, s, p_c);
+                 update_pressure_BC(BC, p_c);
+                 p += p_c;  //put inside loop?
+                 update_pressure_BC(BC, p); //put outside loop?
+             //}
+
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_p_solve_time();
+
+             //setting BC vector
+             //BC.update_velocity_BC();
+
+             timer.set_start(std::chrono::high_resolution_clock::now());
+             //then make b
+             make_b(b, Re, dt, v_n, v_n1, p, BC);
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_b_create_time();
 
 
-         //solve for v for the next time step
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         solve(A, b.xv, v_n.xv);
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_vx_solve_time();
+             //shuffling of variables
+             v_n1 = v_n;
 
 
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         solve(A, b.yv, v_n.yv);
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_vy_solve_time();
-
-         timer.set_start(std::chrono::high_resolution_clock::now());
-         solve(A, b.zv, v_n.zv);
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_vz_solve_time();
+             //solve for v for the next time step
+             timer.set_start(std::chrono::high_resolution_clock::now());
+             solve(A, b.xv, v_n.xv);
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_vx_solve_time();
 
 
-         //enforcing BC
-         enforce_velocity_BC(BC, v_n);
+             timer.set_start(std::chrono::high_resolution_clock::now());
+             solve(A, b.yv, v_n.yv);
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_vy_solve_time();
+
+             timer.set_start(std::chrono::high_resolution_clock::now());
+             solve(A, b.zv, v_n.zv);
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_vz_solve_time();
+
+
+             //enforcing BC
+             enforce_velocity_BC(BC, v_n);
+ #ifdef REPEATS
+         }
+ #endif
 
 
          ++counter;

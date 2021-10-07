@@ -190,7 +190,7 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
 }
 
 //moves points inside boundary on a boring grid
-void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m, boundary_normals &norms, mesh_points &m_points, vel_points &v_points) {
+void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m, boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::map<unsigned, int> &old_new) {
     std::unordered_set<unsigned> inside_indices;
     std::unordered_set<unsigned> boundary_indices;
 
@@ -253,7 +253,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     z.reserve(g.z.size());
     std::vector<grid_relation> r;
     r.reserve(g.r.size());
-    std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
+    //std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     unsigned index_counter = 0;
 

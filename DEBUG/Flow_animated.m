@@ -5,6 +5,8 @@ All_b_files = dirPlus('rigid_body_data');
 
 no_files = length(All_v_files);
 
+no_files = 174; %for testing
+
 fprintf("Reading files\n")
 data = struct;
 for ii = 1:no_files

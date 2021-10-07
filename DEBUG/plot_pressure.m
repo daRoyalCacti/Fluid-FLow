@@ -84,11 +84,11 @@ function p = plot_pressure(file_loc)
     Ax = gca;
     
     xlabels = nan(size(Ax.XDisplayData));
-    xlabels(1:10:end) = floor( linspace(x_sort(1), x_sort(end), length(test(1:10:end)) ) *100 )/100;
+    xlabels(1:10:end) = floor( linspace(x_sort(1), x_sort(end), length(xlabels(1:10:end)) ) *100 )/100;
     Ax.XDisplayLabels = xlabels;
     
     ylabels = nan(size(Ax.YDisplayData));
-    ylabels(end:-10:1) = floor( linspace(y_sort(1), y_sort(end), length(test(1:10:end)) ) *100 )/100;
+    ylabels(end:-10:1) = floor( linspace(y_sort(1), y_sort(end), length(ylabels(1:10:end)) ) *100 )/100;
     Ax.YDisplayLabels = ylabels;
     
     Ax.XLabel = 'x';

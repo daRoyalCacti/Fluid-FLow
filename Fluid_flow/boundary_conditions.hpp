@@ -21,8 +21,7 @@ struct boundary_conditions {
     boundary_normals norms;
     mesh_points m_points;
     vel_points v_points;
-
-
+    std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     triangle_mesh tm;
 
@@ -47,7 +46,7 @@ struct boundary_conditions {
 
 
         std::cerr << "removing inside points\n";
-        remove_inside_boundary_unif(global_grid, tm, *m, norms, m_points, v_points);
+        remove_inside_boundary_unif(global_grid, tm, *m, norms, m_points, v_points, old_new);
 
         //needs to be called after vel_bc is set because it uses dx, dy, dz from it
         /*
@@ -69,6 +68,9 @@ struct boundary_conditions {
         update_velocity_wall_BC();
     }
 
+    [[nodiscard]] auto size() const {
+        return m_points.size();
+    }
 
     unsigned no_wall_points() const {
         const auto dims = global_grid.no_points_unif;

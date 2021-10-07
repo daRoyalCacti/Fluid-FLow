@@ -10,3 +10,5 @@ DEBUG/flow_videos/
 DEBUG/rigid_body_data/
 DEBUG/times.txt
 /MyMath/finite_difference_old.hpp
+/DEBUG/pressure_interpolated/
+/DEBUG/velocity_interpolated/

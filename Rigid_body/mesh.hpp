@@ -49,13 +49,13 @@ struct mesh final{
 
 
 #ifndef NDEBUG
-        if (vertices_.size() != mass_.size()) {
+        if (vertices.size() != mass.size()) {
             std::cerr << "vertices and mass must be the same size\n";
         }
-        if (vertices_.size() != normals_.size()) {
+        if (vertices.size() != normals.size()) {
             std::cerr << "vertices and normals must be the same size\n";
         }
-        if (indices_.size() < vertices_.size()) {
+        if (indices.size() < vertices.size()) {
             std::cerr << "having less indices that vertices doesn't make sense\n";
         }
 #endif
