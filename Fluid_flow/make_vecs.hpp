@@ -12,7 +12,11 @@ void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n
 #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
         if (v_n.is_boundary(i)) {
-            b.add_elm(i,  bc.v_points.get_vel(i));
+            if (v_n.g->off_walls(i)) {
+                b.add_elm(i,  bc.v_points.get_vel(i));
+            } else {
+                b.add_elm(i, 0,0,0);
+            }
         } else {
             b.add_elm(i,
                       -3 / 2 * advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) +
@@ -31,7 +35,11 @@ void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_
 #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
         if (v_n.is_boundary(i)) {
-            b.add_elm(i, bc.v_points.get_vel(i));
+            if (v_n.g->off_walls(i)) {
+                b.add_elm(i,  bc.v_points.get_vel(i));
+            } else {
+                b.add_elm(i, 0,0,0);
+            }
         } else {
             b.add_elm(i,
                       -advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) + v_n(i) / dt -

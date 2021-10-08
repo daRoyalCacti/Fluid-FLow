@@ -63,14 +63,19 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
 
 
 
-void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re) noexcept {
+void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re, const boundary_conditions &bc) noexcept {
 
 
     //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)
     for (unsigned i = 0; i < v.g->size(); i++) {
         if (v.is_boundary(i)) {
-            A.add_elm(i, i,  1);
+            if (v.g->off_walls(i)) {
+                A.add_elm(i,i, 1);
+            } else {
+                A.add_elm(i,i, 1);
+                A.add_elm(i,v.get_move_ind(i, bc.norms.normal(i)), -1);
+            }
         } else {
             const auto Rdxdx = Re*v.dx(i)*v.dx(i);
             const auto Rdydy = Re*v.dy(i)*v.dy(i);

@@ -117,7 +117,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "creating A\n";
  #endif
      //initially creating matrices
-     make_A(A, v_n, dt, Re);
+     make_A(A, v_n, dt, Re, BC);
 
  #ifdef DLOG
      std::cout << "creating Q\n";

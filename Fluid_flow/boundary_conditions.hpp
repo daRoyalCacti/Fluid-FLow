@@ -37,8 +37,8 @@ struct boundary_conditions {
         norms = boundary_normals(no_wall_points());
         std::cerr << "creating wall normals\n";
         create_wall_normals();
-        std::cerr << "updating velocities at wall\n";
-        update_velocity_wall_BC();
+        //std::cerr << "updating velocities at wall\n";
+        //update_velocity_wall_BC();
 
         //p_bc = big_vec<N,M,P,double>(dx, dy, dz, &bound);
         //vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
@@ -64,8 +64,8 @@ struct boundary_conditions {
         norms = boundary_normals(no_wall_points());
         std::cerr << "creating wall normals\n";
         create_wall_normals();
-        std::cerr << "updating velocities at wall\n";
-        update_velocity_wall_BC();
+        //std::cerr << "updating velocities at wall\n";
+        //update_velocity_wall_BC();
     }
 
     [[nodiscard]] auto size() const {
@@ -151,7 +151,7 @@ struct boundary_conditions {
 
 
 
-    void update_velocity_wall_BC();
+    //void update_velocity_wall_BC();
 
 private:
     //void set_wall_points();
@@ -437,7 +437,7 @@ void boundary_conditions<N,M,P>::set_wall_points() {
 
 
 
-void boundary_conditions::update_velocity_wall_BC()  {
+/*void boundary_conditions::update_velocity_wall_BC()  {
     const auto dims = global_grid.no_points_unif;
     const auto N = static_cast<unsigned>(dims.x()-1);
     const auto M = static_cast<unsigned>(dims.y()-1);
@@ -468,6 +468,7 @@ void boundary_conditions::update_velocity_wall_BC()  {
     }
 
 }
+ */
 
 
 void boundary_conditions::create_wall_normals() {

@@ -357,7 +357,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
-            if (g.is_boundary(i) && !norms.contains(i)) {
+            if (g.is_boundary(i) && g.off_walls(i) && !norms.contains(i)) {
                 std::cerr << "boundary point at index " << i << " does not have a normal\n";
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
@@ -372,7 +372,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
-            if (g.is_boundary(i) && !v_points.contains(i)) {
+            if (g.is_boundary(i) && g.off_walls(i) && !v_points.contains(i)) {
                 std::cerr << "boundary point at index " << i << " does not have a velocity\n";
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }

@@ -26,7 +26,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double 
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
 //counter just for debug
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
-
     enforce_velocity_BC(bc, v_n);
     update_pressure_BC(bc, p);
 
@@ -69,7 +68,6 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
         }
 #endif
 
-
     b->update_pos(forces, points, dt);
 
     //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
@@ -100,7 +98,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //bc.update_velocity_wall_BC();
     //bc.update_pressure_BC(p);
 
-    update_wall_velocity(bc, v_n);
+    //update_wall_velocity(bc, v_n);
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced

@@ -14,7 +14,7 @@ void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
     //std::cerr << "testing\n";
     for (unsigned i = 0; i < v.size(); i++) {
         //std::cerr << "\t" << i << "/" << v.size() << "\t" << v.is_boundary(i) << "\n";
-        if (v.is_boundary(i)) {
+        if (v.is_boundary(i) && v.g->off_walls(i)) {
             //if (BC.v_points.get_vel(i) == vec3(0.75,0,0)) {
             //    std::cerr << "whasdf\n";
             //}
@@ -32,7 +32,7 @@ void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
 }
 
 
-void update_wall_velocity(boundary_conditions &bc, const big_vec_v &v) {
+/*void update_wall_velocity(boundary_conditions &bc, const big_vec_v &v) {
     const auto dims = bc.global_grid.no_points_unif;
     const auto N = static_cast<unsigned>(dims.x()-1);
     const auto M = static_cast<unsigned>(dims.y()-1);
@@ -93,7 +93,7 @@ void update_wall_velocity(boundary_conditions &bc, const big_vec_v &v) {
         }
     }
 
-}
+}*/
 
 
 void update_pressure_BC(const boundary_conditions &BC, big_vec_d &p) {
