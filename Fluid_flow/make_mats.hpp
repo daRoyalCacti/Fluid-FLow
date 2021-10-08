@@ -73,8 +73,50 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
             if (v.g->off_walls(i)) {
                 A.add_elm(i,i, 1);
             } else {
-                A.add_elm(i,i, 1);
-                A.add_elm(i,v.get_move_ind(i, bc.norms.normal(i)), -1);
+
+                const auto &n =  bc.norms.normal(i);
+#ifndef NDEBUG
+                if (n != vec3(1,0,0) && n != vec3(-1,0,0) &&
+                    n!= vec3(0,1,0) && n!= vec3(0,-1,0) &&
+                    n!= vec3(0,0,1) && n != vec3(0,0,-1)) {
+                    std::cerr << "wall normal set incorrectly\n";
+                }
+#endif
+                //first order derivative
+                //A.add_elm(i,i, 1);
+                //A.add_elm(i,v.get_move_ind(i,n), -1);
+
+
+
+                unsigned dir;
+#ifndef NDEBUG
+                bool set = false;
+#endif
+                for (unsigned j = 0; j < 3; j++) {
+                    if (n[j] != 0 ) {
+                        dir = j;
+#ifndef NDEBUG
+                        set = true;
+#endif
+                    }
+                }
+#ifndef NDEBUG
+                if (!set) {
+                    std::cerr << "wall normal is the zero vector\n";
+                }
+#endif
+                double h;
+                if (dir == 0) {
+                    h = v.g->dx;
+                } else if (dir == 1) {
+                    h = v.g->dy;
+                } else {
+                    h = v.g-> dz;
+                }
+
+                A.add_elm(i,i, 3/(2*h));
+                A.add_elm(i, v.get_move_ind(i,n), -2/h);
+                A.add_elm(i, v.get_move_ind(i, 2*n), 1/(2*h) );
             }
         } else {
             const auto Rdxdx = Re*v.dx(i)*v.dx(i);
