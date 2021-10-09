@@ -5,8 +5,6 @@ All_b_files = dirPlus('rigid_body_data');
 
 no_files = length(All_v_files);
 
-no_files = 174; %for testing
-
 fprintf("Reading files\n")
 data = struct;
 for ii = 1:no_files
@@ -18,11 +16,13 @@ end
 
 
 fprintf("Finding mins and maxs\n")
-minx = min(data(1).x);
-miny = min(data(1).y);
+minx = inf;
+miny = inf;
+minz = inf;
 
-maxx = max(data(1).x);
-maxy = max(data(1).y);
+maxx = -inf;
+maxy = -inf;
+maxz = -inf;
 
 max_vx = -inf;
 max_vy = -inf;
@@ -36,6 +36,15 @@ for ii = 1:no_files
     
     min_p = min([min(data(ii).p), min_p]);
     max_p = max([max(data(ii).p), max_p]);
+    
+    minx = min([min(data(ii).bx), minx]);
+    maxx = max([max(data(ii).bx), maxx]);
+    
+    miny = min([min(data(ii).by), miny]);
+    maxy = max([max(data(ii).by), maxy]);
+    
+    minz = min([min(data(ii).bz), minz]);
+    maxz = max([max(data(ii).bz), maxz]);
 end
 
 
@@ -61,23 +70,24 @@ for frame = 1:no_files
     sgtitle(['frame = ', num2str(frame)])
     subplot(2,2,1)
     quiver(data(frame).x, data(frame).y, data(frame).vx/max_vx, data(frame).vy/max_vy)
-    axis([minx, maxx, miny, maxy])
+    %axis([minx, maxx, miny, maxy])
+    axis([min(data(frame).x), max(data(frame).x), min(data(frame).y), max(data(frame).y)])
     xlabel('x')
     ylabel('y')
 
     
     subplot(2,2,2)
-    h = heatmap(unique(x),unique(y), flip(data(frame).p), 'GridVisible', 'off');
+    h = heatmap(unique(data(frame).x),unique(data(frame).y), flip(data(frame).p), 'GridVisible', 'off');
     
     %changing the axes
     Ax = gca;
     
     xlabels = nan(size(Ax.XDisplayData));
-    xlabels(1:10:end) = floor( linspace(data(frame).x_sort(1), data(frame).x_sort(end), length(test(1:10:end)) ) *100 )/100;
+    xlabels(1:10:end) = floor( linspace(data(frame).x_sort(1), data(frame).x_sort(end), length(xlabels(1:10:end)) ) *100 )/100;
     Ax.XDisplayLabels = xlabels;
     
     ylabels = nan(size(Ax.YDisplayData));
-    ylabels(end:-10:1) = floor( linspace(data(frame).y_sort(1), data(frame).y_sort(end), length(test(1:10:end)) ) *100 )/100;
+    ylabels(end:-10:1) = floor( linspace(data(frame).y_sort(1), data(frame).y_sort(end), length(ylabels(1:10:end)) ) *100 )/100;
     Ax.YDisplayLabels = ylabels;
     
     Ax.XLabel = 'x';
@@ -94,7 +104,8 @@ for frame = 1:no_files
 %     starty = linspace(min(data(frame).y), max(data(frame).y), 20);
 %     startx = ones(size(starty)) * min(data(frame).x);
 %     streamline(data(frame).x, data(frame).y, data(frame).vx, data(frame).vy, startx, starty)
-    axis([minx, maxx, miny, maxy])
+%     axis([minx, maxx, miny, maxy])
+    axis([min(data(frame).x), max(data(frame).x), min(data(frame).y), max(data(frame).y)])
     xlabel('x')
     ylabel('y')
     
@@ -103,6 +114,7 @@ for frame = 1:no_files
     xlabel('x')
     ylabel('y')
     zlabel('z')
+    axis([minx, maxx, miny, maxy, minz, maxz])
 
 
     % Capture the plot as an image
