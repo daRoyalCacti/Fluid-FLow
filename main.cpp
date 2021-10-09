@@ -1,4 +1,4 @@
-//#define MOVING_WALL
+//#define ACCURATE_SOLVER //really no difference
 
 #include "Fluid_flow/create_flow.hpp"
 

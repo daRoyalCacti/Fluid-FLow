@@ -60,7 +60,11 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x) noexcept {
     //setting up the solver
     //could probably mess with the parameters
     //viennacl::linalg::gmres_tag my_gmres_tag(1e-5, 100, 20); // up to 100 iterations, restart after 20 iterations
-    viennacl::linalg::gmres_tag my_gmres_tag(1e-100, 1000, 20); // up to 100 iterations, restart after 20 iterations
+#ifdef ACCURATE_SOLVER
+    viennacl::linalg::gmres_tag my_gmres_tag(1e-100, 10000, 25); // up to 100 iterations, restart after 20 iterations
+#else
+    viennacl::linalg::gmres_tag my_gmres_tag(1e-100, 1000, 20);
+#endif
 
     //viennacl::linalg::gmres_tag my_gmres_tag(1e-50, 1000, 20); // up to 100 iterations, restart after 20 iterations
 
