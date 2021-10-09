@@ -262,6 +262,7 @@ struct grid {
         if (r[ind].front== -1) {return true;}
         if (r[ind].back== -1) {return true;}
 
+        /*
         if ( r[r[ind].left].up== -1) {return true;}
         if ( r[r[ind].left].down== -1) {return true;}
         if ( r[r[ind].left].front== -1) {return true;}
@@ -286,6 +287,7 @@ struct grid {
         if ( r[r[ind].up].back== -1) {return true;}
         if ( r[r[ind].down].front== -1) {return true;}
         if ( r[r[ind].down].back== -1) {return true;}
+         */
 
         /*const bool ends = !has_left(ind) || !has_right(ind) || !has_down(ind) || !has_up(ind) || !has_front(ind) || !has_back(ind);
         if (ends) {

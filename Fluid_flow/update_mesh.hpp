@@ -27,7 +27,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double 
 //counter just for debug
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
     enforce_velocity_BC(bc, v_n);
-    update_pressure_BC(bc, p);
+    update_pressure_BC(bc, p);    //TESTING
 
     std::vector<vec3> forces, points;
     const auto& g = *v_n.g;
@@ -91,7 +91,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 
 
     //std::cout << "\tenforcing boundary conditions\n";
-    update_pressure_BC(bc, p);
+    update_pressure_BC(bc, p);    //TESTING
 
     //updating pressure and wall velocity points
     // - non-wall velocity points and normals have already been updated

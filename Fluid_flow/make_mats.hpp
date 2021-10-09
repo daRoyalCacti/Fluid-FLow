@@ -17,8 +17,12 @@
 //need normal infor
 // - if points are on boundary, Q is set differenctly
 // - which boundary matters depends on the direction of the normal vector
-void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) noexcept {
+void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) noexcept {
+    const auto dx = p.g->dx;
+    const auto dy = p.g->dy;
+    const auto dz = p.g->dz;
 
+    const auto &norms = bc.norms;
 
 
 //#pragma omp parallel for
@@ -26,12 +30,102 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
     for (unsigned i = 0; i < p.size(); i++) {
 
         if (p.is_boundary(i)) {
+                const auto &n =  bc.norms.normal(i);
+            if (p.g->off_walls(i)) {
+                double mid = 0;
+                //x
+                if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
+                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
+                } else if (p.can_move(i, 2,0,0)) {  //forward
+                    mid += -n.x()*3/(2*dx);
+                    Q.add_elm(i, p.get_move_ind(i, 2,0,0), -n.x()*1/(2*dx) );
+                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*4/(2*dx) );
+                } else {    //backward
+                    mid += n.x()*3/(2*dx);
+                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*4/(2*dx) );
+                    Q.add_elm(i, p.get_move_ind(i, -2,0,0), n.x()*1/(2*dx) );
+                }
+
+                //y
+                if (p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
+                } else if (p.can_move(i, 0,2,0)) {  //forward
+                    mid += -n.y()*3/(2*dy);
+                    Q.add_elm(i, p.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
+                } else {    //backward
+                    mid += n.y()*3/(2*dz);
+                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
+                }
+
+                //z
+                if (p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
+                } else if (p.can_move(i, 0,0,2)) {  //forward
+                    mid += -n.z()*3/(2*dz);
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,2), -n.z()*1/(2*dz) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*4/(2*dz) );
+                } else {    //backward
+                    mid += n.z()*3/(2*dz);
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*4/(2*dz) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
+                }
+
+
+                Q.add_elm(i,i, mid);
+            } else {    //on walls
+                Q.add_elm(i, i,1);
+                //d^2p/dn^2=0
+                /*const auto &n =  bc.norms.normal(i);
 #ifndef NDEBUG
-            if (!norms.contains(i)) {
-                std::cerr << "norms does not contain " << i  << "\n";
-            }
+                if (n != vec3(1,0,0) && n != vec3(-1,0,0) &&
+                n!= vec3(0,1,0) && n!= vec3(0,-1,0) &&
+                n!= vec3(0,0,1) && n != vec3(0,0,-1)) {
+                    std::cerr << "wall normal set incorrectly\n";
+                }
 #endif
-            Q.add_elm(i, i,1);
+//first order derivative
+//A.add_elm(i,i, 1);
+//A.add_elm(i,v.get_move_ind(i,n), -1);
+
+
+
+                unsigned dir;
+#ifndef NDEBUG
+                bool set = false;
+#endif
+                for (unsigned j = 0; j < 3; j++) {
+                    if (n[j] != 0 ) {
+                        dir = j;
+#ifndef NDEBUG
+                        set = true;
+#endif
+                    }
+                }
+#ifndef NDEBUG
+                if (!set) {
+                    std::cerr << "wall normal is the zero vector\n";
+                }
+#endif
+                double hh;
+                if (dir == 0) {
+                    hh = dx*dx;
+                } else if (dir == 1) {
+                    hh = dy*dy;
+                } else {
+                    hh = dz*dz;
+                }
+
+                Q.add_elm(i,i, 2/hh);
+                Q.add_elm(i, p.get_move_ind(i, n), -5/hh);
+                Q.add_elm(i, p.get_move_ind(i, 2*n), 4/hh);
+                Q.add_elm(i, p.get_move_ind(i, 3*n), -1/hh);
+                */
+            }
         } else {
 
             const auto dxdx = p.dx(i)*p.dx(i);
@@ -64,7 +158,6 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_normals &norms) no
 
 
 void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re, const boundary_conditions &bc) noexcept {
-
 
     //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)

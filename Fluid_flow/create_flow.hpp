@@ -123,7 +123,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "creating Q\n";
  #endif
      //making Q
-     make_Q(Q, p, BC.norms);
+     make_Q(Q, p, BC);
 
  #ifdef DLOG
      std::cout << "setting velocity IC\n";
@@ -181,7 +181,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #ifdef DLOG
      std::cout << "Enforcing pressure boundary conditions\n";
  #endif
-     update_pressure_BC(BC, p_c);
+     update_pressure_BC(BC, p_c);     //TESTING
      p += p_c;
 
 
@@ -277,9 +277,9 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
                  //solve for p for the next timestep
 
                  solve(Q, s, p_c);
-                 update_pressure_BC(BC, p_c);
+                 update_pressure_BC(BC, p_c); //TESTING
                  p += p_c;  //put inside loop?
-                 update_pressure_BC(BC, p); //put outside loop?
+                 update_pressure_BC(BC, p); //TESTING //put outside loop?
              //}
 
              timer.set_end(std::chrono::high_resolution_clock::now());
