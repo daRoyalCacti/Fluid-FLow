@@ -91,7 +91,8 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
 
 
 void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &r, std::unordered_set<unsigned> &inside_indices,
-                             boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::unordered_set<unsigned> &boundary_indices) noexcept {
+                             boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::unordered_set<unsigned> &boundary_indices,
+                             tri_inds& t_inds) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
         for (auto h = hits.begin(); h != hits.end(); ++(++h)) {
@@ -99,11 +100,13 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const auto col1 = th->second.v1;
             const auto norm1 = th->second.v2;
             const auto vel1 = th->second.v3;
+            const triangle* t1 = th->second.v4;
 
             ++th;
             const auto col2 = th->second.v1;
             const auto norm2 = th->second.v2;
             const auto vel2 = th->second.v3;
+            const triangle* t2 = th->second.v4;
 
 
             /*const auto inds1 = g.get_ind_unif(col1);
@@ -165,7 +168,7 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             }
 
             if (norms.contains(ind2)) {
-                norms.add_point(ind1, (norms.normal(ind2) + norm2)/2 );
+                norms.add_point(ind2, (norms.normal(ind2) + norm2)/2 );
             } else {
                 norms.add_point(ind2, norm2);
             }
@@ -184,7 +187,7 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             }
 
             if (v_points.contains(ind2)) {
-                v_points.add_point(ind1, (v_points.get_vel(ind2) + vel2)/2 );
+                v_points.add_point(ind2, (v_points.get_vel(ind2) + vel2)/2 );
             } else {
                 v_points.add_point(ind2, vel2);
             }
@@ -192,13 +195,16 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             boundary_indices.insert(ind1);
             boundary_indices.insert(ind2);
 
+            t_inds.add_point(ind1, t1);
+            t_inds.add_point(ind2, t2);
+
         }
 
     }
 }
 
 //moves points inside boundary on a boring grid
-void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m, boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::map<unsigned, int> &old_new) {
+void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m, boundary_normals &norms, mesh_points &m_points, vel_points &v_points, std::map<unsigned, int> &old_new, tri_inds& t_inds) {
     std::unordered_set<unsigned> inside_indices;
     std::unordered_set<unsigned> boundary_indices;
 
@@ -227,7 +233,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
             const double y = minp.y() + j*dy/test;
 
             const ray r(vec3(x, y, 0), vec3(0,0,1) );//shoot ray through the middle of a grid point
-            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
+            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices, t_inds);
         }
     }
 
@@ -239,7 +245,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
              const double x = minp.x() + i*dx/test;
              const double z = minp.z() + k*dz/test;
             const ray r(vec3(x, 0, z), vec3(0,1,0) );
-            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
+            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices, t_inds);
         }
     }
 
@@ -249,7 +255,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
              const double y = minp.y() + j*dy/test;
              const double z = minp.z() + k*dz/test;
             const ray r(vec3(0, y, z), vec3(1,0,0) );
-            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices);
+            get_mesh_collision_unif(tm, g, r, inside_indices, norms, m_points, v_points,boundary_indices, t_inds);
         }
     }
 
@@ -308,7 +314,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     g.r = std::move(r);
 
 
-
     boundary_normals norms_c(norms.size());
     std::cerr << "recalibrating norms\n";
     for (const auto & n : norms.m) {
@@ -316,7 +321,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 #ifndef NDEBUG
         norms_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
-            std::cerr << "normal point lies inside mesh\n";
+            std::cerr << "normal lies inside mesh\n";
         }
 #else
         norms_c.add_point( old_new[n.first], n.second  );
@@ -330,7 +335,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 #ifndef NDEBUG
         m_points_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
-            std::cerr << "normal point lies inside mesh\n";
+            std::cerr << "point lies inside mesh\n";
         }
 #else
         m_points_c.add_point( old_new[n.first], n.second  );
@@ -346,7 +351,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 #ifndef NDEBUG
         v_points_c.add_point( old_new.at(n.first), n.second  );
         if (old_new.at(n.first) == -1)  {
-            std::cerr << "normal point lies inside mesh\n";
+            std::cerr << "velocity lies inside mesh\n";
         }
 #else
         v_points_c.add_point( old_new[n.first], n.second  );
@@ -354,15 +359,31 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     }
     v_points = std::move(v_points_c);
 
+    tri_inds t_inds_c(t_inds.size());
+    std::cerr << "recalibrating triangle indices\n";
+    for (const auto & n : t_inds.m) {
+#ifndef NDEBUG
+        t_inds_c.add_point( old_new.at(n.first), n.second  );
+        if (old_new.at(n.first) == -1)  {
+            std::cerr << "index lies inside mesh\n";
+        }
+#else
+        t_inds_c.add_point( old_new[n.first], n.second  );
+#endif
+    }
+    t_inds = std::move(t_inds_c);
+
+    //std::cerr << t_inds.size() << " " << t_inds_c.size() << " " << v_points.size() << "\n";
+
 #ifndef NDEBUG
         std::cerr << "checking results\n";
         //checking that all normals below to a boundary point
-        for (const auto & n : norms.m) {
+        /*for (const auto & n : norms.m) {
             if ( !g.is_boundary(n.first) ) {
                 std::cerr << "normal at index " << n.first << " is not on a boundary point\n";
                 std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
             }
-        }
+        }*/
 
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
@@ -372,12 +393,12 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
             }
         }
 
-        for (const auto & n : v_points.m) {
+        /*for (const auto & n : v_points.m) {
             if ( !g.is_boundary(n.first) ) {
                 std::cerr << "velocity at index " << n.first << " is not on a boundary point\n";
                 std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
             }
-        }
+        }*/
 
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
@@ -386,6 +407,57 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
+
+        //checking norms, vels, points, and inds all have the same points
+        for (const auto &v : v_points.m) {
+            if (!m_points.contains(v.first)) {
+                std::cerr << "m_points does not contain " << v.first << " where v_points does\n";
+            }
+            if (!norms.contains(v.first)) {
+                std::cerr << "norms does not contain " << v.first << " where v_points does\n";
+            }
+            if (!t_inds.contains(v.first)) {
+                std::cerr << "t_inds does not contain " << v.first << " where v_points does\n";
+            }
+        }
+
+        for (const auto &v : m_points.m) {
+            if (!v_points.contains(v.first)) {
+                std::cerr << "v_points does not contain " << v.first << " where m_points does\n";
+            }
+            if (!norms.contains(v.first)) {
+                std::cerr << "norms does not contain " << v.first << " where m_points does\n";
+            }
+            if (!t_inds.contains(v.first)) {
+                std::cerr << "t_inds does not contain " << v.first << " where m_points does\n";
+            }
+        }
+
+        for (const auto &v : norms.m) {
+            if (!v_points.contains(v.first)) {
+                std::cerr << "v_points does not contain " << v.first << " where norms does\n";
+            }
+            if (!m_points.contains(v.first)) {
+                std::cerr << "m_points does not contain " << v.first << " where norms does\n";
+            }
+            if (!t_inds.contains(v.first)) {
+                std::cerr << "t_inds does not contain " << v.first << " where norms does\n";
+            }
+        }
+
+        for (const auto &v : t_inds.m) {
+            if (!m_points.contains(v.first)) {
+                std::cerr << "m_points does not contain " << v.first << " where t_inds does\n";
+            }
+            if (!norms.contains(v.first)) {
+                std::cerr << "norms does not contain " << v.first << " where t_inds does\n";
+            }
+            if (!v_points.contains(v.first)) {
+                std::cerr << "v_points does not contain " << v.first << " where t_inds does\n";
+            }
+        }
+
+
         std::cerr << "finished checking results\n";
 #endif
 

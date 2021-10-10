@@ -38,6 +38,7 @@ struct triangle_mesh {
 
     struct d_vec3 {
         vec3 v1, v2, v3;
+        const triangle* v4;
     };
 
     //returns if ray collided with mesh
@@ -48,10 +49,10 @@ struct triangle_mesh {
         std::map<double, d_vec3> hits; //stores hit time and hit pos
         double time;
         //unsigned test_counter = 0;
-        for (const auto & t : tris) {
+        for (const triangle & t : tris) {
             if (t.hit_time(r, time)) {
                 //time, collision point, normal at collision point, velocity at collision point
-                hits.insert({ time, d_vec3{r.at(time), t.get_normal(r.at(time)), t.get_velocity(r.at(time))}  });
+                hits.insert({ time, d_vec3{r.at(time), t.get_normal(r.at(time)), t.get_velocity(r.at(time)), &t}  });
             }
         }
 

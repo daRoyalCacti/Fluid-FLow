@@ -98,7 +98,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 
     v_n.g->move(b->model.v, old_c_o_m, b->model.w, dt);
 
-    //NEED TO UPDATE ALL MAPS IN BC!
+    bc.update(b->model.w, b->model.v, old_c_o_m, dt);
 
 
     //std::cout << "\tenforcing boundary conditions\n";

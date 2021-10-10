@@ -16,6 +16,7 @@
 #include <fstream>
 #include "mesh.hpp"
 
+
 struct body {
     mesh model; //positions and velocities global
 
@@ -170,6 +171,7 @@ struct body {
             }
         }
 #endif
+
     }
 
 

@@ -18,25 +18,25 @@
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
     grid global_grid;
-    boundary_normals norms;
+    boundary_normals_grouped norms; //need to differentiate between wall norms and mesh norms. Still want to keep norms to not have to change a lot of code.
+    boundary_normals mesh_norms;
+    wall_normals wall_norms;
     mesh_points m_points;
     vel_points v_points;
+    tri_inds t_inds;
     std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     triangle_mesh tm;
 
 
     boundary_conditions() = delete;
-    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm(m) {
+    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
+        : tm(m), norms(mesh_norms, wall_norms) {
         std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
         //global_grid.create_no_points_unif();  //now called in make_entire grid
 
-        std::cerr << "setting boundary normals\n";
-        //set_wall_points();
-        norms = boundary_normals(no_wall_points());
-        std::cerr << "creating wall normals\n";
-        create_wall_normals();
+
         //std::cerr << "updating velocities at wall\n";
         //update_velocity_wall_BC();
 
@@ -46,7 +46,15 @@ struct boundary_conditions {
 
 
         std::cerr << "removing inside points\n";
-        remove_inside_boundary_unif(global_grid, tm, *m, norms, m_points, v_points, old_new);
+        remove_inside_boundary_unif(global_grid, tm, *m, mesh_norms, m_points, v_points, old_new, t_inds);
+
+        std::cerr << "setting boundary normals\n";
+        //set_wall_points();
+        wall_norms = wall_normals(no_wall_points());
+        std::cerr << "creating wall normals\n";
+        create_wall_normals();
+
+        //norms = boundary_normals_grouped(wall_norms, mesh_norms);
 
         //needs to be called after vel_bc is set because it uses dx, dy, dz from it
         /*
@@ -55,17 +63,27 @@ struct boundary_conditions {
     }
 
     //should never be used in real flow, only used for testing derivatives
-    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0) : tm{} {
+    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
+        : tm{}, norms(mesh_norms, wall_norms) {
         std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
         //global_grid.create_no_points_unif();  //now called in make_entire grid
 
         std::cerr << "setting boundary normals\n";
-        norms = boundary_normals(no_wall_points());
+        wall_norms = wall_normals(no_wall_points());
         std::cerr << "creating wall normals\n";
         create_wall_normals();
         //std::cerr << "updating velocities at wall\n";
         //update_velocity_wall_BC();
+    }
+
+    void update(const vec3& w, const vec3& v, const vec3 &c_o_m, const double dt) {
+        std::cerr << "updating m\n";
+        m_points.update(w, v, c_o_m, dt);
+        std::cerr << "updating n\n";
+        norms.update(t_inds, m_points, w, dt);
+        std::cerr << "updating v\n";
+        v_points.update(t_inds, m_points);
     }
 
     [[nodiscard]] auto size() const {
@@ -479,20 +497,26 @@ void boundary_conditions::create_wall_normals() {
 
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(global_grid.convert_indices_unif(vec3(i,0,k) ), vec3(0,1,0));
-            norms.add_point(global_grid.convert_indices_unif(vec3(i,M,k) ), vec3(0,-1,0));
+            const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,0,k) )];
+            wall_norms.add_point(ind1, vec3(0,1,0));
+            const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,M,k) ) ];
+            wall_norms.add_point(ind2, vec3(0,-1,0));
         }
     }
     for (unsigned i = 0; i <= N; i++) {
         for (unsigned j = 0; j <= M; j++) {
-            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,0) ), vec3(0,0,1));
-            norms.add_point(global_grid.convert_indices_unif(vec3(i,j,P) ), vec3(0,0,-1));
+            const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,j,0) )];
+            wall_norms.add_point(ind1, vec3(0,0,1));
+            const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,j,P) )];
+            wall_norms.add_point(ind2, vec3(0,0,-1));
         }
     }
     for (unsigned j = 0; j <= M; j++) {
         for (unsigned k = 0; k <= P; k++) {
-            norms.add_point(global_grid.convert_indices_unif(vec3(0,j,k) ),vec3(1,0,0));
-            norms.add_point(global_grid.convert_indices_unif(vec3(N,j,k) ),vec3(-1,0,0));
+            const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,j,k) )];
+            wall_norms.add_point(ind1,vec3(1,0,0));
+            const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(N,j,k) )];
+            wall_norms.add_point(ind2,vec3(-1,0,0));
         }
     }
 }
