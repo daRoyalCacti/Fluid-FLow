@@ -123,6 +123,11 @@ struct body {
 
 
 
+        //updating all normals
+        std::transform(model.normals.begin(), model.normals.end(), model.normals.begin(),
+               [&](const vec3& x)
+               {return rotate(vec3(0), rot_angle_vec, x, rot_angle_vec.length());});
+
         //updating all positions
         std::transform(model.vertices.begin(), model.vertices.end(), model.vertices.begin(),
                        [&](const vec3& x)
@@ -138,10 +143,6 @@ struct body {
 
         model.update_bounding_box();
 
-       //updating all normals
-       std::transform(model.normals.begin(), model.normals.end(), model.normals.begin(),
-                      [&](const vec3& x)
-                      {return rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length());}); //rotating about the old center of mass, then moving forward
 
 #ifndef NDEBUG
         for (const auto &v : model.normals) {
