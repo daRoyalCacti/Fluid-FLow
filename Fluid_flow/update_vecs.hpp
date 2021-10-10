@@ -15,6 +15,7 @@ void enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v) {
     for (unsigned i = 0; i < v.size(); i++) {
         //std::cerr << "\t" << i << "/" << v.size() << "\t" << v.is_boundary(i) << "\n";
         if (v.is_boundary(i) && v.g->off_walls(i)) {
+            //std::cerr << v(i) << "\n";
             //if (BC.v_points.get_vel(i) == vec3(0.75,0,0)) {
             //    std::cerr << "whasdf\n";
             //}

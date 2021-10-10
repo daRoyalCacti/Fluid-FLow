@@ -17,11 +17,15 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
     const auto sy = static_cast<unsigned long>(Wy/dy);
     const auto sz = static_cast<unsigned long>(Wz/dz);
 
-    g.mins = {minx,miny,minz};
-    g.maxs = {minx+Wx, miny+Wy, minz+Wz};
+    const vec3 mins = {minx,miny,minz};
+    const vec3 maxs = {minx+Wx, miny+Wy, minz+Wz};
+    /*
     g.dx = dx;
     g.dy = dy;
-    g.dz = dz;
+    g.dz = dz;*/
+    g = grid(dx, dy, dz, mins, maxs);
+    //std::cerr << g.dx << " " << g.dy << " " << g.dz << "\n";
+    //std::cerr << dx << " " << dy << " " << dz << "\n";
 
     const auto s = static_cast<unsigned long>(sx*sy*sz);
     g.x.resize(s);
@@ -29,7 +33,7 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
     g.z.resize(s);
     g.r.resize(s);
 
-    g.create_no_points_unif();
+    //g.create_no_points_unif();
 
     unsigned counter = 0;
     for (int k = 0; k < sz; k++) {
@@ -102,8 +106,12 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const auto vel2 = th->second.v3;
 
 
-            const auto inds1 = g.get_ind_unif(col1);
-            const auto inds2 = g.get_ind_unif(col2);
+            /*const auto inds1 = g.get_ind_unif(col1);
+            const auto inds2 = g.get_ind_unif(col2);*/
+            const auto inds1 = vec3{floor( (col1.x()-g.edge1.x()) /g.dx), floor( (col1.y()-g.edge1.y()) /g.dy), floor( (col1.z()-g.edge1.z())/g.dz)};
+            const auto inds2 = vec3{floor( (col2.x()-g.edge1.x()) /g.dx), floor( (col2.y()-g.edge1.y()) /g.dy), floor( (col2.z()-g.edge1.z())/g.dz)};
+            //std::cerr << inds1 << " " << inds2 << "\n";
+            //std::cerr << g.dx << " " << col1.x() << " " << g.edge1 << "\n";
 
 
             const auto ind1 = g.convert_indices_unif(inds1);
@@ -214,6 +222,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
         //for (double y = minp.y(); y <= maxp.y(); y += g.dy/test) {
     for (unsigned i = 0; i <= Nx; i++) {
         for (unsigned j = 0; j <= Ny; j++) {
+            //std::cerr << i << " " << j << "\n";
             const double x = minp.x() + i*dx/test;
             const double y = minp.y() + j*dy/test;
 

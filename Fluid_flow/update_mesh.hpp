@@ -43,6 +43,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 
         //could be done more efficiently using a range base for loop through bc.m_points
         for (unsigned i = 0; i < p.size(); i++) {
+            //std::cerr << i << "\n";
             if (g.off_walls(i)) {  //if off the boundary
                 if (g.is_boundary(i)) {    //if boundary point
                     points[forces_counter] = bc.m_points.get_point(i);    //forces applied at the mesh boundary
@@ -68,6 +69,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
         }
 #endif
 
+    const auto old_c_o_m = b->pos_cm;
     b->update_pos(forces, points, dt);
 
     //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
@@ -87,7 +89,16 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     std::cout << "\tUpdating g\n";
     v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
     //std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
-    interpolate_vectors(v_n, v_n1, p, b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
+
+    const auto x_off = b->model.v.x()*dt;
+    const auto y_off = b->model.v.y()*dt;
+    const auto z_off = b->model.v.z()*dt;
+
+    interpolate_vectors(v_n, v_n1, p, x_off, y_off, z_off);
+
+    v_n.g->move(b->model.v, old_c_o_m, b->model.w, dt);
+
+    //NEED TO UPDATE ALL MAPS IN BC!
 
 
     //std::cout << "\tenforcing boundary conditions\n";
@@ -398,7 +409,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
     p.v = std::move(p_buff);
 
-    v_n.g->move(x_off, y_off, z_off);
     const auto end_moving = std::chrono::high_resolution_clock::now();
     time_moving += static_cast<std::chrono::duration<double>>(end_moving - start_moving).count();
 

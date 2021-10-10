@@ -10,6 +10,7 @@
 #include <set>
 #include <fstream>
 #include "../MyMath/vec3.hpp"
+#include "../MyMath/dist_to_plane.hpp"
 
 //stores the neighbours of a grid point
 // -1 if no neighbour
@@ -23,16 +24,32 @@ struct grid {
     std::vector<double> x, y, z;
     double dx, dy, dz;
     std::vector<grid_relation> r{};
-    vec3 mins, maxs;    //min = (minx, miny, minz)
+    //vec3 mins, maxs;    //min = (minx, miny, minz)
+    vec3 edge1, edge2, /*edge3,*/ edge4, edge5, /*edge6,*/ edge7, edge8;
+    vec3 middle;
     vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
 
 
     vec3 operator[](unsigned i) const noexcept { return { x[i], y[i], z[i] }; }
 
     grid() : dx{}, dy{}, dz{} {};
+    grid(const double dx_, const double dy_, const double dz_, const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
+        : dx(dx_), dy(dy_), dz(dz_), //mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
+        middle( (minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2 ),
+        edge1(minx, miny, minz), edge2(maxx, miny, minz), /*edge3(minx, maxy, minz),*/ edge4(maxx, maxy, minz),
+        edge5(minz, miny, maxz), /*edge6(maxx, miny, maxz),*/ edge7(minx, maxy, maxz), edge8(maxx, maxy, maxz),
+        no_points_unif(round( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {}
+
+    grid(const double dx_, const double dy_, const double dz_, const vec3& minv, const vec3& maxv)
+        : grid(dx_, dy_, dz_, minv.x(), minv.y(), minv.z(), maxv.x(), maxv.y(), maxv.z()) {}
+
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_,
          const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
-        : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_), mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
+        : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_), //mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
+        middle( (minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2 ),
+        edge1(minx, miny, minz), edge2(maxx, miny, minz), /*edge3(minx, maxy, minz),*/ edge4(maxx, maxy, minz),
+        edge5(minx, miny, maxz), /*edge6(maxx, miny, maxz),*/ edge7(minx, maxy, maxz), edge8(maxx, maxy, maxz),
+        no_points_unif(round( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {
 #ifndef NDEBUG
         bool err = false;
         if (x_.size() != y_.size()) {
@@ -53,8 +70,34 @@ struct grid {
 #endif
     }
 
-    void move(const double x_off, const double y_off, const double z_off) noexcept {
-        for (auto & x_ : x) {
+    void move(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
+        // const vec3 rot_angle_vec = model.w*dt;
+        //rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}
+
+
+
+        const auto rot_angle_vec = omega*dt;
+        const auto trans_vec = vel*dt;
+
+        for (unsigned i = 0; i < x.size(); i++) {
+            const auto rot = rotate(c_o_m, rot_angle_vec, vec3(x[i], y[i], z[i]), rot_angle_vec.length() );
+            x[i] = rot.x();
+            y[i] = rot.y();
+            z[i] = rot.z();
+        }
+
+        edge1 = rotate(c_o_m, rot_angle_vec, edge1, rot_angle_vec.length() );
+        edge2 = rotate(c_o_m, rot_angle_vec, edge2, rot_angle_vec.length() );
+        //edge3 = rotate(c_o_m, rot_angle_vec, edge3, rot_angle_vec.length() );
+        edge4 = rotate(c_o_m, rot_angle_vec, edge4, rot_angle_vec.length() );
+        edge5 = rotate(c_o_m, rot_angle_vec, edge5, rot_angle_vec.length() );
+        //edge6 = rotate(c_o_m, rot_angle_vec, edge6, rot_angle_vec.length() );
+        edge7 = rotate(c_o_m, rot_angle_vec, edge7, rot_angle_vec.length() );
+        edge8 = rotate(c_o_m, rot_angle_vec, edge8, rot_angle_vec.length() );
+        middle = rotate(c_o_m, rot_angle_vec, middle, rot_angle_vec.length() );
+
+
+        /*for (auto & x_ : x) {
             x_ += x_off;
         }
         for (auto & y_ : y) {
@@ -64,15 +107,32 @@ struct grid {
             z_ += z_off;
         }
         const vec3 off(x_off, y_off, z_off);
-        mins+=off;
-        maxs+=off;
+        mins+=off;  //might need to store positions of corners - should only actualy need to store 4 of them
+        maxs+=off;  //needed for off_wall*/
     }
 
     //check to see if an index is away from the walls
     [[nodiscard]] bool off_walls(const unsigned i) const {
-        const bool away_x = (x[i] > mins.x()+2*dx) && (x[i]<maxs.x()-2*dx);
+        /*const bool away_x = (x[i] > mins.x()+2*dx) && (x[i]<maxs.x()-2*dx);
         const bool away_y = (y[i] > mins.y()+2*dy) && (y[i]<maxs.y()-2*dy);
-        const bool away_z = (z[i] > mins.z()+2*dz) && (z[i]<maxs.z()-2*dz);
+        const bool away_z = (z[i] > mins.z()+2*dz) && (z[i]<maxs.z()-2*dz);*/
+        const vec3 v = {x[i], y[i], z[i]};
+        //the distances to all the walls
+        const auto dist_left = dist_to_plane( v, edge1, edge5, edge7 );
+        const auto dist_right = dist_to_plane( v, edge2, edge4, edge8 );
+        const auto dist_down = dist_to_plane( v, edge1, edge2, edge5 );
+        const auto dist_up = dist_to_plane( v, edge4, edge8, edge7 );
+        const auto dist_front = dist_to_plane( v, edge1, edge2, edge4 );
+        const auto dist_back = dist_to_plane( v, edge5, edge7, edge8 );
+
+        //std::cerr << i << "\t" << v << "\n";
+        //std::cerr << "\t" << dist_left << " " << dist_right << " " << dist_down << " " << dist_up << " " << dist_front << " " << dist_back << "\n";
+
+        const bool away_x = (dist_left > 2*dx) && (dist_right > 2*dx);
+        const bool away_y = (dist_down > 2*dy) && (dist_up > 2*dx);
+        const bool away_z = (dist_front > 2*dz) && (dist_back > 2*dz);
+
+
         return away_x && away_y && away_z;
     }
 
@@ -173,7 +233,8 @@ struct grid {
     }
 
     [[nodiscard]] inline auto get_middle_inds() const noexcept {
-        const double middle_z = ( maxs.z() + mins.z() ) /2;
+        //const double middle_z = ( maxs.z() + mins.z() ) /2;
+        const auto middle_z = middle.z();
 
         std::vector<unsigned long> ret_vec;
         ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
@@ -196,18 +257,18 @@ struct grid {
         return ret_vec;
     }
 
-    void create_no_points_unif() {
+    /*inline void create_no_points_unif() {
         no_points_unif = round( (maxs - mins) / vec3(dx, dy, dz) );
-    }
+    }*/
 
     [[nodiscard]] auto convert_indices_unif(const vec3 &inds) const {
         return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
     }
 
-    [[nodiscard]] inline vec3 get_ind_unif(vec3 p) const noexcept {
+    /*[[nodiscard]] inline vec3 get_ind_unif(vec3 p) const noexcept {
         p -= mins;
         return {floor(p.x()/dx), floor(p.y()/dy),floor(p.z()/dz)};
-    }
+    }*/
 
 
     [[nodiscard]] inline bool has_left(const unsigned ind) const noexcept {return r[ind].left != -1;} //returns true if it has a left
