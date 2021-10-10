@@ -30,8 +30,8 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
     for (unsigned i = 0; i < p.size(); i++) {
 
         if (p.is_boundary(i)) {
-                const auto &n =  bc.norms.normal(i);
             if (p.g->off_walls(i)) {
+                const auto &n =  bc.norms.normal(i);
                 double mid = 0;
                 //x
                 if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
@@ -158,6 +158,9 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
 
 
 void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re, const boundary_conditions &bc) noexcept {
+    const auto dx = v.g->dx;
+    const auto dy = v.g->dy;
+    const auto dz = v.g->dz;
 
     //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)
@@ -166,7 +169,54 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
             if (v.g->off_walls(i)) {
                 A.add_elm(i,i, 1);
             } else {
+                const auto &n =  bc.norms.normal(i);
+                double mid = 0;
+                //x
+                if (v.can_move(i, -1,0,0) && v.can_move(i, 1,0,0)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
+                    A.add_elm(i, v.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
+                } else if (v.can_move(i, 2,0,0)) {  //forward
+                    mid += -n.x()*3/(2*dx);
+                    A.add_elm(i, v.get_move_ind(i, 2,0,0), -n.x()*1/(2*dx) );
+                    A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*4/(2*dx) );
+                } else {    //backward
+                    mid += n.x()*3/(2*dx);
+                    A.add_elm(i, v.get_move_ind(i, -1,0,0), -n.x()*4/(2*dx) );
+                    A.add_elm(i, v.get_move_ind(i, -2,0,0), n.x()*1/(2*dx) );
+                }
 
+                //y
+                if (v.can_move(i, 0,-1,0) && v.can_move(i, 0,1,0)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
+                    A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
+                } else if (v.can_move(i, 0,2,0)) {  //forward
+                    mid += -n.y()*3/(2*dy);
+                    A.add_elm(i, v.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
+                    A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
+                } else {    //backward
+                    mid += n.y()*3/(2*dz);
+                    A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
+                    A.add_elm(i, v.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
+                }
+
+                //z
+                if (v.can_move(i, 0,0,-1) && v.can_move(i, 0,0,1)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
+                    A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
+                } else if (v.can_move(i, 0,0,2)) {  //forward
+                    mid += -n.z()*3/(2*dz);
+                    A.add_elm(i, v.get_move_ind(i, 0,0,2), -n.z()*1/(2*dz) );
+                    A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()*4/(2*dz) );
+                } else {    //backward
+                    mid += n.z()*3/(2*dz);
+                    A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()*4/(2*dz) );
+                    A.add_elm(i, v.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
+                }
+
+
+                A.add_elm(i,i, mid);
+
+                /*
                 const auto &n =  bc.norms.normal(i);
 #ifndef NDEBUG
                 if (n != vec3(1,0,0) && n != vec3(-1,0,0) &&
@@ -210,6 +260,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                 A.add_elm(i,i, 3/(2*h));
                 A.add_elm(i, v.get_move_ind(i,n), -2/h);
                 A.add_elm(i, v.get_move_ind(i, 2*n), 1/(2*h) );
+                 */
             }
         } else {
             const auto Rdxdx = Re*v.dx(i)*v.dx(i);
