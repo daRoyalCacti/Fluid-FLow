@@ -30,8 +30,8 @@ int main() {
 
     constexpr double mass1 = 0.01;
 
-    constexpr vec3 vel_cm = vec3(0.75, 0, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
-    constexpr vec3 w = vec3(0,0,2);
+    constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
+    constexpr vec3 w = vec3(0,0,0);
 
     const double z_mid = wz/2;
     const double y_mid = wy/2;

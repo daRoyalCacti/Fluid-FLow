@@ -75,6 +75,41 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
                 }
 
+                /*if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
+                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
+                } else if (p.can_move(i, 1,0,0)) {  //forward
+                    mid += -n.x()/dx;
+                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()/dx );
+                } else {    //backward
+                    mid += n.x()/dx;
+                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()/dx );
+                }
+
+                //y
+                if (p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
+                } else if (p.can_move(i, 0,1,0)) {  //forward
+                    mid += -n.y()/dy;
+                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()/dy );
+                } else {    //backward
+                    mid += n.y()*3/(2*dz);
+                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()/dy );
+                }
+
+                //z
+                if (p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1)) {    //central difference
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
+                } else if (p.can_move(i, 0,0,1)) {  //forward
+                    mid += -n.z()/dz;
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()/dz );
+                } else {    //backward
+                    mid += n.z()/dz;
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()/dz );
+                }*/
+
 
                 Q.add_elm(i,i, mid);
             } else {    //on walls
@@ -212,6 +247,41 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                     A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()*4/(2*dz) );
                     A.add_elm(i, v.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
                 }
+
+                /*if (v.can_move(i, -1,0,0) && v.can_move(i, 1,0,0)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
+                    A.add_elm(i, v.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
+                } else if (v.can_move(i, 1,0,0)) {  //forward
+                    mid += -n.x()/dx;
+                    A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()/dx );
+                } else {    //backward
+                    mid += n.x()/dx;
+                    A.add_elm(i, v.get_move_ind(i, -1,0,0), -n.x()/dx );
+                }
+
+                //y
+                if (v.can_move(i, 0,-1,0) && v.can_move(i, 0,1,0)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
+                    A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
+                } else if (v.can_move(i, 0,1,0)) {  //forward
+                    mid += -n.y()/dy;
+                    A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()/dy );
+                } else {    //backward
+                    mid += n.y()*3/(2*dz);
+                    A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()/dy );
+                }
+
+                //z
+                if (v.can_move(i, 0,0,-1) && v.can_move(i, 0,0,1)) {    //central difference
+                    A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
+                    A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
+                } else if (v.can_move(i, 0,0,1)) {  //forward
+                    mid += -n.z()/dz;
+                    A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()/dz );
+                } else {    //backward
+                    mid += n.z()/dz;
+                    A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()/dz );
+                }*/
 
 
                 A.add_elm(i,i, mid);
