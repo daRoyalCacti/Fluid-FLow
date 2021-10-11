@@ -78,11 +78,9 @@ struct boundary_conditions {
     }
 
     void update(const vec3& w, const vec3& v, const vec3 &c_o_m, const double dt) {
-        std::cerr << "updating m\n";
+        tm.update();
         m_points.update(w, v, c_o_m, dt);
-        std::cerr << "updating n\n";
         norms.update(t_inds, m_points, w, dt);
-        std::cerr << "updating v\n";
         v_points.update(t_inds, m_points);
     }
 

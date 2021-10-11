@@ -20,7 +20,7 @@ vec3 global_forces(const double t) {
 }
 
 //defined below update_mesh
-void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, double x_off, double y_off, double z_off);
+void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt);
 
 //updating mesh also requires updating the vectors
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
@@ -90,11 +90,11 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
     //std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
 
-    const auto x_off = b->model.v.x()*dt;
+    /*const auto x_off = b->model.v.x()*dt;
     const auto y_off = b->model.v.y()*dt;
-    const auto z_off = b->model.v.z()*dt;
-
-    interpolate_vectors(v_n, v_n1, p, x_off, y_off, z_off);
+    const auto z_off = b->model.v.z()*dt;*/
+    //const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
+    interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 
     v_n.g->move(b->model.v, old_c_o_m, b->model.w, dt);
 
@@ -137,12 +137,15 @@ template <typename T>
 double update_buffer(const T& a, const double x, const double y, const double z) {
     return a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
              a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
-                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x;
+                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*z;
 }
 
-
-void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double x_off, const double y_off, const double z_off) {
+//const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
+void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) {
     const auto &g = *v_n.g;
+
+    const auto rot_angle_vec = omega*dt;
+    const auto trans_vec = vel*dt;
 
     //variable to hold the new interpolated values
     Eigen::Matrix<double, Eigen::Dynamic, 1> vn_buff_x, vn_buff_y, vn_buff_z,
@@ -163,17 +166,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
 
     //finding points to use for interpolation
     // - assumes the offsets are smaller than the step size
-    #ifndef NDEBUG
-    if (x_off > g.dx) {
-        std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
-    }
-    if (y_off > g.dy) {
-        std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
-    }
-    if (z_off > g.dz) {
-        std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
-    }
-    #endif
+
     constexpr unsigned no_points = 20;
 
     double time_finding_indices = 0;
@@ -332,7 +325,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
             mat(i, 16) = y*z*z;
             mat(i, 17) = x*x*y*z;
             mat(i, 18) = x*y*y*z;
-            mat(i, 19) = x*y*z*x;
+            mat(i, 19) = x*y*z*z;
         }
 
         const auto end_filling = std::chrono::high_resolution_clock::now();
@@ -377,10 +370,37 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const d
         const decltype(vn1_vec_z) a_vn1_z = mat_inv*(vn1_vec_z);
         const decltype(p_vec) a_p = mat_inv*(p_vec);*/
 
+        /*const auto rot_angle_vec = omega*dt;
+        const auto trans_vec = vel*dt;
 
-        const auto x = g.x[index] + x_off;
+        for (unsigned i = 0; i < x.size(); i++) {
+            const auto rot = rotate(c_o_m, rot_angle_vec, vec3(x[i], y[i], z[i]), rot_angle_vec.length() );
+            x[i] = rot.x()+trans_vec.x();
+            y[i] = rot.y()+trans_vec.y();
+            z[i] = rot.z()+trans_vec.z();
+        }*/
+
+        /*const auto x = g.x[index] + x_off;
         const auto y = g.y[index] + y_off;
-        const auto z = g.z[index] + z_off;
+        const auto z = g.z[index] + z_off;*/
+        const auto rot = rotate(c_o_m, rot_angle_vec, vec3(g.x[index], g.y[index], g.z[index]), rot_angle_vec.length() );
+        const auto x = rot.x()+trans_vec.x();
+        const auto y = rot.y()+trans_vec.y();
+        const auto z = rot.z()+trans_vec.z();
+
+#ifndef NDEBUG
+        if ( std::abs(x-g.x[index]) > g.dx) {
+            std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+        if (std::abs(y-g.y[index]) > g.dy) {
+            std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+        if (std::abs(z-g.z[index]) > g.dz) {
+            std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
+        }
+#endif
+
+
         /*buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
                 a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
                 a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x ;*/

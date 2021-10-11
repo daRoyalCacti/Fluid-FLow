@@ -154,10 +154,13 @@ struct body {
 #endif
 
         //updating all velocities
-        std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
+        /*std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
                        [&](const vec3& x)
-                       {return model.v + cross( (x-pos_cm),model.w);}); //velocity of cm plus rotational velocity (v=r x w)
+                       {return model.v + cross( model.w, (x-pos_cm));});*/ //velocity of cm plus rotational velocity (v=w x r)
                                                 //https://en.wikipedia.org/wiki/Angular_velocity
+        for (unsigned i = 0; i < model.velocities.size(); i++) {
+            model.velocities[i] = model.v + cross( model.w, (model.vertices[i]-pos_cm));
+        }
 
 #ifndef NDEBUG
         for (const auto &v : model.velocities) {
@@ -175,11 +178,13 @@ struct body {
     }
 
 
-
     void write_pos(const char* file_loc) {
         std::ofstream output(file_loc);
-        for (const auto& p : model.vertices) {
+        /*for (const auto& p : model.vertices) {
             output << p << "\n";
+        }*/
+        for (unsigned i = 0; i < model.vertices.size(); i++) {
+            output << model.vertices[i] << " " << model.velocities[i] << " " << model.normals[i] << "\n";
         }
         output.close();
     }

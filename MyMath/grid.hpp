@@ -81,20 +81,21 @@ struct grid {
 
         for (unsigned i = 0; i < x.size(); i++) {
             const auto rot = rotate(c_o_m, rot_angle_vec, vec3(x[i], y[i], z[i]), rot_angle_vec.length() );
-            x[i] = rot.x();
-            y[i] = rot.y();
-            z[i] = rot.z();
+            x[i] = rot.x()+trans_vec.x();
+            y[i] = rot.y()+trans_vec.y();
+            z[i] = rot.z()+trans_vec.z();
         }
 
-        edge1 = rotate(c_o_m, rot_angle_vec, edge1, rot_angle_vec.length() );
-        edge2 = rotate(c_o_m, rot_angle_vec, edge2, rot_angle_vec.length() );
+        edge1 = rotate(c_o_m, rot_angle_vec, edge1, rot_angle_vec.length() ) + trans_vec;
+        edge2 = rotate(c_o_m, rot_angle_vec, edge2, rot_angle_vec.length() ) + trans_vec;
         //edge3 = rotate(c_o_m, rot_angle_vec, edge3, rot_angle_vec.length() );
-        edge4 = rotate(c_o_m, rot_angle_vec, edge4, rot_angle_vec.length() );
-        edge5 = rotate(c_o_m, rot_angle_vec, edge5, rot_angle_vec.length() );
+        edge4 = rotate(c_o_m, rot_angle_vec, edge4, rot_angle_vec.length() ) + trans_vec;
+        edge5 = rotate(c_o_m, rot_angle_vec, edge5, rot_angle_vec.length() ) + trans_vec;
         //edge6 = rotate(c_o_m, rot_angle_vec, edge6, rot_angle_vec.length() );
-        edge7 = rotate(c_o_m, rot_angle_vec, edge7, rot_angle_vec.length() );
-        edge8 = rotate(c_o_m, rot_angle_vec, edge8, rot_angle_vec.length() );
-        middle = rotate(c_o_m, rot_angle_vec, middle, rot_angle_vec.length() );
+        edge7 = rotate(c_o_m, rot_angle_vec, edge7, rot_angle_vec.length() ) + trans_vec;
+        edge8 = rotate(c_o_m, rot_angle_vec, edge8, rot_angle_vec.length() ) + trans_vec;
+        middle = rotate(c_o_m, rot_angle_vec, middle, rot_angle_vec.length() ) + trans_vec;
+
 
 
         /*for (auto & x_ : x) {
@@ -239,7 +240,8 @@ struct grid {
         std::vector<unsigned long> ret_vec;
         ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
         for (unsigned long i = 0; i < z.size(); i++) {
-            if ( z[i] <= middle_z && z[i]+dz > middle_z ) {
+            //NOPE JUST GET INDS INITIALLY AND USE THAT FOR ALL WRITING
+            if ( z[i] <= middle_z && z[i] >= middle_z-dz ) {    //TODO : update this to used the max of dx,dy,dz (when the mesh rotates, dx could be in the z direction)
                 ret_vec.push_back(i);
             }
         }
