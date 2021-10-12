@@ -33,6 +33,7 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
             if (p.g->off_walls(i)) {
                 const auto &n =  bc.norms.normal(i);
                 double mid = 0;
+
                 //x
                 if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
                     Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
@@ -56,7 +57,7 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                     Q.add_elm(i, p.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
                 } else {    //backward
-                    mid += n.y()*3/(2*dz);
+                    mid += n.y()*3/(2*dy);
                     Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
                 }
@@ -229,7 +230,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                     A.add_elm(i, v.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
                     A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
                 } else {    //backward
-                    mid += n.y()*3/(2*dz);
+                    mid += n.y()*3/(2*dy);
                     A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
                     A.add_elm(i, v.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
                 }
