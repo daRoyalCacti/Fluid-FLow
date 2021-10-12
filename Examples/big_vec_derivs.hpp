@@ -261,6 +261,17 @@ void big_veg_derivs_ex() {
                 std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
             }
         }
+        {   //d^3/dxdydz
+            #ifdef BVED_DLOG
+            std::cerr << "\td^3/dxdydz\n";
+            #endif
+            const auto true_deriv = -cos(x)*sin(y)*cos(z);
+            const auto calc_deriv = smart_deriv<1, 1, 1>(v, i).x();
+            if (abs(calc_deriv - true_deriv) > tol) {
+                std::cerr << "d^3/dxdydz failed at ind = " << i << "\n";
+                std::cerr << "true value : " << true_deriv << "\t calculated value : " << calc_deriv << "\n";
+            }
+        }
 
 
 

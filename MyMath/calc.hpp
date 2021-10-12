@@ -17,11 +17,39 @@ template<unsigned nx, unsigned ny, unsigned nz, typename T>
 auto smart_deriv(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
-    static_assert( !( (nx==1) && (ny==1) && (nz==1) ), "d^3/dxdydz is not currently supported" );
+    //static_assert( !( (nx==1) && (ny==1) && (nz==1) ), "d^3/dxdydz is not currently supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
 
     constexpr auto m = std::max( {nx, ny, nz} );
     constexpr auto s = nx + ny + nz;
+
+    if constexpr ((nx==1) && (ny==1) && (nz==1)) {  //d^3/dxdydz
+        const auto dx = v.dx(ind);
+        //const auto dy = v.dy(ind);
+        //const auto dz = v.dz(ind);
+
+        const bool cx = v.can_move(ind, 1,0,0) && v.can_move(ind, -1,0,0);
+        //const bool cy = v.can_move(0,1,0) && v.can_move(0,-1,0);
+        //const bool cz = v.can_move(0,0,2) && v.can_move(0,0,-1);
+
+        const bool bx = v.can_move(ind, -2,0,0);
+        //const bool by = v.can_move(0,-2,0);
+        //const bool bz = v.can_move(0,0,-2);
+
+        //const bool fx = v.can_move(2,0,0);
+        //const bool fy = v.can_move(0,2,0);
+        //const bool fz = v.can_move(0,0,2);
+
+        if (cx) {
+            return 1/(2*dx) * ( smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0)) - smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0))  );
+        } else if (bx) {
+            return 1/(2*dx) * ( 3*smart_deriv<0,1,1>(v, ind) - 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0)) + smart_deriv<0,1,1>(v, v.get_move_ind(ind, -2,0,0))  );
+        } else {
+            return 1/(2*dx) * (-3*smart_deriv<0,1,1>(v, ind) + 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0))  - smart_deriv<0,1,1>(v, v.get_move_ind(ind,  2,0,0))  );
+        }
+
+
+    }
 
     if constexpr (s==1) {   //first order derivative
         constexpr unsigned axis = nx == 1 ? 0 : ny == 1 ? 1 : 2;
