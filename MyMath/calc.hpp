@@ -6,7 +6,6 @@
 #define CODE_CALC_HPP
 
 #include "vec3.hpp"
-#include "big_vec.hpp"  //to removed later
 
 
 
@@ -17,35 +16,19 @@ template<unsigned nx, unsigned ny, unsigned nz, typename T>
 auto smart_deriv(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
-    //static_assert( !( (nx==1) && (ny==1) && (nz==1) ), "d^3/dxdydz is not currently supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
 
     constexpr auto m = std::max( {nx, ny, nz} );
     constexpr auto s = nx + ny + nz;
 
     if constexpr ((nx==1) && (ny==1) && (nz==1)) {  //d^3/dxdydz
-        const auto dx = v.dx(ind);
-        //const auto dy = v.dy(ind);
-        //const auto dz = v.dz(ind);
 
-        const bool cx = v.can_move(ind, 1,0,0) && v.can_move(ind, -1,0,0);
-        //const bool cy = v.can_move(0,1,0) && v.can_move(0,-1,0);
-        //const bool cz = v.can_move(0,0,2) && v.can_move(0,0,-1);
-
-        const bool bx = v.can_move(ind, -2,0,0);
-        //const bool by = v.can_move(0,-2,0);
-        //const bool bz = v.can_move(0,0,-2);
-
-        //const bool fx = v.can_move(2,0,0);
-        //const bool fy = v.can_move(0,2,0);
-        //const bool fz = v.can_move(0,0,2);
-
-        if (cx) {
-            return 1/(2*dx) * ( smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0)) - smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0))  );
-        } else if (bx) {
-            return 1/(2*dx) * ( 3*smart_deriv<0,1,1>(v, ind) - 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0)) + smart_deriv<0,1,1>(v, v.get_move_ind(ind, -2,0,0))  );
+        if (v.can_move(ind, 1,0,0) && v.can_move(ind, -1,0,0)) {    //central
+            return 1/(2*v.dx(ind)) * ( smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0)) - smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0))  );
+        } else if (v.can_move(ind, -2,0,0)) {   //backward
+            return 1/(2*v.dx(ind)) * ( 3*smart_deriv<0,1,1>(v, ind) - 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0)) + smart_deriv<0,1,1>(v, v.get_move_ind(ind, -2,0,0))  );
         } else {
-            return 1/(2*dx) * (-3*smart_deriv<0,1,1>(v, ind) + 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0))  - smart_deriv<0,1,1>(v, v.get_move_ind(ind,  2,0,0))  );
+            return 1/(2*v.dx(ind)) * (-3*smart_deriv<0,1,1>(v, ind) + 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0))  - smart_deriv<0,1,1>(v, v.get_move_ind(ind,  2,0,0))  );
         }
 
 
@@ -94,11 +77,7 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
             constexpr vec3 move_vec_c4 = make_vec<axis1, -1, axis2, -1>();
 
             constexpr vec3 move_vec_f1_1 = make_vec<axis1, 1, axis2, 2>();
-            //constexpr vec3 move_vec_f2_1 = make_vec<axis1, 1, axis2, 1>();
-            //constexpr vec3 move_vec_f3_1 = make_vec<axis1, 1, axis2, 0>();
             constexpr vec3 move_vec_f4_1 = make_vec<axis1, -1, axis2, 2>();
-            //constexpr vec3 move_vec_f5_1 = make_vec<axis1, -1, axis2, 1>();
-            //constexpr vec3 move_vec_f6_1 = make_vec<axis1, -1, axis2, 0>();
 
             constexpr vec3 move_vec_f1_2 = make_vec<axis2, 1, axis1, 2>();
             constexpr vec3 move_vec_f2_2 = make_vec<axis2, 1, axis1, 1>();
@@ -108,54 +87,27 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
             constexpr vec3 move_vec_f6_2 = make_vec<axis2, -1, axis1, 0>();
 
             constexpr vec3 move_vec_b1_1 = make_vec<axis1, 1, axis2, -2>();
-            //constexpr vec3 move_vec_b2_1 = make_vec<axis1, 1, axis2, -1>();
-            //constexpr vec3 move_vec_b3_1 = make_vec<axis1, 1, axis2, 0>();
             constexpr vec3 move_vec_b4_1 = make_vec<axis1, -1, axis2, -2>();
-            //constexpr vec3 move_vec_b5_1 = make_vec<axis1, -1, axis2, -1>();
-            //constexpr vec3 move_vec_b6_1 = make_vec<axis1, -1, axis2, 0>();
 
             constexpr vec3 move_vec_b1_2 = make_vec<axis2, 1, axis1, -2>();
             constexpr vec3 move_vec_b2_2 = make_vec<axis2, 1, axis1, -1>();
-            constexpr vec3 move_vec_b3_2 = move_vec_f3_2;//make_vec<axis2, 1, axis1, 0>();
+            constexpr vec3 move_vec_b3_2 = move_vec_f3_2;
             constexpr vec3 move_vec_b4_2 = make_vec<axis2, -1, axis1, -2>();
             constexpr vec3 move_vec_b5_2 = make_vec<axis2, -1, axis1, -1>();
-            constexpr vec3 move_vec_b6_2 = move_vec_f6_2; //make_vec<axis2, -1, axis1, 0>();
+            constexpr vec3 move_vec_b6_2 = move_vec_f6_2;
 
             constexpr vec3 move_vec_fb1_1 = make_vec<axis1, 2, axis2, -2>();
             constexpr vec3 move_vec_fb2_1 = make_vec<axis1, 1, axis2, -2>();
             constexpr vec3 move_vec_fb3_1 = make_vec<axis1, 0, axis2, -2>();
-            //constexpr vec3 move_vec_fb4_1 = make_vec<axis1, 2, axis2, -1>();
-            //constexpr vec3 move_vec_fb5_1 = make_vec<axis1, 1, axis2, -1>();
-            //constexpr vec3 move_vec_fb6_1 = make_vec<axis1, 0, axis2, -1>();
-            //constexpr vec3 move_vec_fb7_1 = make_vec<axis1, 2, axis2, 0>();
-            //constexpr vec3 move_vec_fb8_1 = make_vec<axis1, 1, axis2, 0>();
 
             constexpr vec3 move_vec_fb1_2 = make_vec<axis2, 2, axis1, -2>();
-            //constexpr vec3 move_vec_fb2_2 = make_vec<axis2, 2, axis1, -1>();
             constexpr vec3 move_vec_fb3_2 = make_vec<axis2, 2, axis1, 0>();
             constexpr vec3 move_vec_fb4_2 = make_vec<axis2, 1, axis1, -2>();
-            //constexpr vec3 move_vec_fb5_2 = make_vec<axis2, 1, axis1, -1>();
-            //constexpr vec3 move_vec_fb6_2 = make_vec<axis2, 1, axis1, 0>();
-            //constexpr vec3 move_vec_fb7_2 = make_vec<axis2, 0, axis1, -1>();
             constexpr vec3 move_vec_fb8_2 = make_vec<axis2, 0, axis1, -2>();
 
             constexpr vec3 move_vec_ff1 = make_vec<axis1, 2, axis2, 2>();
             constexpr vec3 move_vec_ff2 = make_vec<axis1, 1, axis2, 2>();
             constexpr vec3 move_vec_ff3 = make_vec<axis1, 0, axis2, 2>();
-            //constexpr vec3 move_vec_ff4 = make_vec<axis1, 2, axis2, 1>();
-            //constexpr vec3 move_vec_ff5 = make_vec<axis1, 1, axis2, 1>();
-            //constexpr vec3 move_vec_ff6 = make_vec<axis1, 0, axis2, 1>();
-            //constexpr vec3 move_vec_ff7 = make_vec<axis1, 2, axis2, 0>();
-            //constexpr vec3 move_vec_ff8 = make_vec<axis1, 1, axis2, 0>();
-
-            /*constexpr vec3 move_vec_bb1 = make_vec<axis1, -2, axis2, -2>();
-            constexpr vec3 move_vec_bb2 = make_vec<axis1, -1, axis2, -2>();
-            constexpr vec3 move_vec_bb3 = make_vec<axis1, 0, axis2, -2>();*/
-            //constexpr vec3 move_vec_bb4 = make_vec<axis1, -2, axis2, -1>();
-            //constexpr vec3 move_vec_bb5 = make_vec<axis1, -1, axis2, -1>();
-            //constexpr vec3 move_vec_bb6 = make_vec<axis1, 0, axis2, -1>();
-            //constexpr vec3 move_vec_bb7 = make_vec<axis1, -2, axis2, 0>();
-            //constexpr vec3 move_vec_bb8 = make_vec<axis1, -1, axis2, 0>();
 
 
 
@@ -179,7 +131,7 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
                 return forward_backward_difference_2nd_mixed<axis2, axis1>(v, ind);
             } else if ( v.can_move(ind, move_vec_ff1) && v.can_move(ind, move_vec_ff2)  && v.can_move(ind, move_vec_ff3) ) {
                 return forward_difference_2nd_mixed<axis1, axis2>(v, ind);
-            } else {//if ( v.can_move(ind, move_vec_bb1) && v.can_move(ind, move_vec_bb2)  && v.can_move(ind, move_vec_bb3) ) {
+            } else {
                 return backward_difference_2nd_mixed<axis1, axis2>(v, ind);
             }
 
@@ -286,18 +238,6 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
             constexpr vec3 move_vec_bc7 = make_vec<axis1, -1, axis2, -1>();
             constexpr vec3 move_vec_bc8 = make_vec<axis1, -1, axis2, 0>();
 
-            constexpr vec3 move_vec_bf1 = make_vec<axis1, 2, axis2, -3>();
-            constexpr vec3 move_vec_bf2 = make_vec<axis1, 2, axis2, -2>();
-            constexpr vec3 move_vec_bf3 = make_vec<axis1, 2, axis2, -1>();
-            constexpr vec3 move_vec_bf4 = make_vec<axis1, 2, axis2, 0>();
-            constexpr vec3 move_vec_bf5 = make_vec<axis1, 1, axis2, -3>();
-            constexpr vec3 move_vec_bf6 = make_vec<axis1, 1, axis2, -2>();
-            constexpr vec3 move_vec_bf7 = make_vec<axis1, 1, axis2, -1>();
-            constexpr vec3 move_vec_bf8 = make_vec<axis1, 1, axis2, 0>();
-            constexpr vec3 move_vec_bf9 = make_vec<axis1, 0, axis2, -3>();
-            constexpr vec3 move_vec_bf10 = make_vec<axis1, 0, axis2, -2>();
-            constexpr vec3 move_vec_bf11 = make_vec<axis1, 0, axis2, -1>();
-
             if (v.can_move(ind, move_vec_cc1) && v.can_move(ind, move_vec_cc2) && v.can_move(ind, move_vec_cc3) &&
             v.can_move(ind, move_vec_cc4) && v.can_move(ind, move_vec_cc5) && v.can_move(ind, move_vec_cc6) ) {
                 return central_difference_3rd_mixed<axis2, axis1>(v, ind);
@@ -332,10 +272,7 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
             v.can_move(ind, move_vec_bb7) && v.can_move(ind, move_vec_bb8) && v.can_move(ind, move_vec_bb9) &&
             v.can_move(ind, move_vec_bb10) && v.can_move(ind, move_vec_bb11) ) {
                 return backward_difference_3rd_mixed<axis2, axis1>(v, ind);
-            } else { //if (v.can_move(ind, move_vec_bf1) && v.can_move(ind, move_vec_bf2) && v.can_move(ind, move_vec_bf3) &&
-            //v.can_move(ind, move_vec_bf4) && v.can_move(ind, move_vec_bf5) && v.can_move(ind, move_vec_bf6) &&
-            //v.can_move(ind, move_vec_bf7) && v.can_move(ind, move_vec_bf8) && v.can_move(ind, move_vec_bf9) &&
-            //v.can_move(ind, move_vec_bf10) && v.can_move(ind, move_vec_bf11) ) {
+            } else {
                 return backward_forward_difference_3rd_mixed<axis2, axis1>(v, ind);
             }
 
@@ -358,7 +295,7 @@ auto laplacian(const T& v, const unsigned ind) noexcept {
 
 //TODO : Test
 vec3 gradient(const big_vec_d& v, const unsigned ind) noexcept {
-    return vec3(smart_deriv<1,0,0>(v, ind), smart_deriv<0,1,0>(v, ind), smart_deriv<0,0,1>(v, ind));
+    return {smart_deriv<1,0,0>(v, ind), smart_deriv<0,1,0>(v, ind), smart_deriv<0,0,1>(v, ind)};
 }
 
 //D(v_{ind})
