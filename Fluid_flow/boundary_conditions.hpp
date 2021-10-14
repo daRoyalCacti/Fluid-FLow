@@ -14,6 +14,8 @@
 #include "create_grids.hpp"
 #include <cmath>
 
+//#define BOUNDARY_CONDITIONS_DLOG
+
 
 struct boundary_conditions {
     size_t no_inside_mesh = 0;
@@ -32,7 +34,9 @@ struct boundary_conditions {
     boundary_conditions() = delete;
     boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
         : tm(m), norms(mesh_norms, wall_norms) {
+#ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "making entire grid\n";
+#endif
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
         //global_grid.create_no_points_unif();  //now called in make_entire grid
 
@@ -44,14 +48,19 @@ struct boundary_conditions {
         //vel_bc = big_vec<N,M,P,vec3>(dx, dy, dz, &bound);
 
 
-
+#ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "removing inside points\n";
+#endif
         remove_inside_boundary_unif(global_grid, tm, *m, mesh_norms, m_points, v_points, old_new, t_inds);
 
+#ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "setting boundary normals\n";
+#endif
         //set_wall_points();
         wall_norms = wall_normals(no_wall_points());
+#ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "creating wall normals\n";
+#endif
         create_wall_normals();
 
         //norms = boundary_normals_grouped(wall_norms, mesh_norms);
@@ -65,13 +74,10 @@ struct boundary_conditions {
     //should never be used in real flow, only used for testing derivatives
     boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
         : tm{}, norms(mesh_norms, wall_norms) {
-        std::cerr << "making entire grid\n";
         make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
         //global_grid.create_no_points_unif();  //now called in make_entire grid
 
-        std::cerr << "setting boundary normals\n";
         wall_norms = wall_normals(no_wall_points());
-        std::cerr << "creating wall normals\n";
         create_wall_normals();
         //std::cerr << "updating velocities at wall\n";
         //update_velocity_wall_BC();

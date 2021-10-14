@@ -13,9 +13,7 @@ struct flow_timer final {
     double s_create_time{};
     double b_create_time{};
     double p_solve_time{};
-    double vx_solve_time{};
-    double vy_solve_time{};
-    double vz_solve_time{};
+    double v_solve_time{};
     double update_mesh_time{};
     double all_time{};
     std::ofstream output;
@@ -32,16 +30,14 @@ struct flow_timer final {
     void save_s_create_time() noexcept { s_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_b_create_time() noexcept {b_create_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_p_solve_time() noexcept {p_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vx_solve_time() noexcept {vx_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vy_solve_time() noexcept {vy_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
-    void save_vz_solve_time() noexcept {vz_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
+    void save_v_solve_time() noexcept {v_solve_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_mesh_update_time() noexcept {update_mesh_time = static_cast<std::chrono::duration<double>>(end - start).count();}
     void save_total_time(std::chrono::time_point<std::chrono::high_resolution_clock> s,
                          std::chrono::time_point<std::chrono::high_resolution_clock> e) noexcept {all_time = static_cast<std::chrono::duration<double>>(e - s).count();}
 
     void write_times(const double t) noexcept {
-        output << t << " " << s_create_time << " " << p_solve_time << " " << b_create_time << " " << vx_solve_time
-        << " " << vy_solve_time << " " << vz_solve_time << " " << update_mesh_time << " " <<  all_time << "\n";
+        output << t << " " << s_create_time << " " << p_solve_time << " " << b_create_time << " " << v_solve_time
+        << " " << update_mesh_time << " " <<  all_time << "\n";
         output.flush();
     }
 

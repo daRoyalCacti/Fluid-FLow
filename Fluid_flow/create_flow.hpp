@@ -5,6 +5,14 @@
 #ifndef CODE_CREATE_FLOW_HPP
 #define CODE_CREATE_FLOW_HPP
 
+#define VC
+#define NO_MESH_UPDATE
+#define DLOG    //detailed logging
+//#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
+//#define REPEATS
+#ifdef REPEATS
+constexpr unsigned no_repeats = 3;
+#endif
 
 #include <fstream>
 #include <chrono>
@@ -29,12 +37,10 @@
 #include "../MyMath/big_vec.hpp"
 //#include "../MyMath/big_matrix.hpp"
 #include "update_mesh.hpp"
-#define DLOG    //detailed logging
-//#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
-//#define REPEATS
-#ifdef REPEATS
-    constexpr unsigned no_repeats = 3;
-#endif
+
+
+constexpr double accuracy_percent_v = 0.1;
+constexpr double accuracy_percent_p = 0.01;
 
 struct output_settings {
     std::string_view vel_file_loc = "../DEBUG/velocity_data/";
@@ -77,12 +83,10 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
 #ifdef DLOG
     std::cout << "setting boundary conditions\n";
- #endif
+#endif
     boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
     //boundary_conditions BC(dx, dy, dz, Wx, Wy, Wz);
-    std::cerr << "debug writing\n";
-    //BC.DEBUG_write_boundary_points();
-    BC.global_grid.DEBUG_write_boundary_points();
+    BC.global_grid.DEBUG_write_boundary_points(false);
     BC.DEBUG_write_normal_vectors();
 
 
@@ -101,6 +105,10 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      big_vec_v v_n(BC);    //velocity at the current time-step
      big_vec_v v_n1(BC);   //velocity at the previous time-step
+#ifdef VC
+    big_vec_v vc(BC);
+#endif
+
      big_vec_d p(BC);    //pressure vector
      big_vec_d p_c(BC);    //pressure correction vector
 
@@ -161,10 +169,12 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  //#endif
      //then create the s matrix
      //BC.update_pressure_BC();
+#ifndef     NO_MESH_UPDATE
  #ifdef DLOG
      std::cout << "setting the mesh boundary conditions\n";
  #endif
      update_mesh(BC, rb, v_n, v_n1, p, dt, 0);
+#endif
 
  #ifdef DLOG
      std::cout << "making s\n";
@@ -175,7 +185,8 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "Solving pressure\n";
  #endif
      //solve for p for the first timestep
-     solve(Q, s, p_c);
+     solve_pressure(BC, Q, s, p_c, p, accuracy_percent_p);
+     /*solve(Q, s, p_c);
      //enforce_PBC(p_c, BC.norms);
 
  #ifdef DLOG
@@ -183,6 +194,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      update_pressure_BC(BC, p_c);     //TESTING
      p += p_c;
+     update_pressure_BC(BC, p);*/
 
 
      //setting BC vector
@@ -197,14 +209,25 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      std::cout << "solving for v\n";
  #endif
      //and solve for v at the first timestep
+     solve_velocity(BC, A, b, vc, v_n, accuracy_percent_v);
+     /*
+#ifdef VC
+    solve(A, b.xv, vc.xv);
+    solve(A, b.yv, vc.yv);
+    solve(A, b.zv, vc.zv);
+    enforce_velocity_BC(BC, vc);
+#else
      solve(A, b.xv, v_n.xv);
      solve(A, b.yv, v_n.yv);
      solve(A, b.zv, v_n.zv);
+#endif
+      */
 
  #ifdef DLOG
      std::cout << "enforcing velocity BC\n";
  #endif
      //enforcing BC
+     v_n += vc;
      enforce_velocity_BC(BC, v_n);
 
  #ifdef DLOG
@@ -242,6 +265,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
              std::cerr << "Timing error\n";
          }
 
+#ifndef NO_MESH_UPDATE
          //updating the mesh
          timer.set_start(std::chrono::high_resolution_clock::now());
 #ifdef OFFSET_MESH_UPDATE
@@ -253,12 +277,16 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
              // - update mesh
              // - solve fluid at new position
              // - repeat
+
              update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
+
 #ifdef OFFSET_MESH_UPDATE
          }
 #endif
-         timer.set_end(std::chrono::high_resolution_clock::now());
-         timer.save_mesh_update_time();
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_mesh_update_time();
+#endif
+
 
 #ifdef REPEATS
          for (unsigned i = 0; i < no_repeats; i++) {
@@ -276,10 +304,12 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
                  timer.set_start(std::chrono::high_resolution_clock::now());
                  //solve for p for the next timestep
 
-                 solve(Q, s, p_c);
+                 solve_pressure(BC, Q, s, p_c, p, accuracy_percent_p);
+                 /*solve(Q, s, p_c);
                  update_pressure_BC(BC, p_c); //TESTING
                  p += p_c;  //put inside loop?
                  update_pressure_BC(BC, p); //TESTING //put outside loop?
+                  */
              //}
 
              timer.set_end(std::chrono::high_resolution_clock::now());
@@ -298,8 +328,35 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
              //shuffling of variables
              v_n1 = v_n;
 
-
+             timer.set_start(std::chrono::high_resolution_clock::now());
+             solve_velocity(BC, A, b, vc, v_n, accuracy_percent_v);
+             timer.set_end(std::chrono::high_resolution_clock::now());
+             timer.save_v_solve_time();
              //solve for v for the next time step
+             /*
+#ifdef VC
+            timer.set_start(std::chrono::high_resolution_clock::now());
+            solve(A, b.xv, vc.xv);
+            timer.set_end(std::chrono::high_resolution_clock::now());
+            timer.save_vx_solve_time();
+
+
+            timer.set_start(std::chrono::high_resolution_clock::now());
+            solve(A, b.yv, vc.yv);
+            timer.set_end(std::chrono::high_resolution_clock::now());
+            timer.save_vy_solve_time();
+
+            timer.set_start(std::chrono::high_resolution_clock::now());
+            solve(A, b.zv, vc.zv);
+            timer.set_end(std::chrono::high_resolution_clock::now());
+            timer.save_vz_solve_time();
+
+            enforce_velocity_BC(BC, vc);
+            v_n += vc;
+
+            //enforcing BC
+            enforce_velocity_BC(BC, v_n);
+#else
              timer.set_start(std::chrono::high_resolution_clock::now());
              solve(A, b.xv, v_n.xv);
              timer.set_end(std::chrono::high_resolution_clock::now());
@@ -319,6 +376,8 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
              //enforcing BC
              enforce_velocity_BC(BC, v_n);
+#endif
+              */
  #ifdef REPEATS
          }
  #endif

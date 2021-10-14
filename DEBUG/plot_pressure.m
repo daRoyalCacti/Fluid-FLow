@@ -79,6 +79,7 @@ function p = plot_pressure(file_loc)
     
 %     figure
     h = heatmap(unique(x),unique(y), flip(p), 'GridVisible', 'off');
+%     h = heatmap(unique(y),unique(x), flip(p'), 'GridVisible', 'off');
     
     %changing the axes
     Ax = gca;

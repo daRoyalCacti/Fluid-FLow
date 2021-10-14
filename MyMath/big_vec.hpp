@@ -131,6 +131,11 @@ struct big_vec_d final : public big_vec<double> {
         return *this;
     }
 
+    big_vec_d &operator-=(const big_vec_d &other) {
+        v -= other.v;
+        return *this;
+    }
+
     big_vec_d& operator=(const big_vec_d& q) noexcept {
         v = q.v;
         g = q.g;
@@ -358,7 +363,7 @@ struct big_vec_v final : public big_vec<vec3> {
         zv.clear();
     }
 
-    unsigned long size() const override {
+    [[nodiscard]] unsigned long size() const override {
         return xv.size();
     }
 
@@ -391,6 +396,21 @@ struct big_vec_v final : public big_vec<vec3> {
 
     [[nodiscard]] vec3 operator()(const unsigned ind) const noexcept override {
         return {xv.v[ind], yv.v[ind], zv.v[ind]};
+    }
+
+    big_vec_v &operator+=(const big_vec_v &other) {
+        xv += other.xv;
+        yv += other.yv;
+        zv += other.zv;
+        return *this;
+    }
+
+
+    big_vec_v &operator-=(const big_vec_v &other) {
+        xv -= other.xv;
+        yv -= other.yv;
+        zv -= other.zv;
+        return *this;
     }
 
 

@@ -3,7 +3,8 @@ All_v_files = dirPlus('velocity_data');   %https://stackoverflow.com/questions/2
 All_p_files = dirPlus('pressure_data'); 
 All_b_files = dirPlus('rigid_body_data');
 
-no_files = length(All_v_files);
+% no_files = length(All_v_files);
+no_files = 371;
 
 fprintf("Reading files\n")
 data = struct;
@@ -11,7 +12,7 @@ for ii = 1:no_files
     [data(ii).x, data(ii).y , data(ii).vx , data(ii).vy , data(ii).vz ] = read_v_data( cell2mat(All_v_files(ii)) );
     
     [data(ii).p, data(ii).dx, data(ii).dy, data(ii).x_sort, data(ii).y_sort] = read_p_data( cell2mat(All_p_files(ii)) );
-    [data(ii).bx, data(ii).by, data(ii).bz] = read_b_data( cell2mat(All_b_files(ii)) );
+    [data(ii).bx, data(ii).by, data(ii).bz, data(ii).bvx, data(ii).bvy, data(ii).bvz, data(ii).bnx, data(ii).bny, data(ii).bnz] = read_b_data( cell2mat(All_b_files(ii)) );
 end
 
 
@@ -67,9 +68,9 @@ for frame = 1:no_files
     %fprintf('drawing frame %d of %d\n', frame+1, frames)
     
     clf
-    sgtitle(['frame = ', num2str(frame)])
+    sgtitle(['frame = ', num2str(frame-1)])
     subplot(2,2,1)
-    quiver(data(frame).x, data(frame).y, data(frame).vx/max_vx, data(frame).vy/max_vy)
+    quiver(data(frame).x, data(frame).y, data(frame).vx/max_vx, data(frame).vy/max_vy, 3)
     %axis([minx, maxx, miny, maxy])
     axis([min(data(frame).x), max(data(frame).x), min(data(frame).y), max(data(frame).y)])
     xlabel('x')
@@ -111,10 +112,13 @@ for frame = 1:no_files
     
     subplot(2,2,4)
     plot3(data(frame).bx, data(frame).by, data(frame).bz, 'o')
+    hold on
+    quiver3(data(frame).bx, data(frame).by, data(frame).bz, data(frame).bvx, data(frame).bvy, data(frame).bvz, 'r')
+    quiver3(data(frame).bx, data(frame).by, data(frame).bz, data(frame).bnx, data(frame).bny, data(frame).bnz, 'm')
     xlabel('x')
     ylabel('y')
     zlabel('z')
-    axis([minx, maxx, miny, maxy, minz, maxz])
+    axis([minx-0.2, maxx+0.2, miny-0.2, maxy+0.2, minz-0.2, maxz+0.2])
 
 
     % Capture the plot as an image
@@ -182,13 +186,21 @@ fileID = fopen(file_loc, 'r');
 end
 
 
-function [x,y,z] = read_b_data(file_loc)
-fileID = fopen(file_loc, 'r');
-    data = fscanf(fileID, '%f %f %f');
+function [x,y,z, vx, vy, vz, nx, ny, nz] = read_b_data(file_loc)
+    fileID = fopen(file_loc, 'r');
+    data = fscanf(fileID, '%f %f %f %f %f %f %f %f %f');
     fclose(fileID);
-    x = data(1:3:end);
-    y = data(2:3:end);
-    z = data(3:3:end);
+    x = data(1:9:end);
+    y = data(2:9:end);
+    z = data(3:9:end);
+    
+    vx = data(4:9:end);
+    vy = data(5:9:end);
+    vz = data(6:9:end);
+    
+    nx = data(7:9:end);
+    ny = data(8:9:end);
+    nz = data(9:9:end);
 end
 
 

@@ -12,4 +12,6 @@ function [vx, vy, vz] = plot_flow(file_loc)
     
 %     figure
     quiver(x,y,vx,vy, 3)
+    axis([min(x), max(x), min(y), max(y)])
+%     quiver(y,x,vy,vx, 3)
 end

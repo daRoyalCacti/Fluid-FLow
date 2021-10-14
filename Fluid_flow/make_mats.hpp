@@ -11,6 +11,7 @@
 
 
 
+
 //p to store dx,dy,dz and BC
 
 //p contains all boundary info
@@ -21,6 +22,17 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
     const auto dx = p.g->dx;
     const auto dy = p.g->dy;
     const auto dz = p.g->dz;
+#ifndef NDEBUG
+    if (dx == 0) {
+        std::cerr << "Make Q has dx=0\n";
+    }
+    if (dy == 0) {
+        std::cerr << "Make Q has dy=0\n";
+    }
+    if (dz == 0) {
+        std::cerr << "Make Q has dz=0\n";
+    }
+#endif
 
     const auto &norms = bc.norms;
 
@@ -35,10 +47,10 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                 double mid = 0;
 
                 //x
-                if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
+                /*if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
                     Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
-                } else if (p.can_move(i, 2,0,0)) {  //forward
+                } else */if (p.can_move(i, 2,0,0)) {  //forward
                     mid += -n.x()*3/(2*dx);
                     Q.add_elm(i, p.get_move_ind(i, 2,0,0), -n.x()*1/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*4/(2*dx) );
@@ -49,10 +61,10 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                 }
 
                 //y
-                if (p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0)) {    //central difference
+                /*if (p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0)) {    //central difference
                     Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
-                } else if (p.can_move(i, 0,2,0)) {  //forward
+                } else */if (p.can_move(i, 0,2,0)) {  //forward
                     mid += -n.y()*3/(2*dy);
                     Q.add_elm(i, p.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
@@ -63,10 +75,10 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                 }
 
                 //z
-                if (p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1)) {    //central difference
+                /*if (p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1)) {    //central difference
                     Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
-                } else if (p.can_move(i, 0,0,2)) {  //forward
+                } else */if (p.can_move(i, 0,0,2)) {  //forward
                     mid += -n.z()*3/(2*dz);
                     Q.add_elm(i, p.get_move_ind(i, 0,0,2), -n.z()*1/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*4/(2*dz) );
@@ -197,6 +209,17 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
     const auto dx = v.g->dx;
     const auto dy = v.g->dy;
     const auto dz = v.g->dz;
+#ifndef NDEBUG
+    if (dx == 0) {
+        std::cerr << "Make A has dx=0\n";
+    }
+    if (dy == 0) {
+        std::cerr << "Make A has dy=0\n";
+    }
+    if (dz == 0) {
+        std::cerr << "Make A has dz=0\n";
+    }
+#endif
 
     //#pragma omp parallel for
     //shared(A, v, dt, Re, Rdxdx, Rdydy, Rdzdz) default(none)
@@ -208,10 +231,10 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                 const auto &n =  bc.norms.normal(i);
                 double mid = 0;
                 //x
-                if (v.can_move(i, -1,0,0) && v.can_move(i, 1,0,0)) {    //central difference
+                /*if (v.can_move(i, -1,0,0) && v.can_move(i, 1,0,0)) {    //central difference
                     A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
                     A.add_elm(i, v.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
-                } else if (v.can_move(i, 2,0,0)) {  //forward
+                } else */if (v.can_move(i, 2,0,0)) {  //forward
                     mid += -n.x()*3/(2*dx);
                     A.add_elm(i, v.get_move_ind(i, 2,0,0), -n.x()*1/(2*dx) );
                     A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*4/(2*dx) );
@@ -222,10 +245,10 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                 }
 
                 //y
-                if (v.can_move(i, 0,-1,0) && v.can_move(i, 0,1,0)) {    //central difference
+                /*if (v.can_move(i, 0,-1,0) && v.can_move(i, 0,1,0)) {    //central difference
                     A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
                     A.add_elm(i, v.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
-                } else if (v.can_move(i, 0,2,0)) {  //forward
+                } else */if (v.can_move(i, 0,2,0)) {  //forward
                     mid += -n.y()*3/(2*dy);
                     A.add_elm(i, v.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
                     A.add_elm(i, v.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
@@ -236,10 +259,10 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                 }
 
                 //z
-                if (v.can_move(i, 0,0,-1) && v.can_move(i, 0,0,1)) {    //central difference
+                /*if (v.can_move(i, 0,0,-1) && v.can_move(i, 0,0,1)) {    //central difference
                     A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
                     A.add_elm(i, v.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
-                } else if (v.can_move(i, 0,0,2)) {  //forward
+                } else */if (v.can_move(i, 0,0,2)) {  //forward
                     mid += -n.z()*3/(2*dz);
                     A.add_elm(i, v.get_move_ind(i, 0,0,2), -n.z()*1/(2*dz) );
                     A.add_elm(i, v.get_move_ind(i, 0,0,1), n.z()*4/(2*dz) );

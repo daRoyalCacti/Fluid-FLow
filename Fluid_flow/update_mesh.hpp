@@ -20,7 +20,7 @@ vec3 global_forces(const double t) {
 }
 
 //defined below update_mesh
-void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt);
+void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, double dt);
 
 //updating mesh also requires updating the vectors
 // - have to extrapolate p, v_n but also v_n1 because some equations require it
@@ -137,7 +137,8 @@ template <typename T>
 double update_buffer(const T& a, const double x, const double y, const double z) {
     return a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
              a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
-                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*z;
+                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*z +
+                    a(20)*x*x* y*y* z + a(21)*x*x *y *z*z + a(22)*x *y*y* z*z + a(23)*x*x* y*y* z*z;
 }
 
 //const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
@@ -167,7 +168,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
     //finding points to use for interpolation
     // - assumes the offsets are smaller than the step size
 
-    constexpr unsigned no_points = 20;
+    constexpr unsigned no_points = 24;//20;
 
     double time_finding_indices = 0;
     double time_filling_matrices = 0;
@@ -326,6 +327,10 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
             mat(i, 17) = x*x*y*z;
             mat(i, 18) = x*y*y*z;
             mat(i, 19) = x*y*z*z;
+            mat(i, 20) = x*x* y*y* z;
+            mat(i, 21) = x*x *y *z*z;
+            mat(i, 22) = x *y*y* z*z;
+            mat(i,23) = x*x* y*y* z*z;
         }
 
         const auto end_filling = std::chrono::high_resolution_clock::now();
@@ -347,7 +352,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
         const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
         const decltype(vn_vec_z) a_vn_z = solver.solve(vn_vec_z);
-        const decltype(vn1_vec_x) a_vn1_x = solver.solve(vn_vec_x);
+        const decltype(vn1_vec_x) a_vn1_x = solver.solve(vn1_vec_x);
         const decltype(vn1_vec_y) a_vn1_y = solver.solve(vn1_vec_y);
         const decltype(vn1_vec_z) a_vn1_z = solver.solve(vn1_vec_z);
         const decltype(p_vec) a_p = solver.solve(p_vec);

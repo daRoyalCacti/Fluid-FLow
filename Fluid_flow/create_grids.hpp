@@ -12,6 +12,9 @@
 #include <vector>
 #include <unordered_set>
 
+
+//#define REMOVE_INSIDE_DLOG
+
 void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz, const double dx, const double dy, const double dz, const double minx = 0, const double miny = 0, const double minz = 0) {
     const auto sx = static_cast<unsigned long>(Wx/dx);
     const auto sy = static_cast<unsigned long>(Wy/dy);
@@ -223,7 +226,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     const double dy = ( maxp.y() - minp.y() ) / ceil( ( maxp.y() - minp.y() ) /g.dy );
     const double dz = ( maxp.z() - minp.z() ) / ceil( ( maxp.z() - minp.z() ) /g.dz );
 
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "rays from the z direction\n";
+#endif
     //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
         //for (double y = minp.y(); y <= maxp.y(); y += g.dy/test) {
     for (unsigned i = 0; i <= Nx; i++) {
@@ -237,7 +242,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
         }
     }
 
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "rays from the y direction\n";
+#endif
     //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
      //   for (double z = minp.z(); z <= maxp.z(); z += g.dz/test) {
      for (unsigned i = 0; i <= Nx; i++) {
@@ -249,7 +256,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
         }
     }
 
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "rays from the x direction\n";
+#endif
      for (unsigned j = 0; j <= Ny; j++) {
          for (unsigned k = 0; k <= Nz; k++) {
              const double y = minp.y() + j*dy/test;
@@ -261,7 +270,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 
     //removing points
     //======================================================
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "removing points\n";
+#endif
     std::vector<double> x, y, z;
     x.reserve(g.x.size());
     y.reserve(g.y.size());
@@ -297,7 +308,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     z.shrink_to_fit();
     r.shrink_to_fit();
 
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "recalibrating r\n";
+#endif
     for (auto& e : r) {
         if (e.left != -1) { e.left = old_new.at(e.left); }
         if (e.right != -1) { e.right = old_new.at(e.right); }
@@ -315,7 +328,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 
 
     boundary_normals norms_c(norms.size());
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "recalibrating norms\n";
+#endif
     for (const auto & n : norms.m) {
 
 #ifndef NDEBUG
@@ -330,7 +345,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     norms = std::move(norms_c);
 
     mesh_points m_points_c(m_points.size());
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "recalibrating points\n";
+#endif
     for (const auto & n : m_points.m) {
 #ifndef NDEBUG
         m_points_c.add_point( old_new.at(n.first), n.second  );
@@ -345,7 +362,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     m_points = std::move(m_points_c);
 
     vel_points v_points_c(v_points.size());
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "recalibrating vels\n";
+#endif
     for (const auto & n : v_points.m) {
 
 #ifndef NDEBUG
@@ -360,7 +379,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     v_points = std::move(v_points_c);
 
     tri_inds t_inds_c(t_inds.size());
+#ifdef REMOVE_INSIDE_DLOG
     std::cerr << "recalibrating triangle indices\n";
+#endif
     for (const auto & n : t_inds.m) {
 #ifndef NDEBUG
         t_inds_c.add_point( old_new.at(n.first), n.second  );
@@ -376,7 +397,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     //std::cerr << t_inds.size() << " " << t_inds_c.size() << " " << v_points.size() << "\n";
 
 #ifndef NDEBUG
+#ifdef REMOVE_INSIDE_DLOG
         std::cerr << "checking results\n";
+#endif
         //checking that all normals below to a boundary point
         /*for (const auto & n : norms.m) {
             if ( !g.is_boundary(n.first) ) {
@@ -457,8 +480,9 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
             }
         }
 
-
+#ifdef REMOVE_INSIDE_DLOG
         std::cerr << "finished checking results\n";
+#endif
 #endif
 
 

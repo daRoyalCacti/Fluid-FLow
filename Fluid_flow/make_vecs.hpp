@@ -18,10 +18,16 @@ void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n
                 b.add_elm(i, 0,0,0);
             }
         } else {
+#ifdef VC
+            b.add_elm(i,
+                      -3 / 2 * advection(v_n, i) + 1 / 2 * advection(v_n1, i)
+                      - gradient(p, i) + 1 / Re * laplacian(v_n, i) );
+#else
             b.add_elm(i,
                       -3 / 2 * advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) +
                       v_n(i) / dt -
                       gradient(p, i) + 1 / 2 * advection(v_n1, i));
+#endif
         }
 
     }
@@ -41,9 +47,14 @@ void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_
                 b.add_elm(i, 0,0,0);
             }
         } else {
+#ifdef VC
+            b.add_elm(i,
+                      -advection(v_n, i) + 1 / (Re) * laplacian(v_n, i) - gradient(p, i));
+#else
             b.add_elm(i,
                       -advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) + v_n(i) / dt -
                       gradient(p, i));
+#endif
         }
     }
 
@@ -58,11 +69,11 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
             if (p.g->off_walls(i)) {
                 s(i) = 0;
             } else {
-                //b.add_elm(i, 0,0,0);
                 s(i) = 0;
             }
             //s(i) = p(i);
         } else {
+
             s(i) = divergence(v_n, i) / dt - 3/2 * divergence_advection(v_n, i) + 1/2 *
                     divergence_advection(v_n1, i) + 3/(2*Re) *
                     divergence_laplacian(v_n,i) - 1/(2*Re) * divergence_laplacian(v_n1, i) - laplacian(p, i);

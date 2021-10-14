@@ -326,7 +326,7 @@ struct grid {
         if (r[ind].back== -1) {return true;}
 
 
-        if ( r[r[ind].left].up== -1) {return true;}
+        /*if ( r[r[ind].left].up== -1) {return true;}
         if ( r[r[ind].left].down== -1) {return true;}
         if ( r[r[ind].left].front== -1) {return true;}
         if ( r[r[ind].left].back== -1) {return true;}
@@ -349,7 +349,7 @@ struct grid {
         if ( r[r[ind].up].front== -1) {return true;}
         if ( r[r[ind].up].back== -1) {return true;}
         if ( r[r[ind].down].front== -1) {return true;}
-        if ( r[r[ind].down].back== -1) {return true;}
+        if ( r[r[ind].down].back== -1) {return true;}*/
 
 
         /*const bool ends = !has_left(ind) || !has_right(ind) || !has_down(ind) || !has_up(ind) || !has_front(ind) || !has_back(ind);
@@ -380,12 +380,16 @@ struct grid {
     }
 
 
-    void DEBUG_write_boundary_points() const {
+    void DEBUG_write_boundary_points(const bool print_off_wall = false) const {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
             const auto inds = get_middle_inds();
             for (const auto ind : inds) {
-                output << x[ind] << " " << y[ind] << " " << is_boundary(ind) << "\n";
+                if (!print_off_wall) {
+                    output << x[ind] << " " << y[ind] << " " << is_boundary(ind) << "\n";
+                } else {
+                    output << x[ind] << " " << y[ind] << " " << (is_boundary(ind) && off_walls(ind)) << "\n";
+                }
             }
 
         } else {
@@ -395,7 +399,7 @@ struct grid {
         output.close();
     }
 
-    void DEBUG_write_boundary_points_at_x(const double xp) const {
+    [[maybe_unused]] void DEBUG_write_boundary_points_at_x(const double xp) const {
         std::ofstream output("../DEBUG/boundary_points.txt");
         if (output.is_open()) {
             const auto inds = get_some_x_inds(xp);
