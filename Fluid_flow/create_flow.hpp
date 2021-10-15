@@ -39,7 +39,7 @@ constexpr unsigned no_repeats = 3;
 #include "update_mesh.hpp"
 
 
-constexpr double accuracy_percent_v = 0.1;
+constexpr double accuracy_percent_v = 0.01;
 constexpr double accuracy_percent_p = 0.01;
 
 struct output_settings {
@@ -221,7 +221,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      solve(A, b.yv, v_n.yv);
      solve(A, b.zv, v_n.zv);
 #endif
-      */
+
 
  #ifdef DLOG
      std::cout << "enforcing velocity BC\n";
@@ -229,6 +229,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      //enforcing BC
      v_n += vc;
      enforce_velocity_BC(BC, v_n);
+      */
 
  #ifdef DLOG
      std::cout << "writing first timestep\n";
