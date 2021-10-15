@@ -1,4 +1,3 @@
-#define ACCURATE_SOLVER //really no difference
 //#define UPDATE_VECS_CHECK_RESULTS_LOG
 
 #include "Fluid_flow/create_flow.hpp"

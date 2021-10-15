@@ -6,7 +6,7 @@
 #define CODE_CREATE_FLOW_HPP
 
 #define VC
-#define NO_MESH_UPDATE
+//#define NO_MESH_UPDATE
 #define DLOG    //detailed logging
 //#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
 //#define REPEATS
