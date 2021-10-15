@@ -65,12 +65,13 @@ constexpr solver_vals very_detailed_solve{10000, 25};
     constexpr solver_vals very_detailed_solve{10000, 1000};
 #endif*/
 
-constexpr unsigned no_solver_choices = 5;
-constexpr unsigned max_its_v[no_solver_choices] = {1000, 5000, 10000};
-constexpr unsigned dims_v[no_solver_choices]    = {20, 20, 25};
+constexpr unsigned no_solver_choices_v = 6;
+constexpr unsigned max_its_v[no_solver_choices_v] = {500, 1000, 5000, 10000};
+constexpr unsigned dims_v[no_solver_choices_v]    = {20, 20, 20, 25};
 
-constexpr unsigned max_its_p[no_solver_choices] = {1000, 5000, 10000};
-constexpr unsigned dims_p[no_solver_choices]    = {20, 20, 25};
+constexpr unsigned no_solver_choices_p = 5;
+constexpr unsigned max_its_p[no_solver_choices_p] = {1000, 5000, 10000};
+constexpr unsigned dims_p[no_solver_choices_p]    = {20, 20, 25};
 
 
 //solves Ax=b for x
@@ -113,22 +114,24 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
 
 
 void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const big_vec_d &s, big_vec_d &p_c, big_vec_d &p, const double accuracy_percent) {
-    for (unsigned i; i < no_solver_choices; i++) {
+    for (unsigned i; i < no_solver_choices_p; i++) {
+        auto p_cpy = p;
         solve(Q, s, p_c, max_its_p[i], dims_p[i]);
-        bool accurate = update_pressure_BC(BC, p_c, accuracy_percent);
+        bool accurate = update_pressure_BC<true>(BC, p_c, accuracy_percent);
         if (accurate) {
-            p += p_c;
-            const bool accurate2 = update_pressure_BC(BC, p, accuracy_percent);
+            p_cpy += p_c;
+            const bool accurate2 = update_pressure_BC<true>(BC, p_cpy, accuracy_percent);
             if (accurate2) {
-                std::cerr << "pressure solved using solver" << i << "\n";
+                p = p_cpy;
+                std::cerr << "pressure solved using solver " << i << "\n";
                 return;
             } else {
-                p -= p_c;
+                p_cpy -= p_c;
             }
         }
     }
 
-    p += p_c;
+    //p += p_c;
     std::cerr << "pressure is still not accurate even with most accurate solver\n";
 
     /*solve<normal_solve.max_iterations, normal_solve.dim>(Q, s, p_c);
@@ -171,25 +174,28 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
 }
 
 void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const big_vec_v &b, big_vec_v &vc, big_vec_v &v_n, const double accuracy_percent) {
-    for (unsigned i; i < no_solver_choices; i++) {
+    for (unsigned i; i < no_solver_choices_v; i++) {
+        auto v_n_cpy = v_n;
         //solve(Q, s, p_c, max_its[i], dims[i]);
         solve(A, b.xv, vc.xv, max_its_v[i], dims_v[i]);
         solve(A, b.yv, vc.yv, max_its_v[i], dims_v[i]);
         solve(A, b.zv, vc.zv, max_its_v[i], dims_v[i]);
-        bool accurate = enforce_velocity_BC(BC, vc, accuracy_percent);
+        bool accurate = enforce_velocity_correction_BC<true>(BC, vc, accuracy_percent);
         if (accurate) {
-            v_n += vc;
-            const bool accurate2 =  enforce_velocity_BC(BC, v_n, accuracy_percent);
+            v_n_cpy += vc;
+            const bool accurate2 =  enforce_velocity_BC<true>(BC, v_n_cpy, accuracy_percent);
             if (accurate2) {
-                std::cerr << "velocity solved using solver" << i << "\n";
+                v_n = v_n_cpy;
+                std::cerr << "velocity solved using solver " << i << "\n";
                 return;
             } else {
-                v_n -= vc;
+                v_n_cpy -= vc;
+                std::cerr << "solver " << i << " failed\n";
             }
         }
     }
 
-    v_n += vc;
+    //v_n += vc;
     std::cerr << "velocity is still not accurate even with most accurate solver\n";
 
 
