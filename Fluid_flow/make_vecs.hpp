@@ -13,7 +13,7 @@ void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n
     for (unsigned i = 0; i < p.size(); i++) {
         if (v_n.is_boundary(i)) {
             if (v_n.g->off_walls(i)) {
-                b.add_elm(i,  bc.v_points.get_vel(i));
+                b.add_elm(i,  bc.v_points.get_vel(i) - v_n(i)); //need to minus v_n(i) because solving for pressure correction
             } else {
                 b.add_elm(i, 0,0,0);
             }
@@ -42,7 +42,7 @@ void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_
     for (unsigned i = 0; i < p.size(); i++) {
         if (v_n.is_boundary(i)) {
             if (v_n.g->off_walls(i)) {
-                b.add_elm(i,  bc.v_points.get_vel(i));
+                b.add_elm(i,  bc.v_points.get_vel(i) - v_n(i)); //need to minus v_n(i) because solving for pressure correction
             } else {
                 b.add_elm(i, 0,0,0);
             }
@@ -69,7 +69,7 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
             if (p.g->off_walls(i)) {
                 s(i) = 0;
             } else {
-                s(i) = 0;
+                s(i) = 0-p(i);  //need to minus p(i) because solving for pressure correction
             }
             //s(i) = p(i);
         } else {
@@ -94,7 +94,7 @@ void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_
             if (p.g->off_walls(i)) {
                 s(i) = 0;
             } else {
-                s(i) = 0;
+                s(i) = 0-p(i);  //need to minus p(i) because solving for pressure correction
             }
             //s(i) = p(i);
         } else {
