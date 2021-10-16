@@ -65,12 +65,12 @@ constexpr solver_vals very_detailed_solve{10000, 25};
     constexpr solver_vals very_detailed_solve{10000, 1000};
 #endif*/
 
-constexpr unsigned no_solver_choices_v = 6;
-constexpr unsigned max_its_v[no_solver_choices_v] = {500, 1000, 5000, 10000};
-constexpr unsigned dims_v[no_solver_choices_v]    = {20, 20, 20, 25};
+constexpr unsigned no_solver_choices_v = 7;
+constexpr unsigned max_its_v[no_solver_choices_v] = {300, 500, 1000, 5000, 10000};
+constexpr unsigned dims_v[no_solver_choices_v]    = {20, 20, 20, 20, 25};
 
 constexpr unsigned no_solver_choices_p = 5;
-constexpr unsigned max_its_p[no_solver_choices_p] = {1000, 5000, 10000};
+constexpr unsigned max_its_p[no_solver_choices_p] = {3000, 5000, 10000};
 constexpr unsigned dims_p[no_solver_choices_p]    = {20, 20, 25};
 
 

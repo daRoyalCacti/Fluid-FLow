@@ -77,13 +77,17 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                     }
 
                 }
+                const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
+                const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
+                const bool is_good_z = old.z() > 1e-3 && std::abs( (old.z() - v(i).z()) /v(i).z() *100) > accuracy_percent;
+                const bool is_good = is_good_x && is_good_y && is_good_z;
 
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                 if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
                     std::cerr << "velocity boundary condition returned an infinite value\n";
                 }
                 if constexpr (err) {
-                    if (old.length() > 1e-3 && (old-v(i)).length()/v(i).length()*100 > accuracy_percent) {
+                    if (is_good) {
                         std::cerr << "Too much correction on the velocity correction at the walls\n";
                         std::cerr << "\tcorrection : " << (old-v(i)).length()/v(i).length()*100 << "%\n";
                         std::cerr << "\tat index " << i << "\n";
@@ -92,7 +96,7 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                 }
 #endif
                 if constexpr (err) {
-                    if (old.length() > 1e-3 && (old-v(i)).length()/v(i).length()*100 > accuracy_percent) {
+                    if (is_good) {
                         return false;
                     }
                 }
@@ -190,13 +194,17 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                     }
 
                 }
+                const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
+                const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
+                const bool is_good_z = old.z() > 1e-3 && std::abs( (old.z() - v(i).z()) /v(i).z() *100) > accuracy_percent;
+                const bool is_good = is_good_x && is_good_y && is_good_z;
 
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                 if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
                     std::cerr << "velocity boundary condition returned an infinite value\n";
                 }
                 if constexpr (err) {
-                    if (old.length() > 1e-3 && (old-v(i)).length()/v(i).length()*100 > accuracy_percent) {
+                    if (is_good) {
                         std::cerr << "Too much correction on the velocity at the walls\n";
                         std::cerr << "\tcorrection : " << (old-v(i)).length()/v(i).length()*100 << "%\n";
                         std::cerr << "\tat index " << i << "\n";
@@ -206,8 +214,14 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 #endif
 
             }
+
+            const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
+            const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
+            const bool is_good_z = old.z() > 1e-3 && std::abs( (old.z() - v(i).z()) /v(i).z() *100) > accuracy_percent;
+            const bool is_good = is_good_x && is_good_y && is_good_z;
+
             if constexpr (err) {
-                if (old.length() > 1e-3 && (old-v(i)).length()/v(i).length()*100 > accuracy_percent) {
+                if (is_good) {
                     return false;
                 }
             }
