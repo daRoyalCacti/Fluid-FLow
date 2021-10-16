@@ -206,9 +206,34 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 if constexpr (err) {
                     if (is_good) {
                         std::cerr << "Too much correction on the velocity at the walls\n";
+                        if (big_dir == 0) {
+                            std::cerr << "\tThis happened for x the largest direction\n";
+                        } else if (big_dir == 1) {
+                            std::cerr << "\tThis happened for y the largest direction\n";
+                        } else {
+                            std::cerr << "\tThis happened for z the largest direction\n";
+                        }
                         std::cerr << "\tcorrection : " << (old-v(i)).length()/v(i).length()*100 << "%\n";
                         std::cerr << "\tat index " << i << "\n";
                         std::cerr << "\told velocity = (" << old << ")\t new velocity = (" << v(i) << ")\n";
+                        std::cerr << "\tnormal vector = (" << norm << ")\n";
+
+                        std::cerr << "\tThis was done using : ";
+                        if (!v.has_right(i)) {
+                            std::cerr << "backwards in x,  ";
+                        } else {
+                            std::cerr << "forwards in x,  ";
+                        }
+                        if (!v.has_up(i)) {
+                            std::cerr << "backwards in y,  ";
+                        } else {
+                            std::cerr << "forwards in y,  ";
+                        }
+                        if (!v.has_back(i)) {
+                            std::cerr << "backwards in z";
+                        } else {
+                            std::cerr << "forwards in z";
+                        }
                     }
                 }
 #endif
