@@ -22,6 +22,7 @@ struct grid_relation {
 // grid[i] corresponds to the interval x[i]+dx, y[i]+dy, z[i]+dz
 struct grid {
     std::vector<double> x, y, z;
+    std::vector<double> plot_x, plot_y, plot_z;
     double dx, dy, dz;
     std::vector<grid_relation> r{};
     //vec3 mins, maxs;    //min = (minx, miny, minz)
@@ -45,7 +46,7 @@ struct grid {
 
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_,
          const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
-        : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_), //mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
+        : x(x_), y(y_), z(z_), dx(dx_), dy(dy_), dz(dz_), plot_x(x_), plot_y(y_), plot_z(z_), //mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
         middle( (minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2 ),
         edge1(minx, miny, minz), edge2(maxx, miny, minz), /*edge3(minx, maxy, minz),*/ edge4(maxx, maxy, minz),
         edge5(minx, miny, maxz), /*edge6(maxx, miny, maxz),*/ edge7(minx, maxy, maxz), edge8(maxx, maxy, maxz),
@@ -70,6 +71,16 @@ struct grid {
 #endif
     }
 
+    void set_plotting_points() {
+        plot_x = x;
+        plot_y = y;
+        plot_z = z;
+    }
+
+    [[nodiscard]] vec3 get_plot_pos(const unsigned ind) const {
+        return {plot_x[ind], plot_y[ind], plot_z[ind]};
+    }
+
     void move(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
         // const vec3 rot_angle_vec = model.w*dt;
         //rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}
@@ -84,6 +95,10 @@ struct grid {
             x[i] = rot.x()+trans_vec.x();
             y[i] = rot.y()+trans_vec.y();
             z[i] = rot.z()+trans_vec.z();
+
+            plot_x[i] += trans_vec.x();
+            plot_y[i] += trans_vec.y();
+            plot_z[i] += trans_vec.z();
         }
 
         edge1 = rotate(c_o_m, rot_angle_vec, edge1, rot_angle_vec.length() ) + trans_vec;
