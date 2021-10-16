@@ -44,7 +44,7 @@ function [vx, vy, vz] = plot_flow_stream(file_loc)
     vyp = reshape(vy, w, w)';
     
     
-    streamslice(xp, yp, vxp, vyp, 3)
+    streamslice(xp, yp, vxp, vyp, 3, 'cubic', 'arrows')
     axis([x_sort(1), x_sort(end), y_sort(1), y_sort(end)])
 
 
