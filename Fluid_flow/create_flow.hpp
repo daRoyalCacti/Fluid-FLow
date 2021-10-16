@@ -7,6 +7,7 @@
 
 #define VC
 //#define NO_MESH_UPDATE
+//#define FLUID_MOVES_MESH
 #define DLOG    //detailed logging
 //#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
 //#define REPEATS

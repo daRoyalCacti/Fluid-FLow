@@ -9,10 +9,15 @@
 #include "../Rigid_body/body.hpp"
 #include "update_vecs.hpp"
 
-
+#ifdef FLUID_MOVES_MESH
+bool fluid_moves(const double t) {
+    return t>0.1;
+}
+#else
 bool fluid_moves(const double t) {
     return false;
 }
+#endif
 
 vec3 global_forces(const double t) {
     //return {0.00001*sin(t), 0, 0};
