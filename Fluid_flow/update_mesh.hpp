@@ -74,7 +74,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
         }
 #endif
 
-    const auto old_c_o_m = b->pos_cm;
+    const auto old_c_o_m = b->model.pos_cm;
     b->update_pos(forces, points, dt);
 
     //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
@@ -292,50 +292,50 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         Eigen::Matrix<double, no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
                                     vn1_vec_x, vn1_vec_y, vn1_vec_z, p_vec;
 
-        for (unsigned i = 0; i < no_points; i++) {
-            vn_vec_x[i] = v_n.xv.v[interp_indices[i]];
-            vn_vec_y[i] = v_n.yv.v[interp_indices[i]];
-            vn_vec_z[i] = v_n.zv.v[interp_indices[i]];
+        for (unsigned j = 0; j < no_points; j++) {
+            vn_vec_x[j] = v_n.xv.v[interp_indices[j]];
+            vn_vec_y[j] = v_n.yv.v[interp_indices[j]];
+            vn_vec_z[j] = v_n.zv.v[interp_indices[j]];
 
-            vn1_vec_x[i] = v_n1.xv.v[interp_indices[i]];
-            vn1_vec_y[i] = v_n1.yv.v[interp_indices[i]];
-            vn1_vec_z[i] = v_n1.zv.v[interp_indices[i]];
+            vn1_vec_x[j] = v_n1.xv.v[interp_indices[j]];
+            vn1_vec_y[j] = v_n1.yv.v[interp_indices[j]];
+            vn1_vec_z[j] = v_n1.zv.v[interp_indices[j]];
 
-            p_vec[i] = p.v[interp_indices[i]];
-
-
+            p_vec[j] = p.v[interp_indices[j]];
 
 
-            const auto x = g.x[interp_indices[i]];
-            const auto y = g.y[interp_indices[i]];
-            const auto z = g.z[interp_indices[i]];
 
 
-            mat(i, 0) = 1;
-            mat(i, 1) = x;
-            mat(i, 2) = y;
-            mat(i, 3) = z;
-            mat(i, 4) = x*y;
-            mat(i, 5) = x*z;
-            mat(i, 6) = y*z;
-            mat(i, 7) = x*y*z;
+            const auto x = g.x[interp_indices[j]];
+            const auto y = g.y[interp_indices[j]];
+            const auto z = g.z[interp_indices[j]];
 
-            mat(i, 8) = x*x;
-            mat(i, 9) = y*y;
-            mat(i, 10) = z*z;
-            mat(i, 11) = x*x*y;
-            mat(i, 12) = x*x*z;
-            mat(i, 13) = y*y*x;
-            mat(i, 14) = y*y*z;
-            mat(i, 15) = x*z*z;
-            mat(i, 16) = y*z*z;
-            mat(i, 17) = x*x*y*z;
-            mat(i, 18) = x*y*y*z;
-            mat(i, 19) = x*y*z*z;
-            mat(i, 20) = x*x* y*y* z;
-            mat(i, 21) = x*x *y *z*z;
-            mat(i, 22) = x *y*y* z*z;
-            mat(i,23) = x*x* y*y* z*z;
+
+            mat(j, 0) = 1;
+            mat(j, 1) = x;
+            mat(j, 2) = y;
+            mat(j, 3) = z;
+            mat(j, 4) = x*y;
+            mat(j, 5) = x*z;
+            mat(j, 6) = y*z;
+            mat(j, 7) = x*y*z;
+
+            mat(j, 8) = x*x;
+            mat(j, 9) = y*y;
+            mat(j, 10) = z*z;
+            mat(j, 11) = x*x*y;
+            mat(j, 12) = x*x*z;
+            mat(j, 13) = y*y*x;
+            mat(j, 14) = y*y*z;
+            mat(j, 15) = x*z*z;
+            mat(j, 16) = y*z*z;
+            mat(j, 17) = x*x*y*z;
+            mat(j, 18) = x*y*y*z;
+            mat(j, 19) = x*y*z*z;
+            mat(j, 20) = x*x* y*y* z;
+            mat(j, 21) = x*x *y *z*z;
+            mat(j, 22) = x *y*y* z*z;
+            mat(j,23) = x*x* y*y* z*z;
         }
 
         const auto end_filling = std::chrono::high_resolution_clock::now();

@@ -18,12 +18,14 @@ struct triangle {
     double d00{}, d01{}, d11{};	//helpful quantities for finding texture coords
 
     const vec3 *normal0, *normal1, *normal2;	//vertex normals
+    const vec3 *v, *w;
+    const vec3 *c_o_m;
 
     triangle() = delete;
 
 
-     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2, const vec3 *v0, const vec3 *v1, const vec3 *v2)
-              : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2), vel0(v0), vel1(v1), vel2(v2) {
+     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2, const vec3 *v0, const vec3 *v1, const vec3 *v2, const vec3* v_, const vec3 *w_, const vec3* com)
+              : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2), vel0(v0), vel1(v1), vel2(v2), v(v_), w(w_), c_o_m(com) {
          update();
      }
 
@@ -66,10 +68,14 @@ struct triangle {
     }
 
     [[nodiscard]] vec3 get_velocity(const vec3& point) const {
-         double Bary0, Bary1, Bary2;
-         barycentric_coords(point, Bary0, Bary1, Bary2);
+         //double Bary0, Bary1, Bary2;
+         //barycentric_coords(point, Bary0, Bary1, Bary2);
          //std::cerr << *vel0 << "\t" << *vel1 << "\t" << *vel2 << "\n";
-         return barycentric_interp(*vel0, *vel1, *vel2, Bary0, Bary1, Bary2);
+         //return barycentric_interp(*vel0, *vel1, *vel2, Bary0, Bary1, Bary2);
+
+         /*model.v + cross( model.w, (model.vertices[i]-pos_cm)) */
+         return *v + cross( *w, (point-*c_o_m));
+
      }
 
 };

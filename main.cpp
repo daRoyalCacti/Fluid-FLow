@@ -1,4 +1,4 @@
-//#define UPDATE_VECS_CHECK_RESULTS_LOG
+#define UPDATE_VECS_CHECK_RESULTS_LOG
 
 #include "Fluid_flow/create_flow.hpp"
 
@@ -6,15 +6,16 @@
 //#include "Examples/big_vec_derivs.hpp"
 //#include "Examples/interp.hpp"
 
-//#define HORIZONTAL
+#define HORIZONTAL
+#define ROTATE
 
 #ifdef HORIZONTAL
 constexpr double wx = 7;
 constexpr double wy = 6;
 constexpr double wz = 5;
 #else
-constexpr double wx = 6;//7;
-constexpr double wy = 7;//6;
+constexpr double wx = 6;
+constexpr double wy = 7;
 constexpr double wz = 5;
 #endif
 constexpr double max_t = 1;
@@ -42,7 +43,11 @@ int main() {
 #else
     constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
 #endif
+#ifdef ROTATE
+    constexpr vec3 w = vec3(0,1,0);
+#else
     constexpr vec3 w = vec3(0,0,0);
+#endif
 
     const double z_mid = wz/2;
     const double y_mid = wy/2;

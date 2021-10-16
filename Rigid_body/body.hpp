@@ -20,14 +20,11 @@
 struct body {
     mesh model; //positions and velocities global
 
-    vec3 pos_cm;  //the position of the center of mass
-
     const double M;   //the mass of the system
 
     body() = delete;
 
-    explicit body(mesh model_) : model(std::move(model_)), M(std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)),
-            pos_cm{ std::inner_product(model_.mass.begin(), model_.mass.end(), model_.vertices.begin(), vec3{}) / std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)} {}
+    explicit body(mesh model_) : model(std::move(model_)), M(std::accumulate(model_.mass.begin(), model_.mass.end(), 0.0)) {}
 
 
     //finds the positions of all the particles undergoing forces <forces> after time dt
@@ -45,16 +42,16 @@ struct body {
 
         //finding position and velocity of CoM
         model.v += a*dt;
-        const auto pos_cm_old = pos_cm;
-        pos_cm += model.v*dt;
+        const auto pos_cm_old = model.pos_cm;
+        model.pos_cm += model.v*dt;
 
         //finding the torque
         const vec3 t = std::inner_product(points.begin(), points.end(), forces.begin(), vec3{}, std::plus<>(),
-                                          [&](const vec3 &r, const vec3 &F){return cross( (r-pos_cm), F);});
+                                          [&](const vec3 &r, const vec3 &F){return cross( (r-model.pos_cm), F);});
 
 
         //moment of inertia
-        const c_line r_axis(pos_cm, t);
+        const c_line r_axis(model.pos_cm, t);
         const double I = std::inner_product(model.mass.begin(), model.mass.end(), model.vertices.begin(), 0.0, std::plus<>(),
                                             [&](const double &m, const vec3 &r){return m * r_axis.distance(r)*r_axis.distance(r);});
 
@@ -159,7 +156,7 @@ struct body {
                        {return model.v + cross( model.w, (x-pos_cm));});*/ //velocity of cm plus rotational velocity (v=w x r)
                                                 //https://en.wikipedia.org/wiki/Angular_velocity
         for (unsigned i = 0; i < model.velocities.size(); i++) {
-            model.velocities[i] = model.v + cross( model.w, (model.vertices[i]-pos_cm));
+            model.velocities[i] = model.v + cross( model.w, (model.vertices[i]-model.pos_cm));
         }
 
 #ifndef NDEBUG

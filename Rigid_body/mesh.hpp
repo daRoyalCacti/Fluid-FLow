@@ -34,11 +34,13 @@ struct mesh final{
     std::vector<vec3> normals;
     vec3 v, w;  //velocity of center of mass and angular velocity about center of mass
     bounding_box bounds;
+    vec3 pos_cm;  //the position of the center of mass
 
     mesh() = delete;
 
     mesh(const std::vector<vec3> &vertices_, std::vector<unsigned> indices_, std::vector<double> mass_, std::vector<vec3> normals_, vec3 v_, vec3 w_) noexcept :
-    vertices(vertices_), indices(std::move(indices_)), mass(std::move(mass_)), velocities{}, normals(std::move(normals_)), v(v_), w(w_) {
+    vertices(vertices_), indices(std::move(indices_)), mass(std::move(mass_)), velocities{}, normals(std::move(normals_)), v(v_), w(w_),
+    pos_cm{ std::inner_product(mass_.begin(), mass_.end(), vertices_.begin(), vec3{}) / std::accumulate(mass_.begin(), mass_.end(), 0.0)} {
         velocities.resize(vertices_.size());
         //filling the initial velocities based off the cm velocity and angular velocity
         vec3 pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);

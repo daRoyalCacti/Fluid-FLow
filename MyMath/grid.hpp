@@ -159,7 +159,7 @@ struct grid {
 
     }
 
-    [[nodiscard]] inline auto get_inds(vec3 p1, vec3 p2) const noexcept {
+    [[maybe_unused]] [[nodiscard]] inline auto get_inds(vec3 p1, vec3 p2) const noexcept {
         //find the axis to look along
         unsigned axis1 = 4, axis2, axis3;
         const std::vector<double>* arr1, *arr2, *arr3;
@@ -238,7 +238,7 @@ struct grid {
         const auto middle_z = middle.z();
 
         std::vector<unsigned long> ret_vec;
-        ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
+        ret_vec.reserve( static_cast<unsigned long>(no_points_unif.x() * no_points_unif.y()) );
         for (unsigned long i = 0; i < z.size(); i++) {
             //NOPE JUST GET INDS INITIALLY AND USE THAT FOR ALL WRITING
             if ( z[i] <= middle_z && z[i] >= middle_z-dz ) {    //TODO : update this to used the max of dx,dy,dz (when the mesh rotates, dx could be in the z direction)
@@ -250,7 +250,7 @@ struct grid {
 
     [[nodiscard]] inline auto get_some_x_inds(const double xp) const noexcept {
         std::vector<unsigned long> ret_vec;
-        ret_vec.reserve( no_points_unif.x() * no_points_unif.y() );
+        ret_vec.reserve( static_cast<unsigned long>(no_points_unif.x() * no_points_unif.y()) );
         for (unsigned long i = 0; i < x.size(); i++) {
             if ( x[i] <= xp && x[i]+dx > xp ) {
                 ret_vec.push_back(i);
@@ -415,7 +415,7 @@ struct grid {
     }
 
 
-    [[nodiscard]] unsigned get_move_ind(const unsigned ind, const int x, const int y, const int z) const noexcept {
+    [[nodiscard]] unsigned get_move_ind(const unsigned ind, const int x_m, const int y_m, const int z_m) const noexcept {
         auto curr_ind = ind;
 #ifndef NDEBUG
         if (curr_ind == -1) {
@@ -426,89 +426,89 @@ struct grid {
         }
 #endif
 
-        if (x > 0) {
-            for (unsigned i = 0; i < x; i++) {
+        if (x_m > 0) {
+            for (unsigned i = 0; i < x_m; i++) {
                 curr_ind = r[curr_ind].right;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx_m move failed. current x_m : " << i+1 << "/" << x_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx_m move failed. current x_m : " << i+1 << "/" << x_m << "\n";
                 }
 #endif
             }
         } else {
-            for (int i = x; i < 0; i++) {
+            for (int i = x_m; i < 0; i++) {
                 curr_ind = r[curr_ind].left;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx_m move failed. current x_m : " << i+1 << "/" << x_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\tx move failed. current x : " << i+1 << "/" << x << "\n";
+                    std::cerr << "\tx_m move failed. current x_m : " << i+1 << "/" << x_m << "\n";
                 }
 #endif
             }
         }
-        if (y > 0) {
-            for (unsigned j = 0; j < y; j++) {
+        if (y_m > 0) {
+            for (unsigned j = 0; j < y_m; j++) {
                 curr_ind = r[curr_ind].up;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty_m move failed. current y_m : " << j+1 << "/" << y_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty_m move failed. current y_m : " << j+1 << "/" << y_m << "\n";
                 }
 #endif
             }
         } else {
-            for (int j = y; j < 0; j++) {
+            for (int j = y_m; j < 0; j++) {
                 curr_ind = r[curr_ind].down;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty_m move failed. current y_m : " << j+1 << "/" << y_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\ty move failed. current y : " << j+1 << "/" << y << "\n";
+                    std::cerr << "\ty_m move failed. current y_m : " << j+1 << "/" << y_m << "\n";
                 }
 #endif
             }
         }
-        if (z > 0) {
-            for (unsigned k = 0; k < z; k++) {
+        if (z_m > 0) {
+            for (unsigned k = 0; k < z_m; k++) {
                 curr_ind = r[curr_ind].back;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz_m move failed. current z_m : " << k+1 << "/" << z_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz_m move failed. current z_m : " << k+1 << "/" << z_m << "\n";
                 }
 #endif
             }
         } else {
-            for (int k = z; k < 0; k++) {
+            for (int k = z_m; k < 0; k++) {
                 curr_ind = r[curr_ind].front;
 #ifndef NDEBUG
                 if (curr_ind == -1) {
                     std::cerr << "current index is -1. This should never happen.\n";
-                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz_m move failed. current z_m : " << k+1 << "/" << z_m << "\n";
                 }
                 if (curr_ind >= size()) {
                     std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-                    std::cerr << "\tz move failed. current z : " << k+1 << "/" << z << "\n";
+                    std::cerr << "\tz_m move failed. current z_m : " << k+1 << "/" << z_m << "\n";
                 }
 #endif
             }
@@ -521,7 +521,7 @@ struct grid {
         return get_move_ind(ind, static_cast<int>(v.x()), static_cast<int>(v.y()), static_cast<int>(v.z()) );
     }
 
-    [[nodiscard]] bool can_move(const unsigned ind, const int x, const int y, const int z) const noexcept {
+    [[nodiscard]] bool can_move(const unsigned ind, const int x_m, const int y_m, const int z_m) const noexcept {
         auto curr_ind = ind;
 #ifndef NDEBUG
         if (curr_ind == -1) {
@@ -532,45 +532,45 @@ struct grid {
         }
 #endif
 
-        if (x > 0) {
-            for (unsigned i = 0; i < x; i++) {
+        if (x_m > 0) {
+            for (unsigned i = 0; i < x_m; i++) {
                 curr_ind = r[curr_ind].right;
                 if (curr_ind == -1) {
                     return false;
                 }
             }
         } else {
-            for (int i = x; i < 0; i++) {
+            for (int i = x_m; i < 0; i++) {
                 curr_ind = r[curr_ind].left;
                 if (curr_ind == -1) {
                     return false;
                 }
             }
         }
-        if (y > 0) {
-            for (unsigned j = 0; j < y; j++) {
+        if (y_m > 0) {
+            for (unsigned j = 0; j < y_m; j++) {
                 curr_ind = r[curr_ind].up;
                 if (curr_ind == -1) {
                     return false;
                 }
             }
         } else {
-            for (int j = y; j < 0; j++) {
+            for (int j = y_m; j < 0; j++) {
                 curr_ind = r[curr_ind].down;
                 if (curr_ind == -1) {
                     return false;
                 }
             }
         }
-        if (z > 0) {
-            for (unsigned k = 0; k < z; k++) {
+        if (z_m > 0) {
+            for (unsigned k = 0; k < z_m; k++) {
                 curr_ind = r[curr_ind].back;
                 if (curr_ind == -1) {
                     return false;
                 }
             }
         } else {
-            for (int k = z; k < 0; k++) {
+            for (int k = z_m; k < 0; k++) {
                 curr_ind = r[curr_ind].front;
                 if (curr_ind == -1) {
                     return false;
