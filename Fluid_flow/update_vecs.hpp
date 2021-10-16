@@ -234,6 +234,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                         } else {
                             std::cerr << "forwards in z";
                         }
+                        std::cerr << "\n";
                     }
                 }
 #endif
