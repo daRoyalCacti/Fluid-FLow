@@ -8,6 +8,7 @@
 #define VC
 //#define NO_MESH_UPDATE
 //#define FLUID_MOVES_MESH
+#define SAME_PLOTTING_INDS
 #define DLOG    //detailed logging
 //#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
 //#define REPEATS
@@ -139,14 +140,26 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #endif
      //first set IC
      v_IC(v_n);
+
+#ifdef SAME_PLOTTING_INDS
+     const auto inds = v_n.g->get_middle_inds();
+#endif
+
+
 #ifdef DLOG
      std::cout << "writing velocity IC\n";
- #endif
+#endif
      if constexpr (write_all_times) {
- #ifdef DLOG
+#ifdef DLOG
          std::cout << "\tGetting indices\n";
- #endif
+#endif
+
+
+#ifndef SAME_PLOTTING_INDS
          const auto inds = v_n.g->get_middle_inds();
+#endif
+
+
 #ifdef DLOG
          std::cout << "\tWriting v\n";
  #endif
@@ -232,6 +245,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      enforce_velocity_BC(BC, v_n);
       */
 
+
  #ifdef DLOG
      std::cout << "writing first timestep\n";
  #endif
@@ -239,7 +253,12 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
  #ifdef DLOG
          std::cout << "\tGetting indices\n";
  #endif
+
+#ifndef SAME_PLOTTING_INDS
          const auto inds = v_n.g->get_middle_inds();
+#endif
+
+
 #ifdef DLOG
          std::cout << "\tWriting v\n";
  #endif
@@ -397,8 +416,9 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
              } else {
                  file_name = std::to_string(counter);
              }
-
+#ifndef SAME_PLOTTING_INDS
              const auto inds = v_n.g->get_middle_inds();
+#endif
              write_vec(v_n,inds, (std::string(os.vel_file_loc) + file_name + ".txt").data());
              write_vec(p,inds, (std::string(os.pres_file_loc) + file_name + ".txt").data());
              rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
