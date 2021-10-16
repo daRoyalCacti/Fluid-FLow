@@ -4,7 +4,7 @@ All_p_files = dirPlus('pressure_data');
 All_b_files = dirPlus('rigid_body_data');
 
 % no_files = length(All_v_files);
-no_files = 371;
+no_files = 286;
 
 fprintf("Reading files\n")
 data = struct;
