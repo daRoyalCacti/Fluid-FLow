@@ -81,7 +81,7 @@ struct body {
                 err = true;
                 std::cerr << "rigid body got infinite velocity\n";
             }
-            if (!std::isfinite(pos_cm.x()) || !std::isfinite(pos_cm.y()) || !std::isfinite(pos_cm.z())) {
+            if (!std::isfinite(model.pos_cm.x()) || !std::isfinite(model.pos_cm.y()) || !std::isfinite(model.pos_cm.z())) {
                 err = true;
                 std::cerr << "rigid body got infinite position\n";
             }
@@ -107,7 +107,7 @@ struct body {
             }
 
             if (err) {
-                std::cerr << "\tpos : " <<pos_cm << "\n";
+                std::cerr << "\tpos : " << model.pos_cm << "\n";
                 std::cerr << "\told pos : " << pos_cm_old << "\n";
                 std::cerr << "\tvelocity : " << model.v << "\n";
                 std::cerr << "\ttorque : " << t << "\n";

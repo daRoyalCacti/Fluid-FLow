@@ -127,6 +127,7 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
                 return;
             } else {
                 p_cpy -= p_c;
+                std::cerr << "solver " << i << " failed\n";
             }
         }
     }

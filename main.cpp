@@ -44,7 +44,7 @@ int main() {
     constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
 #endif
 #ifdef ROTATE
-    constexpr vec3 w = vec3(0,1,0);
+    constexpr vec3 w = vec3(0,0,1);
 #else
     constexpr vec3 w = vec3(0,0,0);
 #endif

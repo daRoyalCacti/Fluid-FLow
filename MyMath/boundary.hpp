@@ -240,12 +240,12 @@ struct boundary_normals final {
         return m.at(index);
     }
 
-    void update(const tri_inds &t_inds, const mesh_points &m_points) {
+    /*void update(const tri_inds &t_inds, const mesh_points &m_points) {
         //t.get_normal(r.at(time))
         for (auto & v : m) {
             v.second = t_inds.get_index(v.first)->get_normal(m_points.get_point(v.first));
         }
-    }
+    }*/
 
 };
 
@@ -278,13 +278,13 @@ struct wall_normals final {
         return m.at(index);
     }
 
-    void update(const vec3 &w, const double dt) {
+    /*void update(const vec3 &w, const double dt) {
         const auto rot_angle_vec = w*dt;
         //t.get_normal(r.at(time))
         for (auto & v : m) {
             v.second = rotate(vec3(0), rot_angle_vec,  v.second, rot_angle_vec.length());;
         }
-    }
+    }*/
 
 };
 
@@ -321,10 +321,10 @@ struct boundary_normals_grouped final {
         }
     }
 
-    void update(const tri_inds &t_inds, const mesh_points &m_points, const vec3& w, const double dt) {
+    /*void update(const tri_inds &t_inds, const mesh_points &m_points, const vec3& w, const double dt) {
         b1.update(t_inds, m_points);
         b2.update(w, dt);
-    }
+    }*/
 
 
 };

@@ -40,10 +40,10 @@ struct mesh final{
 
     mesh(const std::vector<vec3> &vertices_, std::vector<unsigned> indices_, std::vector<double> mass_, std::vector<vec3> normals_, vec3 v_, vec3 w_) noexcept :
     vertices(vertices_), indices(std::move(indices_)), mass(std::move(mass_)), velocities{}, normals(std::move(normals_)), v(v_), w(w_),
-    pos_cm{ std::inner_product(mass_.begin(), mass_.end(), vertices_.begin(), vec3{}) / std::accumulate(mass_.begin(), mass_.end(), 0.0)} {
+    pos_cm{ std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0)} {
         velocities.resize(vertices_.size());
         //filling the initial velocities based off the cm velocity and angular velocity
-        vec3 pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);
+        //pos_cm =  std::inner_product(mass.begin(), mass.end(), vertices.begin(), vec3{}) / std::accumulate(mass.begin(), mass.end(), 0.0);
         for (size_t i = 0; i < velocities.size(); i++) {
             velocities[i] = v_ + cross(w_, (vertices_[i] - pos_cm) );
         }
@@ -63,7 +63,7 @@ struct mesh final{
 #endif
     }
 
-    mesh(const mesh &m) : mass(m.mass), vertices(m.vertices), indices(m.indices), normals(m.normals), v(m.v), w(m.w), bounds(m.bounds)  {
+    mesh(const mesh &m) : mass(m.mass), vertices(m.vertices), indices(m.indices), normals(m.normals), v(m.v), w(m.w), pos_cm(m.pos_cm), bounds(m.bounds)  {
         velocities.resize(m.velocities.size() );
         for (size_t i = 0; i < m.velocities.size(); i++) {
             velocities[i] = m.velocities[i];

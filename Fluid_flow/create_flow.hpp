@@ -6,7 +6,7 @@
 #define CODE_CREATE_FLOW_HPP
 
 #define VC
-//#define NO_MESH_UPDATE
+#define NO_MESH_UPDATE
 //#define FLUID_MOVES_MESH
 #define SAME_PLOTTING_INDS
 #define DLOG    //detailed logging

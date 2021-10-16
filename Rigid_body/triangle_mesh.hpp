@@ -32,7 +32,7 @@ struct triangle_mesh {
             tris[i] = triangle( &m->get_vertice_index(3*i), &m->get_vertice_index(3*i+1), &m->get_vertice_index(3*i+2),
                                 &m->get_normal_index(3*i), &m->get_normal_index(3*i+1), &m->get_normal_index(3*i+2),
                                 &m->get_velocity_index(3*i), &m->get_velocity_index(3*i+1), &m->get_velocity_index(3*i+2),
-                                &m->v, &m->w, &m->pos_cm);
+                                &(m->v), &(m->w), &(m->pos_cm));
         }
 
     }

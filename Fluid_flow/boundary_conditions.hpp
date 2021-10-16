@@ -86,7 +86,7 @@ struct boundary_conditions {
     void update(const vec3& w, const vec3& v, const vec3 &c_o_m, const double dt) {
         tm.update();
         m_points.update(w, v, c_o_m, dt);
-        norms.update(t_inds, m_points, w, dt);
+        //norms.update(t_inds, m_points, w, dt);
         v_points.update(t_inds, m_points);
     }
 
