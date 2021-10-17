@@ -32,10 +32,10 @@ function [vx, vy, vz] = plot_flow_stream(file_loc)
         if (x(ii+1) - x(ii) > 1.5*dx)
             no_points = round( (x(ii+1) - x(ii))/dx )-1;%length(x(ii):dx:x(ii+1))-2;%floor( (x(ii+1) - x(ii))/dx );
             
-            x_repl = (x(ii)):dx:(x(ii+1)-dx);
+            x_repl = linspace(x(ii)+dx, x(ii+1)-dx, no_points);%(x(ii)):dx:(x(ii+1)-dx);
             x_repl = x_repl';
-            x_r = [x_r(1:ind-1); x_repl; x_r(ind+1:end) ];
-            y_r = [y_r(1:ind-1); y_r(ind)*ones(size(x_repl)); y_r(ind+1:end)];
+            x_r = [x_r(1:ind); x_repl; x_r(ind+1:end) ];
+            y_r = [y_r(1:ind); y_r(ind)*ones(size(x_repl)); y_r(ind+1:end)];
             
             vx = [vx(1:ind); 0*(1:no_points)'; vx(ind+1:end) ];
             vy = [vy(1:ind); 0*(1:no_points)'; vy(ind+1:end) ];
