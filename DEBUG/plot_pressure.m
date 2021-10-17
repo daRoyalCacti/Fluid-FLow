@@ -49,17 +49,28 @@ function p = plot_pressure(file_loc)
 %     
 %      rectangle('Position',[min(x),min(y),max(x)-min(x),max(y)-min(y)],'EdgeColor', [0,0,0], 'LineWidth',1.5)
     
-    off = 0;
-    p_r = p;
+    off = 1;
+    p_r = [nan; p; nan];
     for ii = 1:length(p)-1
         ind = ii+off;
-        if (x(ii+1) > x(ii))
-            if (x(ii+1) - x(ii) > 1.5*dx)
-                no_points = floor( (x(ii+1) - x(ii))/dx );
-                p_r = [p_r(1:ind); nan*(1:no_points)'; p_r(ind+1:end) ];
-                off = off + no_points;
-            end
+        if (x(ii+1) - x(ii) > 1.5*dx)
+            no_points = floor( (x(ii+1) - x(ii))/dx );
+            p_r = [p_r(1:ind); nan*(1:no_points)'; p_r(ind+1:end) ];
+            off = off + no_points;
         end
+        
+        ind = ii+off;
+        if ( (y(ii+1) > y(ii)) && abs( x(ii+1) - x_sort(1) ) > dx/3  )
+            p_r = [p_r(1:ind); nan; p_r(ind+1:end)];
+            off = off+1;
+        end
+        
+        ind = ii+off;
+        if ( (y(ii+1) > y(ii)) && abs( x(ii) - x_sort(end) ) > dx/3  )
+            p_r = [p_r(1:ind); nan; p_r(ind+1:end)];
+            off = off+1;
+        end
+        
     end
     
     l = length(p_r);

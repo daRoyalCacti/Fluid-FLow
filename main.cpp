@@ -7,7 +7,7 @@
 //#include "Examples/interp.hpp"
 
 #define HORIZONTAL
-#define ROTATE
+//#define ROTATE
 
 #ifdef HORIZONTAL
 constexpr double wx = 7;
@@ -39,7 +39,8 @@ int main() {
 
     constexpr double mass1 = 0.01;
 #ifdef HORIZONTAL
-    constexpr vec3 vel_cm = vec3(0.75, 0, 0);
+    //CHANGED THIS
+    constexpr vec3 vel_cm = vec3(0.75, 0.75, 0);
 #else
     constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
 #endif

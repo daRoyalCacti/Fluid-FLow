@@ -16,8 +16,16 @@ function [vx, vy, vz] = plot_flow_stream(file_loc)
     dy = y_sort(2)-y_sort(1);
     
     off = 0;
+    
+    x = [x_sort(1); x; x_sort(end)];
+    y=[y_sort(1); y; y_sort(end)];
     x_r = x;
     y_r = y;
+    
+    
+    
+    vx = [0; vx; 0];
+    vy = [0; vy; 0];
     len = length(vx)-1;
     for ii = 1:len
         ind = ii+off;
@@ -32,6 +40,28 @@ function [vx, vy, vz] = plot_flow_stream(file_loc)
             vx = [vx(1:ind); 0*(1:no_points)'; vx(ind+1:end) ];
             vy = [vy(1:ind); 0*(1:no_points)'; vy(ind+1:end) ];
             off = off + no_points;
+        end
+        
+        ind = ii+off;
+        if ( (y(ii+1) > y(ii)) && abs( x(ii+1) - x_sort(1) ) > dx/3  )
+            x_r = [x_r(1:ind); x_sort(1); x_r(ind+1:end)];
+            y_r = [y_r(1:ind); y(ii+1); y_r(ind+1:end)];
+            
+            vx = [vx(1:ind); 0; vx(ind+1:end) ];
+            vy = [vy(1:ind); 0; vy(ind+1:end) ];
+            
+            off = off+1;
+        end
+        
+        ind = ii+off;
+        if ( (y(ii+1) > y(ii)) && abs( x(ii) - x_sort(end) ) > dx/3  )
+            x_r = [x_r(1:ind); x_sort(end); x_r(ind+1:end)];
+            y_r = [y_r(1:ind); y(ii); y_r(ind+1:end)];
+            
+            vx = [vx(1:ind); 0; vx(ind+1:end) ];
+            vy = [vy(1:ind); 0; vy(ind+1:end) ];
+            
+            off = off+1;
         end
     end
     

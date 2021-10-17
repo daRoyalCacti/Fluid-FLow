@@ -76,7 +76,8 @@ struct big_vec {
         return T{};
     }
 
-    [[nodiscard]] inline T move(const unsigned ind, const vec3&v) const noexcept {
+
+    [[nodiscard]] virtual inline T move(const unsigned ind, const vec3&v) const noexcept {
         return move(ind, v.x(), v.y(), v.z());
     }
 
@@ -156,6 +157,12 @@ struct big_vec_d final : public big_vec<double> {
 
     [[nodiscard]] inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
         const auto new_ind = get_move_ind(ind, x, y, z);
+
+        return v[new_ind];
+    }
+
+    [[nodiscard]] inline double move(const unsigned ind, const vec3& v) const noexcept override {
+        const auto new_ind = get_move_ind(ind, v);
 
         return v[new_ind];
     }
@@ -383,6 +390,14 @@ struct big_vec_v final : public big_vec<vec3> {
         return {xv.v[new_ind], yv.v[new_ind], zv.v[new_ind]};
     }
 
+    [[nodiscard]] inline vec3 move(const unsigned ind, const vec3& v) const noexcept override {
+        const auto new_ind = get_move_ind(ind, v);
+
+        return {xv.v[new_ind], yv.v[new_ind], zv.v[new_ind]};
+    }
+
+
+
     //not ideal, should make it so () can return a reference
     auto add_elm(const unsigned ind, const vec3 &elm) noexcept {
         return add_elm(ind, elm.x(), elm.y(), elm.z());
@@ -446,7 +461,7 @@ void write_vec(const auto& v, const auto& inds, const char* file_loc) noexcept {
     if (output.is_open()) {
         for (const auto ind : inds) {
             const grid& g = *v.g;
-            const auto pos = g[ind];
+            const auto pos = g.get_plot_pos(ind);
             output << pos.x() << " " << pos.y() << " " << v(ind) << "\n";
         }
     } else {

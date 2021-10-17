@@ -284,7 +284,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     unsigned index_counter = 0;
 
     for (unsigned i = 0; i < g.x.size(); i++) {
-        if (inside_indices.contains(i) && !boundary_indices.contains(i)) {
+        if (inside_indices.contains(i) && !boundary_indices.contains(i) || g.r[i].is_edge()) {
             old_new.insert({i, -1});
         } else {
             x.push_back(g.x[i]);
@@ -325,6 +325,8 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     g.y = std::move(y);
     g.z = std::move(z);
     g.r = std::move(r);
+
+    g.set_plotting_points();
 
 
     boundary_normals norms_c(norms.size());

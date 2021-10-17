@@ -11,6 +11,7 @@
 //#include <viennacl/matrix.hpp>
 #include <viennacl/compressed_matrix.hpp>
 #include <viennacl/linalg/gmres.hpp>
+#include <viennacl/linalg/bicgstab.hpp>
 
 #include "../MyMath/big_matrix.hpp"
 #include "../MyMath/big_vec.hpp"
@@ -65,13 +66,14 @@ constexpr solver_vals very_detailed_solve{10000, 25};
     constexpr solver_vals very_detailed_solve{10000, 1000};
 #endif*/
 
-constexpr unsigned no_solver_choices_v = 7;
-constexpr unsigned max_its_v[no_solver_choices_v] = {300, 500, 1000, 5000, 10000};
-constexpr unsigned dims_v[no_solver_choices_v]    = {20, 20, 20, 20, 25};
 
-constexpr unsigned no_solver_choices_p = 5;
-constexpr unsigned max_its_p[no_solver_choices_p] = {3000, 5000, 10000};
-constexpr unsigned dims_p[no_solver_choices_p]    = {20, 20, 25};
+constexpr std::array<unsigned, 5> max_its_v = {300, 500, 1000, 5000, 10000,};
+constexpr std::array<unsigned, 5>  dims_v = {20, 20, 20, 20, 25};
+constexpr unsigned no_solver_choices_v = max_its_v.size();
+
+constexpr std::array<unsigned, 3> max_its_p = {3000, 5000, 10000};
+constexpr std::array<unsigned, 3> dims_p    = {20, 20, 25};
+constexpr unsigned no_solver_choices_p = max_its_p.size();
 
 
 //solves Ax=b for x
@@ -90,6 +92,7 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
     //viennacl::linalg::gmres_tag my_gmres_tag(1e-5, 100, 20); // up to 100 iterations, restart after 20 iterations
 #ifdef VIENNACL_WITH_OPENCL
     viennacl::linalg::gmres_tag my_gmres_tag(1e-100, it, dim);
+    //viennacl::linalg::bicgstab_tag my_gmres_tag(1e-100, it, dim);
 #endif
 #ifdef VIENNACL_WITH_OPENMP
     viennacl::linalg::gmres_tag my_gmres_tag(1e-5, it, dim);
@@ -126,14 +129,17 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
                 std::cerr << "pressure solved using solver " << i << "\n";
                 return;
             } else {
-                p_cpy -= p_c;
                 std::cerr << "solver " << i << " failed\n";
             }
         }
     }
 
-    //p += p_c;
     std::cerr << "pressure is still not accurate even with most accurate solver\n";
+    const auto i = no_solver_choices_p-1;
+    solve(Q, s, p_c, max_its_p[i], dims_p[i]);
+    update_pressure_BC<false>(BC, p_c, accuracy_percent);
+    p += p_c;
+    update_pressure_BC<false>(BC, p, accuracy_percent);
 
     /*solve<normal_solve.max_iterations, normal_solve.dim>(Q, s, p_c);
     //enforce_PBC(p_c, BC.norms);
@@ -177,7 +183,6 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
 void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const big_vec_v &b, big_vec_v &vc, big_vec_v &v_n, const double accuracy_percent) {
     for (unsigned i; i < no_solver_choices_v; i++) {
         auto v_n_cpy = v_n;
-        //solve(Q, s, p_c, max_its[i], dims[i]);
         solve(A, b.xv, vc.xv, max_its_v[i], dims_v[i]);
         solve(A, b.yv, vc.yv, max_its_v[i], dims_v[i]);
         solve(A, b.zv, vc.zv, max_its_v[i], dims_v[i]);
@@ -190,14 +195,21 @@ void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const bi
                 std::cerr << "velocity solved using solver " << i << "\n";
                 return;
             } else {
-                v_n_cpy -= vc;
                 std::cerr << "solver " << i << " failed\n";
             }
         }
     }
 
-    //v_n += vc;
+
     std::cerr << "velocity is still not accurate even with most accurate solver\n";
+    const auto i = no_solver_choices_v-1;
+
+    solve(A, b.xv, vc.xv, max_its_v[i], dims_v[i]);
+    solve(A, b.yv, vc.yv, max_its_v[i], dims_v[i]);
+    solve(A, b.zv, vc.zv, max_its_v[i], dims_v[i]);
+    enforce_velocity_correction_BC<false>(BC, vc, accuracy_percent);
+    v_n += vc;
+    enforce_velocity_BC<false>(BC, v_n, accuracy_percent);
 
 
     /*solve<normal_solve.max_iterations, normal_solve.dim>(A, b.xv, vc.xv);

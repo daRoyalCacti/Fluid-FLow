@@ -16,6 +16,14 @@
 // -1 if no neighbour
 struct grid_relation {
     int left{}, right{}, down{}, up{}, front{}, back{};
+
+    [[nodiscard]] bool is_edge() const {
+        const unsigned x = left==-1 || right==-1;
+        const unsigned y = down==-1 || up==-1;
+        const unsigned z = front==-1 || back==-1;
+
+        return (x+y+z) > 1;
+    }
 };
 
 //grids must be axis aligned
@@ -430,6 +438,72 @@ struct grid {
     }
 
 
+
+    [[nodiscard]] bool can_move(const unsigned ind, const int x_m, const int y_m, const int z_m) const noexcept {
+        auto curr_ind = ind;
+#ifndef NDEBUG
+        if (curr_ind == -1) {
+            std::cerr << "index is -1. This should never happen.\n";
+        }
+        if (curr_ind >= size()) {
+            std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+        }
+#endif
+
+        if (x_m > 0) {
+            for (unsigned i = 0; i < x_m; i++) {
+                curr_ind = r[curr_ind].right;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int i = x_m; i < 0; i++) {
+                curr_ind = r[curr_ind].left;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+        if (y_m > 0) {
+            for (unsigned j = 0; j < y_m; j++) {
+                curr_ind = r[curr_ind].up;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int j = y_m; j < 0; j++) {
+                curr_ind = r[curr_ind].down;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+        if (z_m > 0) {
+            for (unsigned k = 0; k < z_m; k++) {
+                curr_ind = r[curr_ind].back;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        } else {
+            for (int k = z_m; k < 0; k++) {
+                curr_ind = r[curr_ind].front;
+                if (curr_ind == -1) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] auto can_move(const unsigned ind, const vec3&  v) const noexcept {
+        return can_move(ind, static_cast<int>(v.x()), static_cast<int>(v.y()), static_cast<int>(v.z()) );
+    }
+
+
     [[nodiscard]] unsigned get_move_ind(const unsigned ind, const int x_m, const int y_m, const int z_m) const noexcept {
         auto curr_ind = ind;
 #ifndef NDEBUG
@@ -438,6 +512,10 @@ struct grid {
         }
         if (curr_ind >= size()) {
             std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
+        }
+
+        if (!can_move(ind, x_m, y_m, z_m)) {
+            std::cerr << "trying to move to a point that cannot be moved to\n";
         }
 #endif
 
@@ -534,70 +612,6 @@ struct grid {
 
     [[nodiscard]] auto get_move_ind(const unsigned ind, const vec3&  v) const noexcept {
         return get_move_ind(ind, static_cast<int>(v.x()), static_cast<int>(v.y()), static_cast<int>(v.z()) );
-    }
-
-    [[nodiscard]] bool can_move(const unsigned ind, const int x_m, const int y_m, const int z_m) const noexcept {
-        auto curr_ind = ind;
-#ifndef NDEBUG
-        if (curr_ind == -1) {
-            std::cerr << "index is -1. This should never happen.\n";
-        }
-        if (curr_ind >= size()) {
-            std::cerr << "index is outside the range of the grid\n\tcurr_ind=" << curr_ind << " size=" << size() << "\n";
-        }
-#endif
-
-        if (x_m > 0) {
-            for (unsigned i = 0; i < x_m; i++) {
-                curr_ind = r[curr_ind].right;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        } else {
-            for (int i = x_m; i < 0; i++) {
-                curr_ind = r[curr_ind].left;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        }
-        if (y_m > 0) {
-            for (unsigned j = 0; j < y_m; j++) {
-                curr_ind = r[curr_ind].up;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        } else {
-            for (int j = y_m; j < 0; j++) {
-                curr_ind = r[curr_ind].down;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        }
-        if (z_m > 0) {
-            for (unsigned k = 0; k < z_m; k++) {
-                curr_ind = r[curr_ind].back;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        } else {
-            for (int k = z_m; k < 0; k++) {
-                curr_ind = r[curr_ind].front;
-                if (curr_ind == -1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    [[nodiscard]] auto can_move(const unsigned ind, const vec3&  v) const noexcept {
-        return can_move(ind, static_cast<int>(v.x()), static_cast<int>(v.y()), static_cast<int>(v.z()) );
     }
 
 

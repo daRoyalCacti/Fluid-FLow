@@ -499,30 +499,96 @@ void boundary_conditions::create_wall_normals() {
     const auto M = static_cast<unsigned>(dims.y()-1);
     const auto P = static_cast<unsigned>(dims.z()-1);
 
-    for (unsigned i = 0; i <= N; i++) {
-        for (unsigned k = 0; k <= P; k++) {
+    //for (unsigned i = 0; i <= N; i++) {
+    //    for (unsigned k = 0; k <= P; k++) {
+    for (unsigned i = 1; i < N; i++) {
+        for (unsigned k = 1; k < P; k++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,0,k) )];
             wall_norms.add_point(ind1, vec3(0,1,0));
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,M,k) ) ];
             wall_norms.add_point(ind2, vec3(0,-1,0));
         }
     }
-    for (unsigned i = 0; i <= N; i++) {
-        for (unsigned j = 0; j <= M; j++) {
+    //for (unsigned i = 0; i <= N; i++) {
+    //    for (unsigned j = 0; j <= M; j++) {
+    for (unsigned i = 1; i < N; i++) {
+        for (unsigned j = 1; j < M; j++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,j,0) )];
             wall_norms.add_point(ind1, vec3(0,0,1));
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,j,P) )];
             wall_norms.add_point(ind2, vec3(0,0,-1));
         }
     }
-    for (unsigned j = 0; j <= M; j++) {
-        for (unsigned k = 0; k <= P; k++) {
+    //for (unsigned j = 0; j <= M; j++) {
+    //    for (unsigned k = 0; k <= P; k++) {
+    for (unsigned j = 1; j < M; j++) {
+        for (unsigned k = 1; k < P; k++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,j,k) )];
             wall_norms.add_point(ind1,vec3(1,0,0));
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(N,j,k) )];
             wall_norms.add_point(ind2,vec3(-1,0,0));
         }
     }
+
+    /*for (unsigned i = 1; i < N; i++) {
+        const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,0,0) )];  //front bottom
+        wall_norms.add_point(ind1, unit_vector(vec3(0,1,1)) );
+        const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,M,0) ) ]; //front top
+        wall_norms.add_point(ind2, unit_vector(vec3(0,-1,1)) );
+
+        const auto ind3 = old_new[global_grid.convert_indices_unif(vec3(i,0,P) )];  //back bottom
+        wall_norms.add_point(ind3, unit_vector(vec3(0,1,-1)) );
+        const auto ind4 = old_new[global_grid.convert_indices_unif(vec3(i,M,P) ) ]; //back top
+        wall_norms.add_point(ind4, unit_vector(vec3(0,-1,-1)) );
+    }
+
+    for (unsigned j = 1; j < M; j++) {
+        const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,j,0) )];  //front left
+        wall_norms.add_point(ind1, unit_vector(vec3(1,0,1)) );
+        const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(0,j,P) )];  //back left
+        wall_norms.add_point(ind2, unit_vector(vec3(1,0,-1)) );
+
+        const auto ind3 = old_new[global_grid.convert_indices_unif(vec3(N,j,0) )];  //front right
+        wall_norms.add_point(ind3, unit_vector(vec3(-1,0,1)) );
+        const auto ind4 = old_new[global_grid.convert_indices_unif(vec3(N,j,P) )];  //back right
+        wall_norms.add_point(ind4, unit_vector(vec3(-1,0,-1)) );
+    }
+
+    for (unsigned k = 1; k < P; k++) {
+        const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,0,k) )];  //left bottom
+        wall_norms.add_point(ind1,unit_vector(vec3(1,1,0)) );
+        const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(N,0,k) )];  //right bottom
+        wall_norms.add_point(ind2,unit_vector(vec3(-1,1,0)) );
+
+        const auto ind3 = old_new[global_grid.convert_indices_unif(vec3(0,M,k) )];  //left top
+        wall_norms.add_point(ind3,unit_vector(vec3(1,-1,0)) );
+        const auto ind4 = old_new[global_grid.convert_indices_unif(vec3(N,M,k) )];  //right top
+        wall_norms.add_point(ind4,unit_vector(vec3(-1,-1,0)) );
+    }
+
+    const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,0,0) )];  //front bottom left
+    wall_norms.add_point(ind1,unit_vector(vec3(1,1,1)) );
+
+    const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(N,0,0) )];  //front bottom right
+    wall_norms.add_point(ind2,unit_vector(vec3(-1,1,1)) );
+
+    const auto ind3 = old_new[global_grid.convert_indices_unif(vec3(0,M,0) )];  //front top left
+    wall_norms.add_point(ind3,unit_vector(vec3(1,-1,1)) );
+
+    const auto ind4 = old_new[global_grid.convert_indices_unif(vec3(N,M,0) )];  //front top right
+    wall_norms.add_point(ind4,unit_vector(vec3(-1,-1,1)) );
+
+    const auto ind5 = old_new[global_grid.convert_indices_unif(vec3(0,0,P) )];  //back bottom left
+    wall_norms.add_point(ind5,unit_vector(vec3(1,1,-1)) );
+
+    const auto ind6 = old_new[global_grid.convert_indices_unif(vec3(N,0,P) )];  //back bottom right
+    wall_norms.add_point(ind6,unit_vector(vec3(-1,1,-1)) );
+
+    const auto ind7 = old_new[global_grid.convert_indices_unif(vec3(0,M,P) )];  //back top left
+    wall_norms.add_point(ind7,unit_vector(vec3(1,-1,-1)) );
+
+    const auto ind8 = old_new[global_grid.convert_indices_unif(vec3(N,M,P) )];  //back top right
+    wall_norms.add_point(ind8,unit_vector(vec3(-1,-1,-1)) );*/
 }
 /*
 //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm

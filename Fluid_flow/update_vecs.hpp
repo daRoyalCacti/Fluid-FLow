@@ -77,6 +77,9 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                     }
 
                 }
+
+                //v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
+
                 const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
                 const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
                 const bool is_good_z = old.z() > 1e-3 && std::abs( (old.z() - v(i).z()) /v(i).z() *100) > accuracy_percent;
@@ -89,7 +92,7 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                 if constexpr (err) {
                     if (is_good) {
                         std::cerr << "Too much correction on the velocity correction at the walls\n";
-                        std::cerr << "\tcorrection : " << (old-v(i)).length()/v(i).length()*100 << "%\n";
+                        std::cerr << "\tcorrection : " << ((old-v(i))/v(i)).length()*100 << "%\n";
                         std::cerr << "\tat index " << i << "\n";
                         std::cerr << "\told velocity = (" << old << ")\t new velocity = (" << v(i) << ")\n";
                     }
@@ -97,6 +100,9 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
 #endif
                 if constexpr (err) {
                     if (is_good) {
+                        return false;
+                    }
+                    if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
                         return false;
                     }
                 }
@@ -143,8 +149,9 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                     std::cerr << "norms does not contain " << i << ")\n";
                 }
 #endif
-
                 const auto norm = BC.norms.normal(i);
+                const auto old_deriv = norm.x()*smart_deriv<1,0,0>(v, i) + norm.y()*smart_deriv<0,1,0>(v, i) + norm.z()*smart_deriv<0,0,1>(v, i);
+
 
 #ifndef NDEBUG
                 if (norm == vec3(0) ) {
@@ -160,6 +167,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 const auto dy = v.dy(i);
                 const auto dz = v.dz(i);
 
+
                 //picking the direction
                 unsigned big_dir = 0;
                 if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {
@@ -170,16 +178,16 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 }
 
                 if (big_dir == 0) { //x direction biggest
-                    if (!v.has_right(i)) {   //backward difference
-                        v.add_elm(i, -ny/nx* smart_deriv<0,1,0>(v, i)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(v, i)*2*dx/3 - v.move(i,-2,0,0)/3 + 4*v.move(i,-1,0,0)/3);
-                    } else {   //forward difference
+                    if (v.can_move(i, 2,0,0)) {   //forward difference
                         v.add_elm(i, ny/nx* smart_deriv<0,1,0>(v, i)*2*dx/3 + nz/nx* smart_deriv<0,0,1>(v, i)*2*dx/3 - v.move(i,2,0,0)/3 + 4*v.move(i,1,0,0)/3);
+                    } else {   //backward difference
+                        v.add_elm(i, -ny/nx* smart_deriv<0,1,0>(v, i)*2*dx/3 - nz/nx* smart_deriv<0,0,1>(v, i)*2*dx/3 - v.move(i,-2,0,0)/3 + 4*v.move(i,-1,0,0)/3);
                     }
                 } else if (big_dir == 1) {  //y direction biggest
-                    if (!v.has_up(i)) {  //backward difference
-                        v.add_elm(i, -nx/ny* smart_deriv<1,0,0>(v, i)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(v, i)*2*dy/3 - v.move(i,0,-2,0)/3 + 4*v.move(i,0,-1,0)/3);
-                    } else { //forward difference
+                    if (v.can_move(i, 0,2,0)) {  //forward difference
                         v.add_elm(i, nx/ny* smart_deriv<1,0,0>(v, i)*2*dy/3 + nz/ny* smart_deriv<0,0,1>(v, i)*2*dy/3 - v.move(i, 0,2,0)/3 + 4*v.move(i,0,1,0)/3);
+                    } else { //backward difference
+                        v.add_elm(i, -nx/ny* smart_deriv<1,0,0>(v, i)*2*dy/3 - nz/ny* smart_deriv<0,0,1>(v, i)*2*dy/3 - v.move(i,0,-2,0)/3 + 4*v.move(i,0,-1,0)/3);
                     }
                 } else {    //z direction
 #ifndef NDEBUG
@@ -187,13 +195,18 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                         std::cerr << "the biggest direction cannot be larger than 2\n";
                     }
 #endif
-                    if (!v.has_back(i)) { //backward difference
-                        v.add_elm(i, -ny/nz* smart_deriv<0,1,0>(v, i)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(v, i)*2*dz/3 - v.move(i,0,0,-2)/3 + 4*v.move(i,0,0,-1)/3);
-                    } else {  //forward difference
+                    if (v.can_move(i, 0,0,2)) { //forward difference
                         v.add_elm(i, ny/nz* smart_deriv<0,1,0>(v, i)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(v, i)*2*dz/3 - v.move(i,0,0,2)/3 + 4*v.move(i,0,0,1)/3);
+                    } else {  //backward difference
+                        v.add_elm(i, -ny/nz* smart_deriv<0,1,0>(v, i)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(v, i)*2*dz/3 - v.move(i,0,0,-2)/3 + 4*v.move(i,0,0,-1)/3);
                     }
 
                 }
+
+                //v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
+
+
+
                 const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
                 const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
                 const bool is_good_z = old.z() > 1e-3 && std::abs( (old.z() - v(i).z()) /v(i).z() *100) > accuracy_percent;
@@ -213,10 +226,6 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                         } else {
                             std::cerr << "\tThis happened for z the largest direction\n";
                         }
-                        std::cerr << "\tcorrection : " << (old-v(i)).length()/v(i).length()*100 << "%\n";
-                        std::cerr << "\tat index " << i << "\n";
-                        std::cerr << "\told velocity = (" << old << ")\t new velocity = (" << v(i) << ")\n";
-                        std::cerr << "\tnormal vector = (" << norm << ")\n";
 
                         std::cerr << "\tThis was done using : ";
                         if (!v.has_right(i)) {
@@ -230,11 +239,21 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                             std::cerr << "forwards in y,  ";
                         }
                         if (!v.has_back(i)) {
-                            std::cerr << "backwards in z";
+                            std::cerr << "backwards in z\n";
                         } else {
-                            std::cerr << "forwards in z";
+                            std::cerr << "forwards in z\n";
                         }
-                        std::cerr << "\n";
+
+                        std::cerr << "\tcorrection : " << ((old-v(i))/v(i)).length()*100 << "%\n";
+                        std::cerr << "\tat index " << i << "\n";
+                        std::cerr << "\told velocity = (" << old << ")\t new velocity = (" << v(i) << ")\n";
+                        std::cerr << "\tnormal vector = (" << norm << ")\n";
+
+
+                        std::cerr << "\told derivative (" << old_deriv << ")\tnew derivative (" << norm.x()*smart_deriv<1,0,0>(v, i) + norm.y()*smart_deriv<0,1,0>(v, i) + norm.z()*smart_deriv<0,0,1>(v, i) << ")\n";
+                        std::cerr << "\tThis is at (" << BC.global_grid.get_plot_pos(i) << ")\n";
+                        std::cerr << "\tl:" << v.has_left(i) << " r:" << v.has_right(i) << " u:" << v.has_up(i) << " d:" << v.has_down(i) << " f:" << v.has_front(i) << " b:" << v.has_back(i) << "\n";
+
                     }
                 }
 #endif
@@ -248,6 +267,9 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 
             if constexpr (err) {
                 if (is_good) {
+                    return false;
+                }
+                if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
                     return false;
                 }
             }
@@ -402,7 +424,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     }
                     if constexpr (err) {
                         if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
-                            std::cerr << "more than 1% correction on pressure. This is bad\n";
+                            std::cerr << "solution to pressure is not accurate\n";
                             if (big_dir == 0) {
                                 std::cerr << "\tThis happened for x the largest direction\n";
                             } else if (big_dir == 1) {
@@ -440,6 +462,9 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                 }
                 if constexpr (err) {
                     if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
+                        return false;
+                    }
+                    if (!std::isfinite(p(i))) {
                         return false;
                     }
                 }
