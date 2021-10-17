@@ -228,7 +228,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
             if (v.g->off_walls(i)) {
                 A.add_elm(i,i, 1);
             } else {
-                const auto &n =  bc.norms.normal(i);
+                /*const auto &n =  bc.norms.normal(i);
 
                 double mid = 0;
                 //x
@@ -273,7 +273,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
                     A.add_elm(i, v.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
                 }
 
-                A.add_elm(i,i, mid);
+                A.add_elm(i,i, mid);*/
 
                 /*if (v.can_move(i, -1,0,0) && v.can_move(i, 1,0,0)) {    //central difference
                     A.add_elm(i, v.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
@@ -314,7 +314,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
 
 
 
-                /*const auto &n =  bc.norms.normal(i);
+                const auto &n =  bc.norms.normal(i);
 #ifndef NDEBUG
                 if (n != vec3(1,0,0) && n != vec3(-1,0,0) &&
                     n!= vec3(0,1,0) && n!= vec3(0,-1,0) &&
@@ -356,7 +356,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
 
                 A.add_elm(i,i, 3/(2*h));
                 A.add_elm(i, v.get_move_ind(i,n), -2/h);
-                A.add_elm(i, v.get_move_ind(i, 2*n), 1/(2*h) );*/
+                A.add_elm(i, v.get_move_ind(i, 2*n), 1/(2*h) );
 
             }
         } else {

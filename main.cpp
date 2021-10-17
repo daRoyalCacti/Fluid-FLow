@@ -18,7 +18,7 @@ constexpr double wx = 6;
 constexpr double wy = 7;
 constexpr double wz = 5;
 #endif
-constexpr double max_t = 1;
+constexpr double max_t = 0.1;
 constexpr double Re = 7069; //150;  //https://www.grc.nasa.gov/WWW/k-12/airplane/reynolds.html
 
 

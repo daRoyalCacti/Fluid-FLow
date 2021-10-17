@@ -7,11 +7,18 @@
 
 #define CL_TARGET_OPENCL_VERSION 300    //the lastest version supported atm
 #define VIENNACL_WITH_EIGEN 1
+
+#define BICGSTAB
+
 #include <viennacl/vector.hpp>
 //#include <viennacl/matrix.hpp>
 #include <viennacl/compressed_matrix.hpp>
+
+#ifndef BICGSTAB
 #include <viennacl/linalg/gmres.hpp>
-//#include <viennacl/linalg/bicgstab.hpp>
+#else
+#include <viennacl/linalg/bicgstab.hpp>
+#endif
 
 #include "../MyMath/big_matrix.hpp"
 #include "../MyMath/big_vec.hpp"
@@ -91,8 +98,17 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
     //could probably mess with the parameters
     //viennacl::linalg::gmres_tag my_gmres_tag(1e-5, 100, 20); // up to 100 iterations, restart after 20 iterations
 #ifdef VIENNACL_WITH_OPENCL
+#ifndef BICGSTAB
     viennacl::linalg::gmres_tag my_gmres_tag(1e-100, it, dim);
-    //viennacl::linalg::bicgstab_tag my_gmres_tag(1e-100, it, dim);
+    viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag);
+#else
+    viennacl::vector<double> x_guess( x.size() );
+    viennacl::copy(x.v, x_guess);
+    viennacl::linalg::bicgstab_tag my_bicgstab_tag(1e-100, it, dim);
+    viennacl::linalg::bicgstab_solver<viennacl::vector<double>> s(my_bicgstab_tag);
+    s.set_initial_guess(x_guess);
+    viennacl::vector<double> res = s(vcl_sparse_matrix, vcl_rhs);
+#endif
 #endif
 #ifdef VIENNACL_WITH_OPENMP
     viennacl::linalg::gmres_tag my_gmres_tag(1e-5, it, dim);
@@ -109,7 +125,7 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
     //viennacl::linalg::gmres_tag my_gmres_tag(1e-50, 1000, 20); // up to 100 iterations, restart after 20 iterations
 
     //solving
-    viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag);
+
 
     //copy result into x
     viennacl::copy(res, x.v);
