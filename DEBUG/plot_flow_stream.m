@@ -30,7 +30,7 @@ function [vx, vy, vz] = plot_flow_stream(file_loc)
     for ii = 1:len
         ind = ii+off;
         if (x(ii+1) - x(ii) > 1.5*dx)
-            no_points = length(x(ii):dx:x(ii+1))-2;%floor( (x(ii+1) - x(ii))/dx );
+            no_points = round( (x(ii+1) - x(ii))/dx )-1;%length(x(ii):dx:x(ii+1))-2;%floor( (x(ii+1) - x(ii))/dx );
             
             x_repl = (x(ii)):dx:(x(ii+1)-dx);
             x_repl = x_repl';

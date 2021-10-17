@@ -54,7 +54,7 @@ function p = plot_pressure(file_loc)
     for ii = 1:length(p)-1
         ind = ii+off;
         if (x(ii+1) - x(ii) > 1.5*dx)
-            no_points = length(x(ii):dx:x(ii+1))-2;%floor( (x(ii+1) - x(ii))/dx );
+            no_points = round( (x(ii+1) - x(ii))/dx )-1;%length(x(ii):dx:x(ii+1))-2;%floor( (x(ii+1) - x(ii))/dx );
             p_r = [p_r(1:ind); nan*(1:no_points)'; p_r(ind+1:end) ];
             off = off + no_points;
         end
