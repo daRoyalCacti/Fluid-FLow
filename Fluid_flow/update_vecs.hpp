@@ -35,7 +35,7 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                 }
 #endif
 
-                const auto nx = norm.x();
+                /*const auto nx = norm.x();
                 const auto ny = norm.y();
                 const auto nz = norm.z();
 
@@ -76,9 +76,9 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                         v.add_elm(i, ny/nz* smart_deriv<0,1,0>(v, i)*2*dz/3 + nx/nz* smart_deriv<1,0,0>(v, i)*2*dz/3 - v.move(i,0,0,2)/3 + 4*v.move(i,0,0,1)/3);
                     }
 
-                }
+                }*/
 
-                //v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
+                v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
 
                 const bool is_good_x = old.x() > 1e-3 && std::abs( (old.x() - v(i).x()) /v(i).x() *100) > accuracy_percent;
                 const bool is_good_y = old.y() > 1e-3 && std::abs( (old.y() - v(i).y()) /v(i).y() *100) > accuracy_percent;
@@ -159,7 +159,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 }
 #endif
 
-                const auto nx = norm.x();
+                /*const auto nx = norm.x();
                 const auto ny = norm.y();
                 const auto nz = norm.z();
 
@@ -201,9 +201,9 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                         v.add_elm(i, -ny/nz* smart_deriv<0,1,0>(v, i)*2*dz/3 - nx/nz* smart_deriv<1,0,0>(v, i)*2*dz/3 - v.move(i,0,0,-2)/3 + 4*v.move(i,0,0,-1)/3);
                     }
 
-                }
+                }*/
 
-                //v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
+                v.add_elm(i, 4/3.0*v.move(i, norm) - 1/3.0*v.move(i,2*norm) );
 
 
 
@@ -219,13 +219,13 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 if constexpr (err) {
                     if (is_good) {
                         std::cerr << "Too much correction on the velocity at the walls\n";
-                        if (big_dir == 0) {
+                        /*if (big_dir == 0) {
                             std::cerr << "\tThis happened for x the largest direction\n";
                         } else if (big_dir == 1) {
                             std::cerr << "\tThis happened for y the largest direction\n";
                         } else {
                             std::cerr << "\tThis happened for z the largest direction\n";
-                        }
+                        }*/
 
                         std::cerr << "\tThis was done using : ";
                         if (!v.has_right(i)) {
@@ -379,7 +379,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     const auto dz = p.dz(i);
 
                     //picking the direction
-                    unsigned big_dir = 0;
+                    /*unsigned big_dir = 0;
                     if (std::abs(norm.y()) > std::abs(norm[big_dir]) ) {
                         big_dir = 1;
                     }
@@ -415,8 +415,111 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
 
                         }
 
-                    }
+                    }*/
 
+                    const bool cx = p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0);
+                    const bool cy = p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0);
+                    const bool cz = p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1);
+
+                    const bool fx = p.can_move(i, 2,0,0);
+                    const bool fy = p.can_move(i, 0,2,0);
+                    const bool fz = p.can_move(i, 0,0,2);
+
+                    const bool bx = p.can_move(i, -2,0,0);
+                    const bool by = p.can_move(i, 0,-2,0);
+                    const bool bz = p.can_move(i, 0,0,-2);
+
+                    std::string_view err_code;
+
+                    //cc not possible because have boundary point
+                    if (cx & cy & fz) { //ccf
+                        err_code = "ccf";
+                        p(i) = 2*dz/3 * ( nx/nz * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)   + ny/nz * (p.move(i,0,1,0) - p.move(i,0,-1,0)) / (2*dy)  ) + 4/3.0*p.move(i,0,0,1) - 1/3.0*p.move(i,0,0,2);
+                    } else if (cx & fy & cz) {  //cfc
+                        err_code = "cfc";
+                        p(i) = 2*dy/3 * ( nx/ny * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)   + nz/ny * (p.move(i,0,0,1) - p.move(i,0,0,-1)) / (2*dz)  ) + 4/3.0*p.move(i,0,1,0) - 1/3.0*p.move(i,0,2,0);
+                    } else if (fx & cy & cz) {  //fcc
+                        err_code = "fcc";
+                        p(i) = 2*dx/3 * ( ny/nx * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy)   + nz/nx * (p.move(i,0,0,1) - p.move(i,0,0,-1)) / (2*dz)  ) + 4/3.0*p.move(i,1,0,0) - 1/3.0*p.move(i,2,0,0);
+
+                    } else if (cx & cy & bz) {  //ccb
+                        err_code = "ccb";
+                        p(i) = 2*dz/3 * ( -nx/nz * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)   - ny/nz * (p.move(i,0,1,0) - p.move(i,0,-1,0)) / (2*dy)  ) + 4/3.0*p.move(i,0,0,-1) - 1/3.0*p.move(i,0,0,-2);
+                    } else if (cx & by & cz) {  //cbc
+                        err_code = "cbc";
+                        p(i) = 2*dy/3 * ( -nx/ny * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)   - nz/ny * (p.move(i,0,0,1) - p.move(i,0,0,-1)) / (2*dz)  ) + 4/3.0*p.move(i,0,-1,0) - 1/3.0*p.move(i,0,-2,0);
+                    } else if (bx & cy & cz) {  //bcc
+                        err_code = "bcc";
+                        p(i) = 2*dx/3 * ( -ny/nx * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy)   - nz/nx * (p.move(i,0,0,1) - p.move(i,0,0,-1)) / (2*dz)  ) + 4/3.0*p.move(i,-1,0,0) - 1/3.0*p.move(i,-2,0,0);
+
+                    } else if (cx & fy & fz) {  //cff
+                        err_code = "cff";
+                        p(i) = 1 / ( 3*nz/(2*dz)  + 3*ny/(2*dy) ) * (  nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)  +  ny * (-p.move(i,0,2,0) + 4*p.move(i,0,1,0))/(2*dy)  + nz * (-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz)  );
+                    } else if (fx & cy & fz) {  //fcf
+                        err_code = "fcf";
+                        p(i) = 1 / ( 3*nx/(2*dx)  + 3*nz/(2*dz) ) * (  ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy)  +  nx * (-p.move(i,2,0,0) + 4*p.move(i,1,0,0))/(2*dx)  + nz * (-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz)  );
+                    } else if (fx & fy & cz) {  //ffc
+                        err_code = "ffc";
+                        p(i) = 1 / ( 3*nx/(2*dx)  + 3*ny/(2*dy) ) * (  nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz)  +  ny * (-p.move(i,0,2,0) + 4*p.move(i,0,1,0))/(2*dy)  + nx * (-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx)  );
+
+                    } else if (cx & fy & bz) {  //cfb
+                        err_code = "cfb";
+                        p(i) = 1 / ( 3*nz/(2*dz)  - 3*ny/(2*dy) )  *  (  -nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)  -  ny * (-p.move(i,0,2,0)+4*p.move(i,0,1,0))/(2*dy) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz)  );
+                    } else if (fx & cy & bz) {  //fcb
+                        err_code = "fcb";
+                        p(i) = 1 / ( 3*nz/(2*dz)  - 3*nx/(2*dx) )  *  (  -ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy)  -  nx * (-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz)  );
+                    } else if (fx & by & cz) {  //fbc
+                        err_code = "fbc";
+                        p(i) = 1 / ( 3*ny/(2*dy)  - 3*nx/(2*dx) )  *  (  -nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz)  -  nx * (-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx) - ny*(-4*p.move(i,0,-1,0)+p.move(i,0,-2,0))/(2*dy)  );
+                    } else if (cx & by & fz) {  //cbf
+                        err_code = "cbf";
+                        p(i) = 1 / ( 3*ny/(2*dy)  - 3*nz/(2*dz) )  *  (  -nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx)  -  nz * (-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz) - ny*(-4*p.move(i,0,-1,0)+p.move(i,0,-2,0))/(2*dy)  );
+                    } else if (bx & cy & fz) {  //bcf
+                        err_code = "bcf";
+                        p(i) = 1 / ( 3*nx/(2*dx)  - 3*nz/(2*dz) )  *  (  -ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy)  -  nz * (-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz) - nx*(-4*p.move(i,-1,0,0)+p.move(i,-2,0,0))/(2*dx)  );
+                    } else if (bx & fy & cz) {  //bfc
+                        err_code = "bfc";
+                        p(i) = 1 / ( 3*nx/(2*dx)  - 3*ny/(2*dy) )  *  (  -nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz)  -  ny * (-p.move(i,0,2,0)+4*p.move(i,0,1,0))/(2*dy) - nx*(-4*p.move(i,-1,0,0)+p.move(i,-2,0,0))/(2*dx)  );
+
+                    } else if (cx & by & bz) {  //cbb
+                        err_code = "cbb";
+                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nz/(2*nz) )  *  (  -nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,0,-2))/(2*dy) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
+                    } else if (bx & cy & bz) {  //bcb
+                        err_code = "bcb";
+                        p(i) = 1 / ( 3*nx/(2*dx) + 3*nz/(2*nz) )*  (  -ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy) - nx * (-4*p.move(i,-1,0,0) + p.move(i,0,-2,0))/(2*dx) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
+                    } else if (bx & by & cz) {  //bbc
+                        err_code = "bbc";
+                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nx/(2*nx) )*  (  -nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,0,-2))/(2*dy) - nx*(-4*p.move(i,-1,0,0)+p.move(i,-2,0,0))/(2*dx) );
+
+                    } else if (fx & fy & fz) {  //fff
+                        err_code = "fff";
+                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*ny) + 3*nz/(2*nz) ) * (  nx*(-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx)  +  ny*(-p.move(i,0,2,0)+4*p.move(i,0,1,0))/(2*dy)  +  nz*(-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz)  );
+                    } else if (bx & by & bz) {  //bbb
+                        err_code = "bbb";
+                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*ny) + 3*nz/(2*nz) ) * (  nx*(-p.move(i,-2,0,0)+4*p.move(i,-1,0,0))/(2*dx)  +  ny*(-p.move(i,0,-2,0)+4*p.move(i,0,-1,0))/(2*dy)  +  nz*(-p.move(i,0,0,-2)+4*p.move(i,0,0,-1))/(2*dz)  );
+
+                    } else if (fx & fy & bz) {  //ffb
+                        err_code = "ffb";
+                        p(i) = 1/( -3*nx/(2*dx) - 3*ny/(2*dy) + 3*nz/(2*dz) )  *  (   -nx*(-p.move(i, 2, 0,0) + 4*p.move(i,1,0,0) )/(2*dx)  -  ny * (-p.move(i, 0, 2, 0) + 4*p.move(i, 0, 1,0))/(2*dy)  +  nz * (-p.move(i, 0, 0, -2) + 4*p.move(i, 0, 0,-1))/(2*dz) );
+                    } else if (fx & by & fz) {  //fbf
+                        err_code = "fbf";
+                        p(i) = 1/( -3*nx/(2*dx) + 3*ny/(2*dy) - 3*nz/(2*dz) ) *  (   -nx*(-p.move(i, 2, 0,0) + 4*p.move(i,1,0,0) )/(2*dx)  +  ny * (-p.move(i, 0, -2, 0) - 4*p.move(i, 0, -1,0))/(2*dy)  -  nz * (-p.move(i, 0, 0, 2) + 4*p.move(i, 0, 0,1))/(2*dz) );
+                    } else if (bx & fy & fz) {  //bff
+                        err_code = "bff";
+                        p(i) = 1/( 3*nx/(2*dx) - 3*ny/(2*dy) - 3*nz/(2*dz) ) *  (   nx*(-p.move(i, -2, 0,0) + 4*p.move(i,-1,0,0) )/(2*dx)  -  ny * (-p.move(i, 0, 2, 0) - 4*p.move(i, 0, 1,0))/(2*dy)  +  nz * (-p.move(i, 0, 0, 2) + 4*p.move(i, 0, 0,1))/(2*dz) );
+
+                    } else if (bx & by & fz) {  //bbf
+                        err_code = "bbf";
+                        p(i) = 1/( 3*nx/(2*dx) + 3*ny/(2*dy) - 3*nz/(2*dz) )  *  (   nx*(-p.move(i, -2, 0,0) + 4*p.move(i,-1,0,0) )/(2*dx)  +  ny * (-p.move(i, 0, -2, 0) + 4*p.move(i, 0, -1,0))/(2*dy)  -  nz * (-p.move(i, 0, 0, 2) + 4*p.move(i, 0, 0,1))/(2*dz) );
+                    } else if (bx & fy & bz) {  //bfb
+                        err_code = "bfb";
+                        p(i) = 1/( 3*nx/(2*dx) - 3*ny/(2*dy) + 3*nz/(2*dz) )  *  (   nx*(-p.move(i, -2, 0,0) + 4*p.move(i,-1,0,0) )/(2*dx)  -  ny * (-p.move(i, 0, 2, 0) + 4*p.move(i, 0, 1,0))/(2*dy)  +  nz * (-p.move(i, 0, 0, -2) + 4*p.move(i, 0, 0,-1))/(2*dz) );
+                    } else if (fx & by & bz) {  //fbb
+                        err_code = "fbb";
+                        p(i) = 1/( -3*nx/(2*dx) + 3*ny/(2*dy) + 3*nz/(2*dz) )  *  (   -nx*(-p.move(i, 2, 0,0) + 4*p.move(i,1,0,0) )/(2*dx)  +  ny * (-p.move(i, 0, -2, 0) + 4*p.move(i, 0, -1,0))/(2*dy)  +  nz * (-p.move(i, 0, 0, -2) + 4*p.move(i, 0, 0,-1))/(2*dz) );
+                    } else {
+                        std::cerr << "enforcing pressure boundary conditions is not possible.\n";
+                    }
 
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                     if (!std::isfinite(p(i))) {
@@ -425,21 +528,21 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     if constexpr (err) {
                         if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
                             std::cerr << "solution to pressure is not accurate\n";
-                            if (big_dir == 0) {
+                            /*if (big_dir == 0) {
                                 std::cerr << "\tThis happened for x the largest direction\n";
                             } else if (big_dir == 1) {
                                 std::cerr << "\tThis happened for y the largest direction\n";
                             } else {
                                 std::cerr << "\tThis happened for z the largest direction\n";
-                            }
+                            }*/
 
                             std::cerr << "\tcorrection : " << std::abs(old-p(i))/std::abs(p(i))*100 << "%\n";
                             std::cerr << "\tat index " << i << "\n";
                             std::cerr << "\told pressure = " << old << "\t new pressure = " << p(i) << "\n";
                             std::cerr << "\tnormal vector = (" << norm << ")\n";
 
-                            std::cerr << "\tThis was done using : ";
-                            if (!p.has_right(i)) {
+                            std::cerr << "\tThis was done using : " << err_code << "\n";
+                            /*if (!p.has_right(i)) {
                                 std::cerr << "backwards in x,  ";
                             } else {
                                 std::cerr << "forwards in x,  ";
@@ -454,7 +557,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                             } else {
                                 std::cerr << "forwards in z";
                             }
-                            std::cerr << "\n";
+                            std::cerr << "\n";*/
                         }
                     }
 #endif

@@ -11,7 +11,7 @@
 //#include <viennacl/matrix.hpp>
 #include <viennacl/compressed_matrix.hpp>
 #include <viennacl/linalg/gmres.hpp>
-#include <viennacl/linalg/bicgstab.hpp>
+//#include <viennacl/linalg/bicgstab.hpp>
 
 #include "../MyMath/big_matrix.hpp"
 #include "../MyMath/big_vec.hpp"
