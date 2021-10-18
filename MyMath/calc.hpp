@@ -281,6 +281,62 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
 }
 
 
+template<unsigned nx, unsigned ny, unsigned nz, typename T>
+auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
+    static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
+    static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
+    static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
+
+    if constexpr(nx + ny + nz == 1) {   //first order
+        constexpr unsigned n = (nx==1) ? 0 : (ny==1) ? 1 : 2;
+        const vec3& x = a.get<n>();
+        return x.x()*smart_deriv<1,0,0>(v,ind) + x.y()*smart_deriv<0,1,0>(v,ind) + x.z()*smart_deriv<0,0,1>(v,ind);
+    } else if constexpr(nx + ny + nz ==2) {  //second order
+        constexpr unsigned highest_order = std::max({nx, ny, nz});
+        vec3 x, y;
+        if (highest_order == 1) {
+            constexpr unsigned axis1 = (nx==1) ? 0 : (ny==1) ? 1 : 2;
+            constexpr unsigned axis2 = (nx==1 && axis1!=0) ? 0 : (ny==1 && axis1!=1) ? 1 : 2;
+            x = a.get<axis1>();
+            y = a.get<axis2>();
+        } else {
+            constexpr unsigned axis = (nx==2) ? 0 : (ny==2) ? 1 : 2;
+            x = a.get<axis>();
+            y = a.get<axis>();
+        }
+
+        return x.x()*y.x()*smart_deriv<2,0,0>(v,ind) + x.y()*y.y()* smart_deriv<0,2,0>(v,ind) + x.z()*y.z()*
+                      smart_deriv<0,0,2>(v,ind) + (x.y()*y.x() + x.x()*y.y() )*smart_deriv<1,1,0>(v,ind) + (x.z()*y.x() + x.x()*y.z())*
+                               smart_deriv<1,0,1>(v,ind) + (x.z()*y.y() + x.y()*y.z())* smart_deriv<0,1,1>(v,ind);
+
+    } else {    //third order
+        static_assert( std::max({nx,ny,nz}) != 1, "d^3/dxdydz is not supported" );
+
+        vec3 x,y;
+        if constexpr(std::max({nx,ny,nz})==3) {
+            constexpr unsigned axis = (nx==3) ? 0 : (ny==3) ? 1 : 2;
+            x = a.get<axis>();
+            y = a.get<axis>();
+        } else {
+            constexpr unsigned axis1 = (nx==2) ? 0 : (ny==2) ? 1 : 2;
+            constexpr unsigned axis2 = (nx==1) ? 0 : (ny==1) ? 1 : 2;
+            x = a.get<axis1>();
+            y = a.get<axis2>();
+        }
+
+        return x.x()*x.x()*y.x()*smart_deriv<3,0,0>(v,ind) + (x.y()*x.y()*y.x() + 2*x.x()*x.y()*y.y())*smart_deriv<1,2,0>(v,ind) +
+        (x.z()*x.z()*y.x() + 2*x.x()*x.z()*y.z())*smart_deriv<1,0,2>(v,ind) + (2*x.x()*x.y()*y.x() + x.x()*x.x()*y.y())*smart_deriv<2,1,0>(v,ind) +
+        (2*x.x()*x.z()*y.x() + x.x()*x.x()*y.z())* smart_deriv<2,0,1>(v, ind) +
+        (2*x.y()*x.z()*y.x() + 2*x.x()*x.z()*y.y() + 2*x.x()*x.y()*y.z())* smart_deriv<1,1,1>(v, ind) +
+        x.y()*x.y()*y.y()*smart_deriv<0,3,0>(v,ind) + x.z()*x.z()*y.z()*smart_deriv<0,0,3>(v, ind) +
+        (x.z()*x.z()*y.y() + 2*x.y()*x.z()*y.z())* smart_deriv<0,1,2>(v, ind) +
+        (2*x.y()*x.z()*y.y() + x.y()*x.y()*y.z())* smart_deriv<0,2,1>(v, ind);
+
+    }
+
+}
+
+
 //H(v_{ind})
 vec3 advection(const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small v
