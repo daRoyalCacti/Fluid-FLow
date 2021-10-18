@@ -26,6 +26,23 @@ struct grid_relation {
     }
 };
 
+struct axes {
+    vec3 x,y,z;
+    template <unsigned i>
+    vec3& get() {
+        if constexpr (i==0) {
+            return x;
+        } else if constexpr (i==1) {
+            return y;
+        } else if constexpr( i==2) {
+            return z;
+        } else {
+            std::cerr << "trying to return an axis that doesn't exist\n";
+            return z;
+        }
+    }
+};
+
 //grids must be axis aligned
 // grid[i] corresponds to the interval x[i]+dx, y[i]+dy, z[i]+dz
 struct grid {
@@ -37,6 +54,8 @@ struct grid {
     vec3 edge1, edge2, /*edge3,*/ edge4, edge5, /*edge6,*/ edge7, edge8;
     vec3 middle;
     vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
+
+    axes axis{ vec3(1,0,0), vec3(0,1,0), vec3(0,0,1) };
 
 
     vec3 operator[](unsigned i) const noexcept { return { x[i], y[i], z[i] }; }
@@ -118,6 +137,10 @@ struct grid {
         edge7 = rotate(c_o_m, rot_angle_vec, edge7, rot_angle_vec.length() ) + trans_vec;
         edge8 = rotate(c_o_m, rot_angle_vec, edge8, rot_angle_vec.length() ) + trans_vec;
         middle = rotate(c_o_m, rot_angle_vec, middle, rot_angle_vec.length() ) + trans_vec;
+
+        axis.x = rotate(vec3(0), -rot_angle_vec, axis.x, rot_angle_vec.length() );
+        axis.y = rotate(vec3(0), -rot_angle_vec, axis.y, rot_angle_vec.length() );
+        axis.z = rotate(vec3(0), -rot_angle_vec, axis.z, rot_angle_vec.length() );
 
 
 
