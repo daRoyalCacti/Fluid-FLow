@@ -456,13 +456,27 @@ void write_vec(const T& v, const char* file_loc) noexcept {
     output.close();
 }
 
-void write_vec(const auto& v, const auto& inds, const char* file_loc) noexcept {
+void write_vec(const big_vec_d& v, const auto& inds, const char* file_loc) noexcept {
     std::ofstream output(file_loc);
     if (output.is_open()) {
         for (const auto ind : inds) {
             const grid& g = *v.g;
             const auto pos = g.get_plot_pos(ind);
             output << pos.x() << " " << pos.y() << " " << v(ind) << "\n";
+        }
+    } else {
+        std::cerr << "failed to open file\n";
+    }
+
+    output.close();
+}
+
+void write_vec(const big_vec_v& v, const auto& inds, const char* file_loc) noexcept {
+    std::ofstream output(file_loc);
+    if (output.is_open()) {
+        for (const auto ind : inds) {
+            const grid& g = *v.g;
+            output << g.x[ind] << " " << g.y[ind] << " " << v(ind) << "\n";
         }
     } else {
         std::cerr << "failed to open file\n";

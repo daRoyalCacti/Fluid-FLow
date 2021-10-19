@@ -21,7 +21,7 @@ function [vx, vy, vz, p] = plot_data(trial)
 
    subplot(2,2,3)
 %    plot_flow_normalized("./velocity_data/" + trial_s + ".txt");
-   plot_flow_stream("./velocity_data/" + trial_s + ".txt");
+   plot_flow_stream("./velocity_data/" + trial_s + ".txt", "./pressure_data/" + trial_s + ".txt");
 
    subplot(2,2, 4)
    Plot_mesh("./rigid_body_data/" + trial_s + ".txt");

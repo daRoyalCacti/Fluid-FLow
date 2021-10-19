@@ -1,14 +1,24 @@
 %plots the flow for a give time
-function [vx, vy, vz] = plot_flow_stream(file_loc)
+function [vx, vy, vz] = plot_flow_stream(file_loc, pressure_file_loc)
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f %f %f');
     fclose(fileID);
-    x = data(1:5:end);
-    y = data(2:5:end);
+%     x = data(1:5:end);
+%     y = data(2:5:end);
     
     vx = data(3:5:end);
     vy = data(4:5:end);
     vz = data(5:5:end);
+    
+    
+    fileIDp = fopen(pressure_file_loc, 'r');
+    datap = fscanf(fileIDp, '%f %f %f');
+    fclose(fileIDp);
+    x = datap(1:3:end);
+    y = datap(2:3:end); 
+    
+    
+    
     
     x_sort = sort(unique(x));
     dx = x_sort(2)-x_sort(1);
