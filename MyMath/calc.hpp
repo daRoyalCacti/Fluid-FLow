@@ -13,7 +13,7 @@
 //nx,ny,nz denote the derivative. e.g. <1,1,0> corresponds to d^2/dxdy
 //ind corresponds to where the derivative is to take place
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv(const T& v, const unsigned ind) noexcept  {
+auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
@@ -24,11 +24,11 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
     if constexpr ((nx==1) && (ny==1) && (nz==1)) {  //d^3/dxdydz
 
         if (v.can_move(ind, 1,0,0) && v.can_move(ind, -1,0,0)) {    //central
-            return 1/(2*v.dx(ind)) * ( smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0)) - smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0))  );
+            return 1/(2*v.dx(ind)) * ( smart_deriv_old<0,1,1>(v, v.get_move_ind(ind, 1,0,0)) - smart_deriv_old<0,1,1>(v, v.get_move_ind(ind, -1,0,0))  );
         } else if (v.can_move(ind, -2,0,0)) {   //backward
-            return 1/(2*v.dx(ind)) * ( 3*smart_deriv<0,1,1>(v, ind) - 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, -1,0,0)) + smart_deriv<0,1,1>(v, v.get_move_ind(ind, -2,0,0))  );
+            return 1/(2*v.dx(ind)) * ( 3*smart_deriv_old<0,1,1>(v, ind) - 4*smart_deriv_old<0,1,1>(v, v.get_move_ind(ind, -1,0,0)) + smart_deriv_old<0,1,1>(v, v.get_move_ind(ind, -2,0,0))  );
         } else {
-            return 1/(2*v.dx(ind)) * (-3*smart_deriv<0,1,1>(v, ind) + 4*smart_deriv<0,1,1>(v, v.get_move_ind(ind, 1,0,0))  - smart_deriv<0,1,1>(v, v.get_move_ind(ind,  2,0,0))  );
+            return 1/(2*v.dx(ind)) * (-3*smart_deriv_old<0,1,1>(v, ind) + 4*smart_deriv_old<0,1,1>(v, v.get_move_ind(ind, 1,0,0))  - smart_deriv_old<0,1,1>(v, v.get_move_ind(ind,  2,0,0))  );
         }
 
 
@@ -282,7 +282,7 @@ auto smart_deriv(const T& v, const unsigned ind) noexcept  {
 
 
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
+auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
@@ -290,7 +290,7 @@ auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
     if constexpr(nx + ny + nz == 1) {   //first order
         constexpr unsigned n = (nx==1) ? 0 : (ny==1) ? 1 : 2;
         const vec3& x = a.get<n>();
-        return x.x()*smart_deriv<1,0,0>(v,ind) + x.y()*smart_deriv<0,1,0>(v,ind) + x.z()*smart_deriv<0,0,1>(v,ind);
+        return x.x()*smart_deriv_old<1,0,0>(v,ind) + x.y()*smart_deriv_old<0,1,0>(v,ind) + x.z()*smart_deriv_old<0,0,1>(v,ind);
     } else if constexpr(nx + ny + nz ==2) {  //second order
         constexpr unsigned highest_order = std::max({nx, ny, nz});
         vec3 x, y;
@@ -305,9 +305,9 @@ auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
             y = a.get<axis>();
         }
 
-        return x.x()*y.x()*smart_deriv<2,0,0>(v,ind) + x.y()*y.y()* smart_deriv<0,2,0>(v,ind) + x.z()*y.z()*
-                      smart_deriv<0,0,2>(v,ind) + (x.y()*y.x() + x.x()*y.y() )*smart_deriv<1,1,0>(v,ind) + (x.z()*y.x() + x.x()*y.z())*
-                               smart_deriv<1,0,1>(v,ind) + (x.z()*y.y() + x.y()*y.z())* smart_deriv<0,1,1>(v,ind);
+        return x.x()*y.x()*smart_deriv_old<2,0,0>(v,ind) + x.y()*y.y()* smart_deriv_old<0,2,0>(v,ind) + x.z()*y.z()*
+        smart_deriv_old<0,0,2>(v,ind) + (x.y()*y.x() + x.x()*y.y() )*smart_deriv_old<1,1,0>(v,ind) + (x.z()*y.x() + x.x()*y.z())*
+        smart_deriv_old<1,0,1>(v,ind) + (x.z()*y.y() + x.y()*y.z())* smart_deriv_old<0,1,1>(v,ind);
 
     } else {    //third order
         static_assert( std::max({nx,ny,nz}) != 1, "d^3/dxdydz is not supported" );
@@ -324,13 +324,13 @@ auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
             y = a.get<axis2>();
         }
 
-        return x.x()*x.x()*y.x()*smart_deriv<3,0,0>(v,ind) + (x.y()*x.y()*y.x() + 2*x.x()*x.y()*y.y())*smart_deriv<1,2,0>(v,ind) +
-        (x.z()*x.z()*y.x() + 2*x.x()*x.z()*y.z())*smart_deriv<1,0,2>(v,ind) + (2*x.x()*x.y()*y.x() + x.x()*x.x()*y.y())*smart_deriv<2,1,0>(v,ind) +
-        (2*x.x()*x.z()*y.x() + x.x()*x.x()*y.z())* smart_deriv<2,0,1>(v, ind) +
-        (2*x.y()*x.z()*y.x() + 2*x.x()*x.z()*y.y() + 2*x.x()*x.y()*y.z())* smart_deriv<1,1,1>(v, ind) +
-        x.y()*x.y()*y.y()*smart_deriv<0,3,0>(v,ind) + x.z()*x.z()*y.z()*smart_deriv<0,0,3>(v, ind) +
-        (x.z()*x.z()*y.y() + 2*x.y()*x.z()*y.z())* smart_deriv<0,1,2>(v, ind) +
-        (2*x.y()*x.z()*y.y() + x.y()*x.y()*y.z())* smart_deriv<0,2,1>(v, ind);
+        return x.x()*x.x()*y.x()*smart_deriv_old<3,0,0>(v,ind) + (x.y()*x.y()*y.x() + 2*x.x()*x.y()*y.y())*smart_deriv_old<1,2,0>(v,ind) +
+        (x.z()*x.z()*y.x() + 2*x.x()*x.z()*y.z())*smart_deriv_old<1,0,2>(v,ind) + (2*x.x()*x.y()*y.x() + x.x()*x.x()*y.y())*smart_deriv_old<2,1,0>(v,ind) +
+        (2*x.x()*x.z()*y.x() + x.x()*x.x()*y.z())* smart_deriv_old<2,0,1>(v, ind) +
+        (2*x.y()*x.z()*y.x() + 2*x.x()*x.z()*y.y() + 2*x.x()*x.y()*y.z())* smart_deriv_old<1,1,1>(v, ind) +
+        x.y()*x.y()*y.y()*smart_deriv_old<0,3,0>(v,ind) + x.z()*x.z()*y.z()*smart_deriv_old<0,0,3>(v, ind) +
+        (x.z()*x.z()*y.y() + 2*x.y()*x.z()*y.z())* smart_deriv_old<0,1,2>(v, ind) +
+        (2*x.y()*x.z()*y.y() + x.y()*x.y()*y.z())* smart_deriv_old<0,2,1>(v, ind);
 
     }
 
@@ -338,80 +338,80 @@ auto smart_deriv_new(const axes& a, const T& v, const unsigned ind) noexcept  {
 
 
 //H(v_{ind})
-vec3 advection(const big_vec_v& v, const unsigned ind) noexcept {
+vec3 advection_old(const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small v
-    return s_v.x() * smart_deriv<1,0,0>(v, ind) + s_v.y() * smart_deriv<0,1,0>(v, ind) + s_v.z() * smart_deriv<0,0,1>(v, ind) ;
+    return s_v.x() * smart_deriv_old<1,0,0>(v, ind) + s_v.y() * smart_deriv_old<0,1,0>(v, ind) + s_v.z() * smart_deriv_old<0,0,1>(v, ind) ;
 }
 
-vec3 advection_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+vec3 advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small v
-    return s_v.x() * smart_deriv_new<1,0,0>(a, v, ind) + s_v.y() * smart_deriv_new<0,1,0>(a, v, ind) + s_v.z() * smart_deriv_new<0,0,1>(a, v, ind) ;
+    return s_v.x() * smart_deriv<1,0,0>(a, v, ind) + s_v.y() * smart_deriv<0,1,0>(a, v, ind) + s_v.z() * smart_deriv<0,0,1>(a, v, ind) ;
 }
 
 //L(v_{ind})
 template <typename T>
-auto laplacian(const T& v, const unsigned ind) noexcept {
-    return smart_deriv<2,0,0>(v, ind) + smart_deriv<0,2,0>(v, ind) +smart_deriv<0,0,2>(v, ind);
+auto laplacian_old(const T& v, const unsigned ind) noexcept {
+    return smart_deriv_old<2,0,0>(v, ind) + smart_deriv_old<0,2,0>(v, ind) +smart_deriv_old<0,0,2>(v, ind);
 }
 
 template <typename T>
-auto laplacian_new(const axes& a, const T& v, const unsigned ind) noexcept {
-    return laplacian(v,ind);
+auto laplacian(const axes& a, const T& v, const unsigned ind) noexcept {
+    return laplacian_old(v,ind);
 }
 
 
 //TODO : Test
-vec3 gradient(const big_vec_d& v, const unsigned ind) noexcept {
-    return {smart_deriv<1,0,0>(v, ind), smart_deriv<0,1,0>(v, ind), smart_deriv<0,0,1>(v, ind)};
+vec3 gradient_old(const big_vec_d& v, const unsigned ind) noexcept {
+    return {smart_deriv_old<1,0,0>(v, ind), smart_deriv_old<0,1,0>(v, ind), smart_deriv_old<0,0,1>(v, ind)};
 }
 
-vec3 gradient_new(const axes& a, const big_vec_d& v, const unsigned ind) noexcept {
-    return {smart_deriv_new<1,0,0>(a, v, ind), smart_deriv_new<0,1,0>(a, v, ind), smart_deriv_new<0,0,1>(a, v, ind)};
+vec3 gradient(const axes& a, const big_vec_d& v, const unsigned ind) noexcept {
+    return {smart_deriv<1,0,0>(a, v, ind), smart_deriv<0,1,0>(a, v, ind), smart_deriv<0,0,1>(a, v, ind)};
 }
 
 //D(v_{ind})
-double divergence(const big_vec_v& v, const unsigned ind) noexcept  {
-    return smart_deriv<1,0,0>(v.xv, ind) + smart_deriv<0,1,0>(v.yv, ind) + smart_deriv<0,0,1>(v.zv, ind);
+double divergence_old(const big_vec_v& v, const unsigned ind) noexcept  {
+    return smart_deriv_old<1,0,0>(v.xv, ind) + smart_deriv_old<0,1,0>(v.yv, ind) + smart_deriv_old<0,0,1>(v.zv, ind);
 }
 
-double divergence_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
-    return smart_deriv_new<1,0,0>(a, v.xv, ind) + smart_deriv_new<0,1,0>(a, v.yv, ind) + smart_deriv_new<0,0,1>(a, v.zv, ind);
+double divergence(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
+    return smart_deriv<1,0,0>(a, v.xv, ind) + smart_deriv<0,1,0>(a, v.yv, ind) + smart_deriv<0,0,1>(a, v.zv, ind);
 }
 
 
 
 
 //D(H(v_{ind}))
-double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
+double divergence_advection_old(const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small vec
 
-    const auto vx_x = smart_deriv<1,0,0>(v.xv,ind);
-    const auto vy_x = smart_deriv<0,1,0>(v.xv,ind);
-    const auto vz_x = smart_deriv<0,0,1>(v.xv,ind);
+    const auto vx_x = smart_deriv_old<1,0,0>(v.xv,ind);
+    const auto vy_x = smart_deriv_old<0,1,0>(v.xv,ind);
+    const auto vz_x = smart_deriv_old<0,0,1>(v.xv,ind);
 
-    const auto vx_y = smart_deriv<1,0,0>(v.yv,ind);
-    const auto vy_y = smart_deriv<0,1,0>(v.yv,ind);
-    const auto vz_y = smart_deriv<0,0,1>(v.yv,ind);
+    const auto vx_y = smart_deriv_old<1,0,0>(v.yv,ind);
+    const auto vy_y = smart_deriv_old<0,1,0>(v.yv,ind);
+    const auto vz_y = smart_deriv_old<0,0,1>(v.yv,ind);
 
-    const auto vx_z = smart_deriv<1,0,0>(v.zv,ind);
-    const auto vy_z = smart_deriv<0,1,0>(v.zv,ind);
-    const auto vz_z = smart_deriv<0,0,1>(v.zv,ind);
-
-
-    const auto vxx_x = smart_deriv<2,0,0>(v.xv,ind);
-    const auto vyy_y = smart_deriv<0,2,0>(v.yv,ind);
-    const auto vzz_z = smart_deriv<0,0,2>(v.zv,ind);
+    const auto vx_z = smart_deriv_old<1,0,0>(v.zv,ind);
+    const auto vy_z = smart_deriv_old<0,1,0>(v.zv,ind);
+    const auto vz_z = smart_deriv_old<0,0,1>(v.zv,ind);
 
 
-    const auto vxy_x = smart_deriv<1,1,0>(v.xv,ind);
+    const auto vxx_x = smart_deriv_old<2,0,0>(v.xv,ind);
+    const auto vyy_y = smart_deriv_old<0,2,0>(v.yv,ind);
+    const auto vzz_z = smart_deriv_old<0,0,2>(v.zv,ind);
 
-    const auto vxz_x = smart_deriv<1,0,1>(v.xv,ind);
 
-    const auto vxy_y = smart_deriv<1,1,0>(v.yv,ind);
-    const auto vyz_y = smart_deriv<0,1,1>(v.yv,ind);
+    const auto vxy_x = smart_deriv_old<1,1,0>(v.xv,ind);
 
-    const auto vxz_z = smart_deriv<1,0,1>(v.zv,ind);
-    const auto vyz_z = smart_deriv<0,1,1>(v.zv,ind);
+    const auto vxz_x = smart_deriv_old<1,0,1>(v.xv,ind);
+
+    const auto vxy_y = smart_deriv_old<1,1,0>(v.yv,ind);
+    const auto vyz_y = smart_deriv_old<0,1,1>(v.yv,ind);
+
+    const auto vxz_z = smart_deriv_old<1,0,1>(v.zv,ind);
+    const auto vyz_z = smart_deriv_old<0,1,1>(v.zv,ind);
 
     const auto term1 = vx_x*vx_x + vy_y*vy_y + vz_z*vz_z;
     const auto term2 = 2*vx_y*vy_x + 2*vx_z*vz_x + 2*vy_z*vz_y;
@@ -424,36 +424,36 @@ double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
 }
 
 
-double divergence_advection_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+double divergence_advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small vec
 
-    const auto vx_x = smart_deriv_new<1,0,0>(a, v.xv,ind);
-    const auto vy_x = smart_deriv_new<0,1,0>(a, v.xv,ind);
-    const auto vz_x = smart_deriv_new<0,0,1>(a, v.xv,ind);
+    const auto vx_x = smart_deriv<1,0,0>(a, v.xv,ind);
+    const auto vy_x = smart_deriv<0,1,0>(a, v.xv,ind);
+    const auto vz_x = smart_deriv<0,0,1>(a, v.xv,ind);
 
-    const auto vx_y = smart_deriv_new<1,0,0>(a, v.yv,ind);
-    const auto vy_y = smart_deriv_new<0,1,0>(a, v.yv,ind);
-    const auto vz_y = smart_deriv_new<0,0,1>(a, v.yv,ind);
+    const auto vx_y = smart_deriv<1,0,0>(a, v.yv,ind);
+    const auto vy_y = smart_deriv<0,1,0>(a, v.yv,ind);
+    const auto vz_y = smart_deriv<0,0,1>(a, v.yv,ind);
 
-    const auto vx_z = smart_deriv_new<1,0,0>(a, v.zv,ind);
-    const auto vy_z = smart_deriv_new<0,1,0>(a, v.zv,ind);
-    const auto vz_z = smart_deriv_new<0,0,1>(a, v.zv,ind);
-
-
-    const auto vxx_x = smart_deriv_new<2,0,0>(a, v.xv,ind);
-    const auto vyy_y = smart_deriv_new<0,2,0>(a, v.yv,ind);
-    const auto vzz_z = smart_deriv_new<0,0,2>(a, v.zv,ind);
+    const auto vx_z = smart_deriv<1,0,0>(a, v.zv,ind);
+    const auto vy_z = smart_deriv<0,1,0>(a, v.zv,ind);
+    const auto vz_z = smart_deriv<0,0,1>(a, v.zv,ind);
 
 
-    const auto vxy_x = smart_deriv_new<1,1,0>(a, v.xv,ind);
+    const auto vxx_x = smart_deriv<2,0,0>(a, v.xv,ind);
+    const auto vyy_y = smart_deriv<0,2,0>(a, v.yv,ind);
+    const auto vzz_z = smart_deriv<0,0,2>(a, v.zv,ind);
 
-    const auto vxz_x = smart_deriv_new<1,0,1>(a, v.xv,ind);
 
-    const auto vxy_y = smart_deriv_new<1,1,0>(a, v.yv,ind);
-    const auto vyz_y = smart_deriv_new<0,1,1>(a, v.yv,ind);
+    const auto vxy_x = smart_deriv<1,1,0>(a, v.xv,ind);
 
-    const auto vxz_z = smart_deriv_new<1,0,1>(a, v.zv,ind);
-    const auto vyz_z = smart_deriv_new<0,1,1>(a, v.zv,ind);
+    const auto vxz_x = smart_deriv<1,0,1>(a, v.xv,ind);
+
+    const auto vxy_y = smart_deriv<1,1,0>(a, v.yv,ind);
+    const auto vyz_y = smart_deriv<0,1,1>(a, v.yv,ind);
+
+    const auto vxz_z = smart_deriv<1,0,1>(a, v.zv,ind);
+    const auto vyz_z = smart_deriv<0,1,1>(a, v.zv,ind);
 
     const auto term1 = vx_x*vx_x + vy_y*vy_y + vz_z*vz_z;
     const auto term2 = 2*vx_y*vy_x + 2*vx_z*vz_x + 2*vy_z*vz_y;
@@ -470,35 +470,35 @@ double divergence_advection_new(const axes& a, const big_vec_v& v, const unsigne
 
 
 //D(L(v_{ind}))
-double divergence_laplacian(const big_vec_v& v, const unsigned ind) noexcept {
-    const auto vxxx = smart_deriv<3,0,0>(v.xv,ind);
-    const auto vxyy = smart_deriv<1,2,0>(v.xv,ind);
-    const auto vxzz = smart_deriv<1,0,2>(v.xv,ind);
+double divergence_laplacian_old(const big_vec_v& v, const unsigned ind) noexcept {
+    const auto vxxx = smart_deriv_old<3,0,0>(v.xv,ind);
+    const auto vxyy = smart_deriv_old<1,2,0>(v.xv,ind);
+    const auto vxzz = smart_deriv_old<1,0,2>(v.xv,ind);
 
-    const auto vyxx = smart_deriv<2,1,0>(v.yv,ind);
-    const auto vyyy = smart_deriv<0,3,0>(v.yv,ind);
-    const auto vyzz = smart_deriv<0,1,2>(v.yv,ind);
+    const auto vyxx = smart_deriv_old<2,1,0>(v.yv,ind);
+    const auto vyyy = smart_deriv_old<0,3,0>(v.yv,ind);
+    const auto vyzz = smart_deriv_old<0,1,2>(v.yv,ind);
 
-    const auto vzxx = smart_deriv<2,0,1>(v.zv,ind);
-    const auto vzyy = smart_deriv<0,2,1>(v.zv,ind);
-    const auto vzzz = smart_deriv<0,0,3>(v.zv,ind);
+    const auto vzxx = smart_deriv_old<2,0,1>(v.zv,ind);
+    const auto vzyy = smart_deriv_old<0,2,1>(v.zv,ind);
+    const auto vzzz = smart_deriv_old<0,0,3>(v.zv,ind);
 
     return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
 }
 
 
-double divergence_laplacian_new(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
-    const auto vxxx = smart_deriv_new<3,0,0>(a, v.xv,ind);
-    const auto vxyy = smart_deriv_new<1,2,0>(a, v.xv,ind);
-    const auto vxzz = smart_deriv_new<1,0,2>(a, v.xv,ind);
+double divergence_laplacian(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
+    const auto vxxx = smart_deriv<3,0,0>(a, v.xv,ind);
+    const auto vxyy = smart_deriv<1,2,0>(a, v.xv,ind);
+    const auto vxzz = smart_deriv<1,0,2>(a, v.xv,ind);
 
-    const auto vyxx = smart_deriv_new<2,1,0>(a, v.yv,ind);
-    const auto vyyy = smart_deriv_new<0,3,0>(a, v.yv,ind);
-    const auto vyzz = smart_deriv_new<0,1,2>(a, v.yv,ind);
+    const auto vyxx = smart_deriv<2,1,0>(a, v.yv,ind);
+    const auto vyyy = smart_deriv<0,3,0>(a, v.yv,ind);
+    const auto vyzz = smart_deriv<0,1,2>(a, v.yv,ind);
 
-    const auto vzxx = smart_deriv_new<2,0,1>(a, v.zv,ind);
-    const auto vzyy = smart_deriv_new<0,2,1>(a, v.zv,ind);
-    const auto vzzz = smart_deriv_new<0,0,3>(a, v.zv,ind);
+    const auto vzxx = smart_deriv<2,0,1>(a, v.zv,ind);
+    const auto vzyy = smart_deriv<0,2,1>(a, v.zv,ind);
+    const auto vzzz = smart_deriv<0,0,3>(a, v.zv,ind);
 
     return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
 }

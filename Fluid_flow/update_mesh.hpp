@@ -11,7 +11,7 @@
 
 #ifdef FLUID_MOVES_MESH
 bool fluid_moves(const double t) {
-    return t>0.1;
+    return t>0.01;
 }
 #else
 bool fluid_moves(const double t) {

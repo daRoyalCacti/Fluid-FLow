@@ -20,8 +20,8 @@ void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n
         } else {
 #ifdef VC
             b.add_elm(i,
-                      -3 / 2 * advection(v_n, i) + 1 / 2 * advection(v_n1, i)
-                      - gradient(p, i) + 1 / Re * laplacian(v_n, i) );
+                      -3 / 2 * advection(v_n.g->axis, v_n, i) + 1 / 2 * advection(v_n.g->axis, v_n1, i)
+                      - gradient(v_n.g->axis, p, i) + 1 / Re * laplacian(v_n.g->axis, v_n, i) );
 #else
             b.add_elm(i,
                       -3 / 2 * advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) +
@@ -49,7 +49,7 @@ void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_
         } else {
 #ifdef VC
             b.add_elm(i,
-                      -advection(v_n, i) + 1 / (Re) * laplacian(v_n, i) - gradient(p, i));
+                      -advection(v_n.g->axis, v_n, i) + 1 / (Re) * laplacian(v_n.g->axis, v_n, i) - gradient(v_n.g->axis, p, i));
 #else
             b.add_elm(i,
                       -advection(v_n, i) + 1 / (2 * Re) * laplacian(v_n, i) + v_n(i) / dt -
@@ -74,9 +74,9 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
             //s(i) = p(i);
         } else {
 
-            s(i) = divergence(v_n, i) / dt - 3/2 * divergence_advection(v_n, i) + 1/2 *
-                    divergence_advection(v_n1, i) + 3/(2*Re) *
-                    divergence_laplacian(v_n,i) - 1/(2*Re) * divergence_laplacian(v_n1, i) - laplacian(p, i);
+            s(i) = divergence(v_n.g->axis, v_n, i) / dt - 3/2 * divergence_advection(v_n.g->axis, v_n, i) + 1/2 *
+                    divergence_advection(v_n.g->axis, v_n1, i) + 3/(2*Re) *
+                    divergence_laplacian(v_n.g->axis, v_n,i) - 1/(2*Re) * divergence_laplacian(v_n.g->axis, v_n1, i) - laplacian(v_n.g->axis, p, i);
 
         }
 
@@ -98,8 +98,8 @@ void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_
             }
             //s(i) = p(i);
         } else {
-            s(i) = divergence(v_n, i) / dt - divergence_advection(v_n, i) + 1 / Re *
-                    divergence_laplacian(v_n, i) - laplacian(p, i);
+            s(i) = divergence(v_n.g->axis, v_n, i) / dt - divergence_advection(v_n.g->axis, v_n, i) + 1 / Re *
+                    divergence_laplacian(v_n.g->axis, v_n, i) - laplacian(v_n.g->axis, p, i);
         }
 
     }

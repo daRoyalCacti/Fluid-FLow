@@ -8,7 +8,7 @@
 #define CL_TARGET_OPENCL_VERSION 300    //the lastest version supported atm
 #define VIENNACL_WITH_EIGEN 1
 
-#define BICGSTAB
+//#define BICGSTAB
 
 #include <viennacl/vector.hpp>
 //#include <viennacl/matrix.hpp>

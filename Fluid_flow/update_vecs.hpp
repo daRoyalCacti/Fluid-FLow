@@ -150,7 +150,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 }
 #endif
                 const auto norm = BC.norms.normal(i);
-                const auto old_deriv = norm.x()*smart_deriv<1,0,0>(v, i) + norm.y()*smart_deriv<0,1,0>(v, i) + norm.z()*smart_deriv<0,0,1>(v, i);
+                const auto old_deriv = norm.x()*smart_deriv_old<1,0,0>(v, i) + norm.y()*smart_deriv_old<0,1,0>(v, i) + norm.z()*smart_deriv_old<0,0,1>(v, i);
 
 
 #ifndef NDEBUG
@@ -250,7 +250,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                         std::cerr << "\tnormal vector = (" << norm << ")\n";
 
 
-                        std::cerr << "\told derivative (" << old_deriv << ")\tnew derivative (" << norm.x()*smart_deriv<1,0,0>(v, i) + norm.y()*smart_deriv<0,1,0>(v, i) + norm.z()*smart_deriv<0,0,1>(v, i) << ")\n";
+                        std::cerr << "\told derivative (" << old_deriv << ")\tnew derivative (" << norm.x()*smart_deriv_old<1,0,0>(v, i) + norm.y()*smart_deriv_old<0,1,0>(v, i) + norm.z()*smart_deriv_old<0,0,1>(v, i) << ")\n";
                         std::cerr << "\tThis is at (" << BC.global_grid.get_plot_pos(i) << ")\n";
                         std::cerr << "\tl:" << v.has_left(i) << " r:" << v.has_right(i) << " u:" << v.has_up(i) << " d:" << v.has_down(i) << " f:" << v.has_front(i) << " b:" << v.has_back(i) << "\n";
 
