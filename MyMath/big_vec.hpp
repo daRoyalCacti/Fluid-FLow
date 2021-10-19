@@ -170,52 +170,29 @@ struct big_vec_d final : public big_vec<double> {
     [[nodiscard]] double& operator()(const unsigned ind) noexcept override { return v(ind); }
     [[nodiscard]] double operator()(const unsigned ind) const noexcept override { return v(ind); }
 
-
-    //interpolates/extrapolates values based on how much the grid moves
-    //https://en.wikipedia.org/wiki/Trilinear_interpolation#Alternative_algorithm
-    // would be quite simple to update to quadratic interpolation
-    void move(const double x_off, const double y_off, const double z_off) override {
-        //variable to hold the new interpolated values
-        Eigen::Matrix<double, Eigen::Dynamic, 1> buffer;
-        buffer.resize(static_cast<long>(g->size()));
-
-
-
-
-
+    template <unsigned no_timesteps_ago>
+    double interp(const unsigned ind, const vec3 interp_pos) {
+        static_assert(no_timesteps_ago < 3, "big vec interpolation only supports up to 2 timesteps ago");
         //finding points to use for interpolation
         // - assumes the offsets are smaller than the step size
-#ifndef NDEBUG
-        if (x_off > g->dx) {
-            std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
-        }
-        if (y_off > g->dy) {
-            std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
-        }
-        if (z_off > g->dz) {
-            std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
-        }
-#endif
-        constexpr unsigned no_points = 20;
-        #pragma omp parallel for
-        for (unsigned index = 0; index < buffer.size(); index++) {
+        constexpr unsigned no_points = 24;
+
+
             unsigned interp_indices[no_points];
             size_t counter = 0;
 
+            //include the point itself
+            interp_indices[counter++] = ind;
             int i = 1;
             while (true) {
-                //include the point itself
-                interp_indices[counter++] = get_move_ind(index, 0, 0, 0);
-                if (counter == no_points) {
-                    goto got_indices;   //could just break here but using goto to be consistent
-                }
 
+                //std::cerr << "\t" << counter << "\n";
                 //getting corner values first
                 for (const auto& horiz : {-i,i}) {
                     for (const auto& vert : {-i,i}) {
                         for (const auto& in : {-i,i}) {
-                            if (can_move(index, horiz, vert, in)) {
-                                interp_indices[counter++] = get_move_ind(index, horiz, vert, in);
+                            if (g->can_move(ind, horiz, vert, in)) {
+                                interp_indices[counter++] = g->get_move_ind(ind, horiz, vert, in);
                                 if (counter == no_points) {
                                     goto got_indices;
                                 }
@@ -227,8 +204,8 @@ struct big_vec_d final : public big_vec<double> {
                 //then getting edge values
                 for (const auto& horiz : {-i,i}) {
                     for (const auto& vert : {-i,i}) {
-                        if (can_move(index, horiz, vert, 0)) {
-                            interp_indices[counter++] = get_move_ind(index, horiz, vert, 0);
+                        if (g->can_move(ind, horiz, vert, 0)) {
+                            interp_indices[counter++] = g->get_move_ind(ind, horiz, vert, 0);
                             if (counter == no_points) {
                                 goto got_indices;
                             }
@@ -236,8 +213,8 @@ struct big_vec_d final : public big_vec<double> {
                     }
 
                     for (const auto& in : {-i,i}) {
-                        if (can_move(index, horiz, 0, in)) {
-                            interp_indices[counter++] = get_move_ind(index, horiz, 0, in);
+                        if (g->can_move(ind, horiz, 0, in)) {
+                            interp_indices[counter++] = g->get_move_ind(ind, horiz, 0, in);
                             if (counter == no_points) {
                                 goto got_indices;
                             }
@@ -248,24 +225,24 @@ struct big_vec_d final : public big_vec<double> {
 
                 //then points along major axes
                 for (const auto& horiz : {-i,i}) {
-                    if (can_move(index, horiz, 0, 0)) {
-                        interp_indices[counter++] = get_move_ind(index, horiz, 0, 0);
+                    if (g->can_move(ind, horiz, 0, 0)) {
+                        interp_indices[counter++] = g->get_move_ind(ind, horiz, 0, 0);
                         if (counter == no_points) {
                             goto got_indices;
                         }
                     }
                 }
                 for (const auto& vert : {-i,i}) {
-                    if (can_move(index, 0, vert, 0)) {
-                        interp_indices[counter++] = get_move_ind(index, 0, vert, 0);
+                    if (g->can_move(ind, 0, vert, 0)) {
+                        interp_indices[counter++] = g->get_move_ind(ind, 0, vert, 0);
                         if (counter == no_points) {
                             goto got_indices;
                         }
                     }
                 }
                 for (const auto& in : {-i,i}) {
-                    if (can_move(index, 0, 0, in)) {
-                        interp_indices[counter++] = get_move_ind(index, 0, 0, in);
+                    if (g->can_move(ind, 0, 0, in)) {
+                        interp_indices[counter++] = g->get_move_ind(ind, 0, 0, in);
                         if (counter == no_points) {
                             goto got_indices;
                         }
@@ -275,8 +252,8 @@ struct big_vec_d final : public big_vec<double> {
                 //getting the rest of the edge values
                 for (const auto& in : {-i,i}) {
                     for (const auto& vert : {-i,i}) {
-                        if (can_move(index, 0, vert, in)) {
-                            interp_indices[counter++] = get_move_ind(index, 0, vert, in);
+                        if (g->can_move(ind, 0, vert, in)) {
+                            interp_indices[counter++] = g->get_move_ind(ind, 0, vert, in);
                             if (counter == no_points) {
                                 goto got_indices;
                             }
@@ -297,61 +274,106 @@ struct big_vec_d final : public big_vec<double> {
 
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
-            Eigen::Matrix<double, no_points, 1> vec;
             Eigen::Matrix<double, no_points, no_points> mat;
-            //Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
-            //solver.setTolerance(1e-4);
+            /*Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
+            solver.setTolerance(1e-4);*/
 
 
-            for (unsigned i = 0; i < no_points; i++) {
-                vec[i] = v[interp_indices[i]];
 
-                const auto x = g->x[interp_indices[i]];
-                const auto y = g->y[interp_indices[i]];
-                const auto z = g->z[interp_indices[i]];
+            Eigen::Matrix<double, no_points, 1> s_vec;
 
-                mat(i, 0) = 1;
-                mat(i, 1) = x;
-                mat(i, 2) = y;
-                mat(i, 3) = z;
-                mat(i, 4) = x*y;
-                mat(i, 5) = x*z;
-                mat(i, 6) = y*z;
-                mat(i, 7) = x*y*z;
+            for (unsigned j = 0; j < no_points; j++) {
+                s_vec[j] = v[interp_indices[j]];
 
-                mat(i, 8) = x*x;
-                mat(i, 9) = y*y;
-                mat(i, 10) = z*z;
-                mat(i, 11) = x*x*y;
-                mat(i, 12) = x*x*z;
-                mat(i, 13) = y*y*x;
-                mat(i, 14) = y*y*z;
-                mat(i, 15) = x*z*z;
-                mat(i, 16) = y*z*z;
-                mat(i, 17) = x*x*y*z;
-                mat(i, 18) = x*y*y*z;
-                mat(i, 19) = x*y*z*x;
+                double x, y, z;
+
+                if constexpr(no_timesteps_ago==0) {
+                    x = g->x[interp_indices[j]];
+                    y = g->y[interp_indices[j]];
+                    z = g->z[interp_indices[j]];
+                } else if constexpr(no_timesteps_ago==1) {
+                    const auto xyz = g->get_old_pos1(interp_indices[j]);
+                    x = xyz.x();
+                    y = xyz.y();
+                    z = xyz.z();
+                } else if constexpr (no_timesteps_ago==2) {
+                    const auto xyz = g->get_old_pos2(interp_indices[j]);
+                    x = xyz.x();
+                    y = xyz.y();
+                    z = xyz.z();
+                }
+
+
+
+                mat(j, 0) = 1;
+                mat(j, 1) = x;
+                mat(j, 2) = y;
+                mat(j, 3) = z;
+                mat(j, 4) = x*y;
+                mat(j, 5) = x*z;
+                mat(j, 6) = y*z;
+                mat(j, 7) = x*y*z;
+
+                mat(j, 8) = x*x;
+                mat(j, 9) = y*y;
+                mat(j, 10) = z*z;
+                mat(j, 11) = x*x*y;
+                mat(j, 12) = x*x*z;
+                mat(j, 13) = y*y*x;
+                mat(j, 14) = y*y*z;
+                mat(j, 15) = x*z*z;
+                mat(j, 16) = y*z*z;
+                mat(j, 17) = x*x*y*z;
+                mat(j, 18) = x*y*y*z;
+                mat(j, 19) = x*y*z*z;
+                mat(j, 20) = x*x* y*y* z;
+                mat(j, 21) = x*x *y *z*z;
+                mat(j, 22) = x *y*y* z*z;
+                mat(j,23) = x*x* y*y* z*z;
             }
 
+
+
+
+
+
+            //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
+            //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
+            const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+
+
             //mat and vec now set, just need to solve for the coefficients
-            Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);
-            //const decltype(mat) mat_inv = solver.inverse();
             //solver.compute(mat);
-            const decltype(vec) a = solver.solve(vec);
-            //const decltype(vec) a = mat_inv*(vec);
+            const decltype(s_vec) a = solver.solve(s_vec);
 
-            const auto x = g->x[index] + x_off;
-            const auto y = g->y[index] + y_off;
-            const auto z = g->z[index] + z_off;
-            buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
+            /*const auto x = g.x[index] + x_off;
+            const auto y = g.y[index] + y_off;
+            const auto z = g.z[index] + z_off;*/
+
+            const auto x = interp_pos.x();
+            const auto y = interp_pos.y();
+            const auto z = interp_pos.z();
+
+#ifndef NDEBUG
+            if ( std::abs(x-g.x[index]) > g.dx) {
+                std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
+            }
+            if (std::abs(y-g.y[index]) > g.dy) {
+                std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
+            }
+            if (std::abs(z-g.z[index]) > g.dz) {
+                std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
+            }
+#endif
+
+
+            return a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
                     a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
-                    a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x ;
-
-        }
-
-        v = std::move(buffer);
+                        a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*z +
+                            a(20)*x*x* y*y* z + a(21)*x*x *y *z*z + a(22)*x *y*y* z*z + a(23)*x*x* y*y* z*z;
 
     }
+
 };
 
 
@@ -429,10 +451,14 @@ struct big_vec_v final : public big_vec<vec3> {
     }
 
 
-    void move(const double x_off, const double y_off, const double z_off) override {
+    /*void move(const double x_off, const double y_off, const double z_off) override {
         xv.move(x_off, y_off, z_off);
         yv.move(x_off, y_off, z_off);
         zv.move(x_off, y_off, z_off);
+    }*/
+    template<unsigned no_timesteps_ago>
+    vec3 interp(const unsigned ind, const vec3 interp_pos) {
+        return { xv.interp<no_timesteps_ago>(ind, interp_pos), yv.interp<no_timesteps_ago>(ind, interp_pos), zv.interp<no_timesteps_ago>(ind, interp_pos) }
     }
 
 };
