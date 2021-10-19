@@ -122,7 +122,7 @@ struct grid {
         return {plot_x[ind], plot_y[ind], plot_z[ind]};
     }
 
-    void move(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
+    void update_pos(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
         // const vec3 rot_angle_vec = model.w*dt;
         //rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}
 

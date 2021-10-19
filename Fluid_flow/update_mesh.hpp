@@ -101,7 +101,7 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     //const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
     interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 
-    v_n.g->move(b->model.v, old_c_o_m, b->model.w, dt);
+    v_n.g->update_pos(b->model.v, old_c_o_m, b->model.w, dt);
 
     bc.update(b->model.w, b->model.v, old_c_o_m, dt);
 
