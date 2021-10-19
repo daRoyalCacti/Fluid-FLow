@@ -29,7 +29,21 @@ struct grid_relation {
 struct axes {
     vec3 x,y,z;
     template <unsigned i>
-    vec3& get() {
+    [[nodiscard]] vec3& get() {
+        if constexpr (i==0) {
+            return x;
+        } else if constexpr (i==1) {
+            return y;
+        } else if constexpr( i==2) {
+            return z;
+        } else {
+            std::cerr << "trying to return an axis that doesn't exist\n";
+            return z;
+        }
+    }
+
+    template <unsigned i>
+    [[nodiscard]] vec3 get() const {
         if constexpr (i==0) {
             return x;
         } else if constexpr (i==1) {
@@ -122,7 +136,6 @@ struct grid {
             x[i] = rot.x()+trans_vec.x();
             y[i] = rot.y()+trans_vec.y();
             z[i] = rot.z()+trans_vec.z();
-
             plot_x[i] += trans_vec.x();
             plot_y[i] += trans_vec.y();
             plot_z[i] += trans_vec.z();

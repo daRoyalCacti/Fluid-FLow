@@ -79,6 +79,8 @@ struct boundary_conditions {
 
         wall_norms = wall_normals(no_wall_points());
         create_wall_normals();
+
+        global_grid.set_plotting_points();
         //std::cerr << "updating velocities at wall\n";
         //update_velocity_wall_BC();
     }
