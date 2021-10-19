@@ -57,6 +57,26 @@ struct axes {
     }
 };
 
+
+struct rigid_body_vals {
+    vec3 curr_com{};
+    vec3 trans1{}, trans2{};
+    vec3 rot1{}, rot2{};
+
+    void update(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) {
+        curr_com = c_o_m + vel*dt;
+
+        rot2 = rot1;
+        trans2 = trans1;
+
+        trans1 = vel*dt;
+        rot1 = omega*dt;
+    }
+};
+
+
+
+
 //grids must be axis aligned
 // grid[i] corresponds to the interval x[i]+dx, y[i]+dy, z[i]+dz
 struct grid {
@@ -70,6 +90,7 @@ struct grid {
     vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
 
     axes axis{ vec3(1,0,0), vec3(0,1,0), vec3(0,0,1) };
+    rigid_body_vals rbv;
 
 
     vec3 operator[](unsigned i) const noexcept { return { x[i], y[i], z[i] }; }
@@ -122,7 +143,20 @@ struct grid {
         return {plot_x[ind], plot_y[ind], plot_z[ind]};
     }
 
+
+    vec3 get_old_pos1(const unsigned i) {
+        const auto rot = rotate(rbv.curr_com, -rbv.rot1, {x[i], y[i], z[i]}, rbv.rot1.length() );
+        return rot - rbv.trans1;
+    }
+
+    vec3 get_old_pos2(const unsigned i) {
+        const auto rot1 = rotate(rbv.curr_com, -rbv.rot1, {x[i], y[i], z[i]}, rbv.rot1.length() );
+        const auto rot2 = rotate(rbv.curr_com, -rbv.rot2, rot1, rbv.rot1.length() );
+        return rot2 - rbv.trans1 - rbv.trans2;
+    }
+
     void update_pos(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
+        rbv.update(vel, c_o_m, omega, dt);
         // const vec3 rot_angle_vec = model.w*dt;
         //rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}
 
