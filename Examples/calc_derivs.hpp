@@ -8,7 +8,7 @@
 #include "../MyMath/calc.hpp"
 #include "../MyMath/boundary.hpp"
 
-#define BCD_DLOG   //bvec example derivating detailed logging
+//#define BCD_DLOG   //bvec example derivating detailed logging
 
 void calc_derivs_ex() {
 
@@ -162,7 +162,7 @@ void calc_derivs_ex() {
             const auto true_deriv =2* pow(cos(y),2)* pow(cos(z),2) *pow(sin(x),2) + 2 *pow(cos(x),2) *pow(cos(z),2)* pow(sin(y),2) -
                     3* pow(cos(z),2) *pow(sin(x),2) *pow(sin(y),2) + 2 *pow(cos(x),2) *pow(cos(y),2) *pow(sin(z),2) -
                     3 *pow(cos(y),2)* pow(sin(x),2)* pow(sin(z),2) - 3 *pow(cos(x),2) *pow(sin(y),2) *pow(sin(z),2) +
-                    pow(sin(x),2)* pow(sin(y),2) *pow(sin(z),2);
+                    3*pow(sin(x),2)* pow(sin(y),2) *pow(sin(z),2);
             const auto calc_deriv = divergence_advection(v, i);
             if (abs(calc_deriv - true_deriv) > tol) {
                 std::cerr << "Divergence of advection failed at ind = " << i << "\n";

@@ -5,7 +5,7 @@
 #ifndef CODE_CALC_HPP
 #define CODE_CALC_HPP
 
-#include "vec3.hpp"
+#include "big_vec.hpp"
 
 
 
@@ -343,21 +343,43 @@ vec3 advection(const big_vec_v& v, const unsigned ind) noexcept {
     return s_v.x() * smart_deriv<1,0,0>(v, ind) + s_v.y() * smart_deriv<0,1,0>(v, ind) + s_v.z() * smart_deriv<0,0,1>(v, ind) ;
 }
 
+vec3 advection_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+    const auto s_v = v(ind);  //small v
+    return s_v.x() * smart_deriv_new<1,0,0>(a, v, ind) + s_v.y() * smart_deriv_new<0,1,0>(a, v, ind) + s_v.z() * smart_deriv_new<0,0,1>(a, v, ind) ;
+}
+
 //L(v_{ind})
 template <typename T>
 auto laplacian(const T& v, const unsigned ind) noexcept {
     return smart_deriv<2,0,0>(v, ind) + smart_deriv<0,2,0>(v, ind) +smart_deriv<0,0,2>(v, ind);
 }
 
+template <typename T>
+auto laplacian_new(const axes& a, const T& v, const unsigned ind) noexcept {
+    return laplacian(v,ind);
+}
+
+
 //TODO : Test
 vec3 gradient(const big_vec_d& v, const unsigned ind) noexcept {
     return {smart_deriv<1,0,0>(v, ind), smart_deriv<0,1,0>(v, ind), smart_deriv<0,0,1>(v, ind)};
+}
+
+vec3 gradient_new(const axes& a, const big_vec_d& v, const unsigned ind) noexcept {
+    return {smart_deriv_new<1,0,0>(a, v, ind), smart_deriv_new<0,1,0>(a, v, ind), smart_deriv_new<0,0,1>(a, v, ind)};
 }
 
 //D(v_{ind})
 double divergence(const big_vec_v& v, const unsigned ind) noexcept  {
     return smart_deriv<1,0,0>(v.xv, ind) + smart_deriv<0,1,0>(v.yv, ind) + smart_deriv<0,0,1>(v.zv, ind);
 }
+
+double divergence_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
+    return smart_deriv_new<1,0,0>(a, v.xv, ind) + smart_deriv_new<0,1,0>(a, v.yv, ind) + smart_deriv_new<0,0,1>(a, v.zv, ind);
+}
+
+
+
 
 //D(H(v_{ind}))
 double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
@@ -401,6 +423,52 @@ double divergence_advection(const big_vec_v& v, const unsigned ind) noexcept {
     return term1 + term2 + term3 + term4 + term5;
 }
 
+
+double divergence_advection_new(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+    const auto s_v = v(ind);  //small vec
+
+    const auto vx_x = smart_deriv_new<1,0,0>(a, v.xv,ind);
+    const auto vy_x = smart_deriv_new<0,1,0>(a, v.xv,ind);
+    const auto vz_x = smart_deriv_new<0,0,1>(a, v.xv,ind);
+
+    const auto vx_y = smart_deriv_new<1,0,0>(a, v.yv,ind);
+    const auto vy_y = smart_deriv_new<0,1,0>(a, v.yv,ind);
+    const auto vz_y = smart_deriv_new<0,0,1>(a, v.yv,ind);
+
+    const auto vx_z = smart_deriv_new<1,0,0>(a, v.zv,ind);
+    const auto vy_z = smart_deriv_new<0,1,0>(a, v.zv,ind);
+    const auto vz_z = smart_deriv_new<0,0,1>(a, v.zv,ind);
+
+
+    const auto vxx_x = smart_deriv_new<2,0,0>(a, v.xv,ind);
+    const auto vyy_y = smart_deriv_new<0,2,0>(a, v.yv,ind);
+    const auto vzz_z = smart_deriv_new<0,0,2>(a, v.zv,ind);
+
+
+    const auto vxy_x = smart_deriv_new<1,1,0>(a, v.xv,ind);
+
+    const auto vxz_x = smart_deriv_new<1,0,1>(a, v.xv,ind);
+
+    const auto vxy_y = smart_deriv_new<1,1,0>(a, v.yv,ind);
+    const auto vyz_y = smart_deriv_new<0,1,1>(a, v.yv,ind);
+
+    const auto vxz_z = smart_deriv_new<1,0,1>(a, v.zv,ind);
+    const auto vyz_z = smart_deriv_new<0,1,1>(a, v.zv,ind);
+
+    const auto term1 = vx_x*vx_x + vy_y*vy_y + vz_z*vz_z;
+    const auto term2 = 2*vx_y*vy_x + 2*vx_z*vz_x + 2*vy_z*vz_y;
+    const auto term3 = s_v.x() * ( vxx_x + vxy_y + vxz_z );
+    const auto term4 = s_v.y() * ( vxy_x + vyy_y + vyz_z );
+    const auto term5 = s_v.z() * ( vxz_x + vyz_y + vzz_z );
+
+
+    return term1 + term2 + term3 + term4 + term5;
+}
+
+
+
+
+
 //D(L(v_{ind}))
 double divergence_laplacian(const big_vec_v& v, const unsigned ind) noexcept {
     const auto vxxx = smart_deriv<3,0,0>(v.xv,ind);
@@ -414,6 +482,23 @@ double divergence_laplacian(const big_vec_v& v, const unsigned ind) noexcept {
     const auto vzxx = smart_deriv<2,0,1>(v.zv,ind);
     const auto vzyy = smart_deriv<0,2,1>(v.zv,ind);
     const auto vzzz = smart_deriv<0,0,3>(v.zv,ind);
+
+    return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
+}
+
+
+double divergence_laplacian_new(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
+    const auto vxxx = smart_deriv_new<3,0,0>(a, v.xv,ind);
+    const auto vxyy = smart_deriv_new<1,2,0>(a, v.xv,ind);
+    const auto vxzz = smart_deriv_new<1,0,2>(a, v.xv,ind);
+
+    const auto vyxx = smart_deriv_new<2,1,0>(a, v.yv,ind);
+    const auto vyyy = smart_deriv_new<0,3,0>(a, v.yv,ind);
+    const auto vyzz = smart_deriv_new<0,1,2>(a, v.yv,ind);
+
+    const auto vzxx = smart_deriv_new<2,0,1>(a, v.zv,ind);
+    const auto vzyy = smart_deriv_new<0,2,1>(a, v.zv,ind);
+    const auto vzzz = smart_deriv_new<0,0,3>(a, v.zv,ind);
 
     return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
 }
