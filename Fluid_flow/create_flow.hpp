@@ -7,7 +7,7 @@
 
 #define VC
 //#define NO_MESH_UPDATE
-//#define FLUID_MOVES_MESH
+#define FLUID_MOVES_MESH
 #define SAME_PLOTTING_INDS
 #define DLOG    //detailed logging
 //#define OFFSET_MESH_UPDATE  //if the mesh should only be updated every 2nd timestep
@@ -90,7 +90,6 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
     //boundary_conditions BC(dx, dy, dz, Wx, Wy, Wz);
     BC.global_grid.DEBUG_write_boundary_points(false);
     BC.DEBUG_write_normal_vectors();
-
 
 
      //boundary_conditions<N,M,P> BC(&rb->model, dx, dy, dz);
@@ -184,10 +183,20 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
      //then create the s matrix
      //BC.update_pressure_BC();
 #ifndef     NO_MESH_UPDATE
+#ifdef STORE_SOLVERS
+    interp_solvers interps(BC.global_grid);
+    const grid init_grid = BC.global_grid;  //creating a copy of the grid that doesn't update for the interpolation
+    const vec3 init_com = rb->model.pos_cm;
+#endif
+
  #ifdef DLOG
      std::cout << "setting the mesh boundary conditions\n";
  #endif
+#ifdef STORE_SOLVERS
+     update_mesh(BC, rb, v_n, v_n1, p, dt, 0, interps, init_grid, init_com);
+#else
      update_mesh(BC, rb, v_n, v_n1, p, dt, 0);
+#endif
 #endif
 
  #ifdef DLOG
@@ -299,7 +308,12 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
              // - solve fluid at new position
              // - repeat
 
-             update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
+#ifdef STORE_SOLVERS
+            update_mesh(BC, rb, v_n, v_n1, p, dt, t, interps, init_grid, init_com);
+#else
+             update_mesh(BC, rb, v_n, v_n1, p, dt, t);
+#endif
+
 
 #ifdef OFFSET_MESH_UPDATE
          }

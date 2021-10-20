@@ -458,7 +458,7 @@ struct big_vec_v final : public big_vec<vec3> {
     }*/
     template<unsigned no_timesteps_ago>
     vec3 interp(const unsigned ind, const vec3 interp_pos) {
-        return { xv.interp<no_timesteps_ago>(ind, interp_pos), yv.interp<no_timesteps_ago>(ind, interp_pos), zv.interp<no_timesteps_ago>(ind, interp_pos) }
+        return { xv.interp<no_timesteps_ago>(ind, interp_pos), yv.interp<no_timesteps_ago>(ind, interp_pos), zv.interp<no_timesteps_ago>(ind, interp_pos) };
     }
 
 };

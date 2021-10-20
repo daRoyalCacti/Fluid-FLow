@@ -7,7 +7,7 @@
 //#include "Examples/interp.hpp"
 //#include "Examples/rotated_derivs.h"
 
-#define HORIZONTAL
+//#define HORIZONTAL
 #define ROTATE
 
 #ifdef HORIZONTAL
@@ -19,7 +19,7 @@ constexpr double wx = 6;
 constexpr double wy = 7;
 constexpr double wz = 5;
 #endif
-constexpr double max_t = 1;
+constexpr double max_t = 0.1;
 constexpr double Re = 7069; //150;  //https://www.grc.nasa.gov/WWW/k-12/airplane/reynolds.html
 
 
@@ -41,13 +41,12 @@ int main() {
 
     constexpr double mass1 = 0.01;
 #ifdef HORIZONTAL
-    //CHANGED THIS
     constexpr vec3 vel_cm = vec3(0.75, 0, 0);
 #else
     constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
 #endif
 #ifdef ROTATE
-    constexpr vec3 w = vec3(0,0,1);
+    constexpr vec3 w = vec3(0,0,0.5);
 #else
     constexpr vec3 w = vec3(0,0,0);
 #endif
