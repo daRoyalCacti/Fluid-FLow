@@ -309,8 +309,12 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 #else
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
 #endif
-    enforce_velocity_BC<false>(bc, v_n);
-    update_pressure_BC<false>(bc, p);    //TESTING
+    if (!enforce_velocity_BC<false>(bc, v_n)) {
+        throw std::runtime_error("enforcing velocity boundary condition failed");
+    }
+    if (!update_pressure_BC<false>(bc, p) ) {
+        throw std::runtime_error("enforcing pressure boundary condition failed");
+    }
 
     std::vector<vec3> forces, points;
     const auto& g = *v_n.g;
@@ -389,7 +393,9 @@ interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 
 
     //std::cout << "\tenforcing boundary conditions\n";
-    update_pressure_BC<false>(bc, p);    //TESTING
+    if (!update_pressure_BC<false>(bc, p)) {
+        throw std::runtime_error("enforcing pressure boundary condition failed");
+    }
 
     //updating pressure and wall velocity points
     // - non-wall velocity points and normals have already been updated
@@ -400,7 +406,9 @@ interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
-    enforce_velocity_BC<false>(bc, v_n);
+    if (!enforce_velocity_BC<false>(bc, v_n)) {
+        throw std::runtime_error("enforcing velocity boundary condition failed");
+    }
     //bc.enforce_pressure_BC(p);
 
     std::cerr << "writing i files\n";

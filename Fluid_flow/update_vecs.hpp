@@ -24,6 +24,7 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                 if (!BC.norms.contains(i)) {
                     std::cerr << "norms does not contain " << i << ")\n";
+                    return false;
                 }
 #endif
 
@@ -32,6 +33,7 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
 #ifndef NDEBUG
                 if (norm == vec3(0) ) {
                     std::cerr << "normal vector is the 0 vector. This should never happen!\n";
+                    return false;
                 }
 #endif
 
@@ -102,9 +104,9 @@ bool enforce_velocity_correction_BC(const boundary_conditions &BC,  big_vec_v &v
                     if (is_good) {
                         return false;
                     }
-                    if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
-                        return false;
-                    }
+                }
+                if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
+                    return false;
                 }
 
             }
@@ -130,6 +132,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                 if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())) {
                     std::cerr << "velocity boundary condition returned an infinite value\n";
+                    return false;
                 }
                 if constexpr (err) {
                     if ((old-v(i)).length()/v(i).length()*100 > accuracy_percent) {
@@ -147,6 +150,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                 if (!BC.norms.contains(i)) {
                     std::cerr << "norms does not contain " << i << ")\n";
+                    return false;
                 }
 #endif
                 const auto norm = BC.norms.normal(i);
@@ -156,6 +160,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 #ifndef NDEBUG
                 if (norm == vec3(0) ) {
                     std::cerr << "normal vector is the 0 vector. This should never happen!\n";
+                    return false;
                 }
 #endif
 
@@ -269,9 +274,9 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
                 if (is_good) {
                     return false;
                 }
-                if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
-                    return false;
-                }
+            }
+            if (!std::isfinite(v(i).x()) || !std::isfinite(v(i).y()) || !std::isfinite(v(i).z())  ) {
+                return false;
             }
         }
 
@@ -359,6 +364,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
 #ifndef NDEBUG
                     if (!BC.norms.contains(i)) {
                         std::cerr << "norms does not contain " << i << ")\n";
+                        return false;
                     }
 #endif
 
@@ -367,6 +373,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
 #ifndef NDEBUG
                     if (norm == vec3(0) ) {
                         std::cerr << "normal vector is the 0 vector. This should never happen!\n";
+                        return false;
                     }
 #endif
 
@@ -567,10 +574,13 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
                         return false;
                     }
-                    if (!std::isfinite(p(i))) {
-                        return false;
-                    }
                 }
+
+                if (!std::isfinite(p(i))) {
+                    return false;
+                }
+
+
             }
 
         }
