@@ -36,6 +36,21 @@ namespace is {
 #endif
 }
 
+//https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
+// - checked in mathematica, matrix is not definite, negative semi-definite or positive semi-definite
+//   * means LLT and LDLT are out
+// - matrix is invertible (checked in mathematica)
+// - really want +++ interms of accuracy. Means its a choice between
+//   *(+)CompleteOrthogonalDecomposition (took 9.08736 - although first real timestep too only 5.2787)
+//   *(-)FullPivHouseholderQR (took 9.98239)
+//   *(+)ColPivHouseholderQR (took 4.78679)
+//   *(-)FullPivLU (took 2.73205)
+//   *(-)BDCSVD (gave infs immediately)
+//   *(-)JacobiSVD (gave infs immediately)
+//          /\ timings for second real timestep with linear interpolation
+typedef Eigen::FullPivLU<Eigen::Matrix<double, is::no_points, is::no_points> > eig_interp_solver;
+
+
 #ifdef STORE_SOLVERS
 struct interp_solvers {
     template <class T>
@@ -48,7 +63,7 @@ struct interp_solvers {
                         template <class U, class... Args> void construct(U*, Args&&...) {}
                     };
 
-    std::vector<Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> >, no_init_alloc<Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> >>  >  solvers;
+    std::vector<eig_interp_solver, no_init_alloc<eig_interp_solver>  >  solvers;
 #ifdef STORE_MATS
     std::vector<Eigen::Matrix<double, no_points, no_points>, no_init_alloc<Eigen::Matrix<double, no_points, no_points>> > mats;
 #endif
@@ -259,7 +274,7 @@ struct interp_solvers {
 #ifdef STORE_MATS
 solvers.solvers[index] = Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> >(solvers.mats[index]);
 #else
-solvers[index] = Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> >(mat);
+solvers[index] = eig_interp_solver(mat);
 #endif
 #else
 const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> > solver(mat);
@@ -427,7 +442,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #endif
 
 
-    const auto &g = *v_n.g;
 
     const auto rot_angle_vec = omega*dt;
     const auto trans_vec = vel*dt;
@@ -435,15 +449,15 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
     //variable to hold the new interpolated values
     Eigen::Matrix<double, Eigen::Dynamic, 1> vn_buff_x, vn_buff_y, vn_buff_z,
                                                 vn1_buff_x, vn1_buff_y, vn1_buff_z, p_buff;
-    vn_buff_x.resize(static_cast<long>(g.size()));
-    vn_buff_y.resize(static_cast<long>(g.size()));
-    vn_buff_z.resize(static_cast<long>(g.size()));
+    vn_buff_x.resize(static_cast<long>(v_n.g->size()));
+    vn_buff_y.resize(static_cast<long>(v_n.g->size()));
+    vn_buff_z.resize(static_cast<long>(v_n.g->size()));
 
-    vn1_buff_x.resize(static_cast<long>(g.size()));
-    vn1_buff_y.resize(static_cast<long>(g.size()));
-    vn1_buff_z.resize(static_cast<long>(g.size()));
+    vn1_buff_x.resize(static_cast<long>(v_n.g->size()));
+    vn1_buff_y.resize(static_cast<long>(v_n.g->size()));
+    vn1_buff_z.resize(static_cast<long>(v_n.g->size()));
 
-    p_buff.resize(static_cast<long>(g.size()));
+    p_buff.resize(static_cast<long>(v_n.g->size()));
 
 
 
@@ -464,7 +478,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #endif
 
     #pragma omp parallel for
-    for (unsigned index = 0; index < g.size(); index++) {
+    for (unsigned index = 0; index < v_n.g->size(); index++) {
         unsigned interp_indices[is::no_points];
         size_t counter = 0;
 
@@ -479,8 +493,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
             for (const auto& horiz : {-i,i}) {
                 for (const auto& vert : {-i,i}) {
                     for (const auto& in : {-i,i}) {
-                        if (g.can_move(index, horiz, vert, in)) {
-                            interp_indices[counter++] = g.get_move_ind(index, horiz, vert, in);
+                        if (v_n.g->can_move(index, horiz, vert, in)) {
+                            interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, vert, in);
                             if (counter == is::no_points) {
                                 goto got_indices;
                             }
@@ -492,8 +506,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
             //then getting edge values
             for (const auto& horiz : {-i,i}) {
                 for (const auto& vert : {-i,i}) {
-                    if (g.can_move(index, horiz, vert, 0)) {
-                        interp_indices[counter++] = g.get_move_ind(index, horiz, vert, 0);
+                    if (v_n.g->can_move(index, horiz, vert, 0)) {
+                        interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, vert, 0);
                         if (counter == is::no_points) {
                             goto got_indices;
                         }
@@ -501,8 +515,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
                 }
 
                 for (const auto& in : {-i,i}) {
-                    if (g.can_move(index, horiz, 0, in)) {
-                        interp_indices[counter++] = g.get_move_ind(index, horiz, 0, in);
+                    if (v_n.g->can_move(index, horiz, 0, in)) {
+                        interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, 0, in);
                         if (counter == is::no_points) {
                             goto got_indices;
                         }
@@ -513,24 +527,24 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 
             //then points along major axes
             for (const auto& horiz : {-i,i}) {
-                if (g.can_move(index, horiz, 0, 0)) {
-                    interp_indices[counter++] = g.get_move_ind(index, horiz, 0, 0);
+                if (v_n.g->can_move(index, horiz, 0, 0)) {
+                    interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, 0, 0);
                     if (counter == is::no_points) {
                         goto got_indices;
                     }
                 }
             }
             for (const auto& vert : {-i,i}) {
-                if (g.can_move(index, 0, vert, 0)) {
-                    interp_indices[counter++] = g.get_move_ind(index, 0, vert, 0);
+                if (v_n.g->can_move(index, 0, vert, 0)) {
+                    interp_indices[counter++] = v_n.g->get_move_ind(index, 0, vert, 0);
                     if (counter == is::no_points) {
                         goto got_indices;
                     }
                 }
             }
             for (const auto& in : {-i,i}) {
-                if (g.can_move(index, 0, 0, in)) {
-                    interp_indices[counter++] = g.get_move_ind(index, 0, 0, in);
+                if (v_n.g->can_move(index, 0, 0, in)) {
+                    interp_indices[counter++] = v_n.g->get_move_ind(index, 0, 0, in);
                     if (counter == is::no_points) {
                         goto got_indices;
                     }
@@ -540,8 +554,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
             //getting the rest of the edge values
             for (const auto& in : {-i,i}) {
                 for (const auto& vert : {-i,i}) {
-                    if (g.can_move(index, 0, vert, in)) {
-                        interp_indices[counter++] = g.get_move_ind(index, 0, vert, in);
+                    if (v_n.g->can_move(index, 0, vert, in)) {
+                        interp_indices[counter++] = v_n.g->get_move_ind(index, 0, vert, in);
                         if (counter == is::no_points) {
                             goto got_indices;
                         }
