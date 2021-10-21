@@ -688,13 +688,13 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 
 
 #ifndef NDEBUG
-        if ( std::abs(x-g.x[index]) > g.dx) {
+        if ( std::abs(x-v_n.g->x[index]) > v_n.g->dx) {
             std::cerr << "movement in the x-direction is larger than step size. Interpolation of values might be inaccurate\n";
         }
-        if (std::abs(y-g.y[index]) > g.dy) {
+        if (std::abs(y-v_n.g->y[index]) > v_n.g->dy) {
             std::cerr << "movement in the y-direction is larger than step size. Interpolation of values might be inaccurate\n";
         }
-        if (std::abs(z-g.z[index]) > g.dz) {
+        if (std::abs(z-v_n.g->z[index]) > v_n.g->dz) {
             std::cerr << "movement in the z-direction is larger than step size. Interpolation of values might be inaccurate\n";
         }
 #endif
