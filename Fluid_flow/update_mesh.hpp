@@ -51,6 +51,33 @@ namespace is {
 typedef Eigen::FullPivLU<Eigen::Matrix<double, is::no_points, is::no_points> > eig_interp_solver;
 
 
+template <typename T>
+void get_interp_inds(T &interp_indices, const grid &g, unsigned index) {
+    interp_indices[0] = index;
+
+    for (const auto x : {1,-1}) {
+        for (const auto y : {1,-1}) {
+            for (const auto z : {1, -1}) {
+                const bool is_good = g.can_move(index, x,0,0) &&g.can_move(index, 0,y,0) && g.can_move(index, 0,0,z) &&
+                        g.can_move(index, x,y,0) && g.can_move(index, x,0,z) && g.can_move(index, 0,y,z)
+                        && g.can_move(index, x,y,z);
+                if (is_good) {
+                    interp_indices[1] = g.get_move_ind(index, x, 0, 0);
+                    interp_indices[2] = g.get_move_ind(index, 0, y, 0);
+                    interp_indices[3] = g.get_move_ind(index, 0, 0, z);
+                    interp_indices[4] = g.get_move_ind(index, x, y, 0);
+                    interp_indices[5] = g.get_move_ind(index, x, 0, z);
+                    interp_indices[6] = g.get_move_ind(index, 0, y, z);
+                    interp_indices[7] = g.get_move_ind(index, x, y, z);
+                    return;
+                }
+
+            }
+        }
+    }
+}
+
+
 #ifdef STORE_SOLVERS
 struct interp_solvers {
     template <class T>
@@ -75,113 +102,50 @@ struct interp_solvers {
 #endif
     }
 
+
     explicit interp_solvers(const grid &g) : interp_solvers(g.size()) {
         //finding points to use for interpolation
         // - assumes the offsets are smaller than the step size
-
-
-        double time_finding_indices = 0;
-        double time_filling_matrices = 0;
-        double time_solver = 0;
-
-    #pragma omp parallel for
+        #pragma omp parallel for
         for (unsigned index = 0; index < g.size(); index++) {
             unsigned interp_indices[is::no_points];
-            size_t counter = 0;
+            get_interp_inds(interp_indices, g, index);
 
-            const auto start_indices = std::chrono::high_resolution_clock::now();
             //include the point itself
-            interp_indices[counter++] = index;
-            int i = 1;
-            while (true) {
+            /*interp_indices[0] = index;
 
-                //getting corner values first
-                for (const auto& horiz : {-i,i}) {
-                    for (const auto& vert : {-i,i}) {
-                        for (const auto& in : {-i,i}) {
-                            if (g.can_move(index, horiz, vert, in)) {
-                                interp_indices[counter++] = g.get_move_ind(index, horiz, vert, in);
-                                if (counter == is::no_points) {
-                                    goto got_indices;
-                                }
-                            }
+            for (const auto x : {1,-1}) {
+                for (const auto y : {1,-1}) {
+                    for (const auto z : {1, -1}) {
+                        const bool is_good = g.can_move(index, x,0,0) &&g.can_move(index, 0,y,0) && g.can_move(index, 0,0,z) &&
+                                g.can_move(index, x,y,0) && g.can_move(index, x,0,z) && g.can_move(index, 0,y,z)
+                                && g.can_move(index, x,y,z);
+                        if (is_good) {
+                            interp_indices[1] = g.get_move_ind(index, x, 0, 0);
+                            interp_indices[2] = g.get_move_ind(index, 0, y, 0);
+                            interp_indices[3] = g.get_move_ind(index, 0, 0, z);
+                            interp_indices[4] = g.get_move_ind(index, x, y, 0);
+                            interp_indices[5] = g.get_move_ind(index, x, 0, z);
+                            interp_indices[6] = g.get_move_ind(index, 0, y, z);
+                            interp_indices[7] = g.get_move_ind(index, x, y, z);
+                            goto outside_loop;
                         }
+
                     }
                 }
-
-                //then getting edge values
-                for (const auto& horiz : {-i,i}) {
-                    for (const auto& vert : {-i,i}) {
-                        if (g.can_move(index, horiz, vert, 0)) {
-                            interp_indices[counter++] = g.get_move_ind(index, horiz, vert, 0);
-                            if (counter == is::no_points) {
-                                goto got_indices;
-                            }
-                        }
-                    }
-
-                    for (const auto& in : {-i,i}) {
-                        if (g.can_move(index, horiz, 0, in)) {
-                            interp_indices[counter++] = g.get_move_ind(index, horiz, 0, in);
-                            if (counter == is::no_points) {
-                                goto got_indices;
-                            }
-                        }
-                    }
-                }
-
-
-                //then points along major axes
-                for (const auto& horiz : {-i,i}) {
-                    if (g.can_move(index, horiz, 0, 0)) {
-                        interp_indices[counter++] = g.get_move_ind(index, horiz, 0, 0);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-                for (const auto& vert : {-i,i}) {
-                    if (g.can_move(index, 0, vert, 0)) {
-                        interp_indices[counter++] = g.get_move_ind(index, 0, vert, 0);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-                for (const auto& in : {-i,i}) {
-                    if (g.can_move(index, 0, 0, in)) {
-                        interp_indices[counter++] = g.get_move_ind(index, 0, 0, in);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-
-                //getting the rest of the edge values
-                for (const auto& in : {-i,i}) {
-                    for (const auto& vert : {-i,i}) {
-                        if (g.can_move(index, 0, vert, in)) {
-                            interp_indices[counter++] = g.get_move_ind(index, 0, vert, in);
-                            if (counter == is::no_points) {
-                                goto got_indices;
-                            }
-                        }
-                    }
-                }
-
-
-
-
-                i++;
             }
-            got_indices:
-            const auto end_indices = std::chrono::high_resolution_clock::now();
-            time_finding_indices += static_cast<std::chrono::duration<double>>(end_indices - start_indices).count();
+            outside_loop:*/
+
+
+
+            /*const auto fff = g.can_move(index, 1,0,0) &&g.can_move(index, 0,1,0) && g.can_move(index, 0,0,1) &&
+                    g.can_move(index, 1,1,0) && g.can_move(index, 1,0,1) && g.can_move(index, 0,1,1)
+                    && g.can_move(index, 1,1,1);*/
+
 
 
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
-            const auto start_filling = std::chrono::high_resolution_clock::now();
 #ifdef STORE_MATS
 
 #else
@@ -261,12 +225,9 @@ struct interp_solvers {
 #endif
             }
 
-            const auto end_filling = std::chrono::high_resolution_clock::now();
-            time_filling_matrices += static_cast<std::chrono::duration<double>>(end_filling - start_filling).count();
 
 
 
-            const auto start_solver = std::chrono::high_resolution_clock::now();
             //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
             //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
             //const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
@@ -280,18 +241,16 @@ solvers[index] = eig_interp_solver(mat);
 const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> > solver(mat);
 #endif
 
-const auto end_solver = std::chrono::high_resolution_clock::now();
-time_solver += static_cast<std::chrono::duration<double>>(end_solver - start_solver).count();
         }
-        std::cerr << "\n\tTime spent finding indices : " << time_finding_indices << "\n";
-        std::cerr << "\tTime spent filling matrices : " << time_filling_matrices << "\n";
-        std::cerr << "\tTime spent initialising solver : " << time_solver << "\n";
+
 
     }
 
 
 };
 #endif
+
+
 
 
 //defined below update_mesh
@@ -442,6 +401,58 @@ double update_buffer(const T& a, const double x, const double y, const double z)
 
 
 
+/*
+bool val_is_good(const Eigen::Matrix<double, is::no_points, 1> &v, double a) {
+    constexpr double tol = 0.01;    //tolerance to take value as good enough
+    constexpr double tol2 = 1e-3;   //tol1 is percentage error, tol2 is absolute error
+    if (std::abs(a) < 1e-10) {  //interpolation will not be accurate here
+        return true;
+    }
+
+    double min = v[0], max = v[0];
+
+    for (unsigned i = 1; i < is::no_points; i++) {
+        if (v[i] > max) {
+            max = v[i];
+        } else if (v[i] < min) {
+            min = v[i];
+        }
+
+    }
+
+    bool max_good, min_good;
+    if (min==0) {
+        min_good = a-min > -tol2;
+    } else {
+        min_good = (a-min)/std::abs(min)>-tol;
+    }
+
+    if (max==0) {
+        max_good = a-max <tol2;
+    } else {
+        max_good = (a-max)/std::abs(max)<tol;
+    }
+
+    return  max_good && min_good;
+}
+
+std::pair<double, double> get_min_max(const Eigen::Matrix<double, is::no_points, 1> &v) {
+    double min = v[0], max = v[0];
+
+    for (unsigned i = 1; i < is::no_points; i++) {
+        if (v[i] > max) {
+            max = v[i];
+        } else if (v[i] < min) {
+            min = v[i];
+        }
+
+    }
+
+    return {min, max};
+}*/
+
+
+
 //const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
 #ifdef STORE_SOLVERS
 void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt, interp_solvers & isolver, const grid &init_grid, const vec3& init_com) {
@@ -484,99 +495,46 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #else
     double time_solver = 0;
 #endif
-
     #pragma omp parallel for
     for (unsigned index = 0; index < v_n.g->size(); index++) {
         unsigned interp_indices[is::no_points];
-        size_t counter = 0;
+
+#ifdef STORE_SOLVERS
+        const auto rot = rotate(init_com, rot_angle_vec, vec3(init_grid.x[index], init_grid.y[index], init_grid.z[index]), rot_angle_vec.length() );
+#else
+        const auto rot = rotate(c_o_m, rot_angle_vec, vec3(g.x[index], g.y[index], g.z[index]), rot_angle_vec.length() );
+#endif
+
+        const auto x = rot.x()+trans_vec.x();
+        const auto y = rot.y()+trans_vec.y();
+        const auto z = rot.z()+trans_vec.z();
+
+        vec3 move_vec = {0,0,0};
+
+        if (x < init_grid.x[index]) {
+            if (v_n.g->can_move(index, move_vec + vec3(-1,0,0)  )) {
+                move_vec += vec3(-1,0,0);
+            }
+        }
+        if (y < init_grid.y[index]) {
+            if (v_n.g->can_move(index, move_vec + vec3(0,-1,0)  )) {
+                move_vec +=vec3(0,-1,0);
+            }
+        }
+        if (z < init_grid.z[index]) {
+            if (v_n.g->can_move(index, move_vec + vec3(0,0,-1)  )) {
+                move_vec += vec3(0,0,-1);;
+            }
+        }
+
+        const auto i_index = v_n.g->get_move_ind(index, move_vec);
+
 
         const auto start_indices = std::chrono::high_resolution_clock::now();
-        //include the point itself
-        interp_indices[counter++] = index;
-        int i = 1;
-        while (true) {
 
-            //std::cerr << "\t" << counter << "\n";
-            //getting corner values first
-            for (const auto& horiz : {-i,i}) {
-                for (const auto& vert : {-i,i}) {
-                    for (const auto& in : {-i,i}) {
-                        if (v_n.g->can_move(index, horiz, vert, in)) {
-                            interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, vert, in);
-                            if (counter == is::no_points) {
-                                goto got_indices;
-                            }
-                        }
-                    }
-                }
-            }
+        //get_interp_inds(interp_indices, *v_n.g, index);
+        get_interp_inds(interp_indices, *v_n.g, i_index);
 
-            //then getting edge values
-            for (const auto& horiz : {-i,i}) {
-                for (const auto& vert : {-i,i}) {
-                    if (v_n.g->can_move(index, horiz, vert, 0)) {
-                        interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, vert, 0);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-
-                for (const auto& in : {-i,i}) {
-                    if (v_n.g->can_move(index, horiz, 0, in)) {
-                        interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, 0, in);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-            }
-
-
-            //then points along major axes
-            for (const auto& horiz : {-i,i}) {
-                if (v_n.g->can_move(index, horiz, 0, 0)) {
-                    interp_indices[counter++] = v_n.g->get_move_ind(index, horiz, 0, 0);
-                    if (counter == is::no_points) {
-                        goto got_indices;
-                    }
-                }
-            }
-            for (const auto& vert : {-i,i}) {
-                if (v_n.g->can_move(index, 0, vert, 0)) {
-                    interp_indices[counter++] = v_n.g->get_move_ind(index, 0, vert, 0);
-                    if (counter == is::no_points) {
-                        goto got_indices;
-                    }
-                }
-            }
-            for (const auto& in : {-i,i}) {
-                if (v_n.g->can_move(index, 0, 0, in)) {
-                    interp_indices[counter++] = v_n.g->get_move_ind(index, 0, 0, in);
-                    if (counter == is::no_points) {
-                        goto got_indices;
-                    }
-                }
-            }
-
-            //getting the rest of the edge values
-            for (const auto& in : {-i,i}) {
-                for (const auto& vert : {-i,i}) {
-                    if (v_n.g->can_move(index, 0, vert, in)) {
-                        interp_indices[counter++] = v_n.g->get_move_ind(index, 0, vert, in);
-                        if (counter == is::no_points) {
-                            goto got_indices;
-                        }
-                    }
-                }
-            }
-
-
-
-
-            i++;
-        }
-        got_indices:
         const auto end_indices = std::chrono::high_resolution_clock::now();
         time_finding_indices += static_cast<std::chrono::duration<double>>(end_indices - start_indices).count();
 
@@ -599,6 +557,9 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 
         Eigen::Matrix<double, is::no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
                                     vn1_vec_x, vn1_vec_y, vn1_vec_z, p_vec;
+
+
+
 
         for (unsigned j = 0; j < is::no_points; j++) {
             vn_vec_x[j] = v_n.xv.v[interp_indices[j]];
@@ -675,13 +636,13 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         //mat and vec now set, just need to solve for the coefficients
         //solver.compute(mat);
 #ifdef STORE_SOLVERS
-        const decltype(vn_vec_x) a_vn_x = isolver.solvers[index].solve(vn_vec_x);
-        const decltype(vn_vec_y) a_vn_y = isolver.solvers[index].solve(vn_vec_y);
-        const decltype(vn_vec_z) a_vn_z = isolver.solvers[index].solve(vn_vec_z);
-        const decltype(vn1_vec_x) a_vn1_x = isolver.solvers[index].solve(vn1_vec_x);
-        const decltype(vn1_vec_y) a_vn1_y = isolver.solvers[index].solve(vn1_vec_y);
-        const decltype(vn1_vec_z) a_vn1_z = isolver.solvers[index].solve(vn1_vec_z);
-        const decltype(p_vec) a_p = isolver.solvers[index].solve(p_vec);
+    const decltype(vn_vec_x) a_vn_x = isolver.solvers[i_index].solve(vn_vec_x);
+    const decltype(vn_vec_y) a_vn_y = isolver.solvers[i_index].solve(vn_vec_y);
+    const decltype(vn_vec_z) a_vn_z = isolver.solvers[i_index].solve(vn_vec_z);
+    const decltype(vn1_vec_x) a_vn1_x = isolver.solvers[i_index].solve(vn1_vec_x);
+    const decltype(vn1_vec_y) a_vn1_y = isolver.solvers[i_index].solve(vn1_vec_y);
+    const decltype(vn1_vec_z) a_vn1_z = isolver.solvers[i_index].solve(vn1_vec_z);
+    const decltype(p_vec) a_p = isolver.solvers[i_index].solve(p_vec);
 #else
         const decltype(vn_vec_x) a_vn_x = solver.solve(vn_vec_x);
         const decltype(vn_vec_y) a_vn_y = solver.solve(vn_vec_y);
@@ -693,7 +654,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #endif
 
         /*const decltype(vn_vec_x) a_vn_x = mat.lu().solve(vn_vec_x);
-        const decltype(vn_vec_y) a_vn_y = mat.lu().solve(vn_vec_y);
+        const decltype(vn_vec_y) a_vn_y = matindex.lu().solve(vn_vec_y);
         const decltype(vn_vec_z) a_vn_z = mat.lu().solve(vn_vec_z);
         const decltype(vn1_vec_x) a_vn1_x = mat.lu().solve(vn_vec_x);
         const decltype(vn1_vec_y) a_vn1_y = mat.lu().solve(vn1_vec_y);
@@ -723,14 +684,8 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         /*const auto x = g.x[index] + x_off;
         const auto y = g.y[index] + y_off;
         const auto z = g.z[index] + z_off;*/
-#ifdef STORE_SOLVERS
-        const auto rot = rotate(init_com, rot_angle_vec, vec3(init_grid.x[index], init_grid.y[index], init_grid.z[index]), rot_angle_vec.length() );
-#else
-        const auto rot = rotate(c_o_m, rot_angle_vec, vec3(g.x[index], g.y[index], g.z[index]), rot_angle_vec.length() );
-#endif
-        const auto x = rot.x()+trans_vec.x();
-        const auto y = rot.y()+trans_vec.y();
-        const auto z = rot.z()+trans_vec.z();
+
+
 
 #ifndef NDEBUG
         if ( std::abs(x-g.x[index]) > g.dx) {
@@ -755,6 +710,93 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         vn1_buff_y[index] = update_buffer(a_vn1_y, x,y,z);
         vn1_buff_z[index] = update_buffer(a_vn1_z, x,y,z);
         p_buff[index] = update_buffer(a_p, x,y,z);
+
+        /*if (!val_is_good(vn_vec_x, vn_buff_x[index])) {
+            std::cerr << "Interpolation of vn_x failed at index " << index << "\n";
+            const auto mm = get_min_max(vn_vec_x);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_x[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n.xv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn_x failed");
+        }
+        if (!val_is_good(vn_vec_y, vn_buff_y[index])) {
+            std::cerr << "Interpolation of vn_y failed at index " << index << "\n";
+            const auto mm = get_min_max(vn_vec_y);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_y[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n.yv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn_y failed");
+        }
+        if (!val_is_good(vn_vec_z, vn_buff_z[index])) {
+            std::cerr << "Interpolation of vn_z failed at index  " << index << "\n";
+            const auto mm = get_min_max(vn_vec_z);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_z[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n.zv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn_z failed");
+        }
+
+        if (!val_is_good(vn1_vec_x, vn1_buff_x[index])) {
+            std::cerr << "Interpolation of vn1_x failed at index " << index << "\n";
+            const auto mm = get_min_max(vn1_vec_x);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_x[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n1.xv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn1_x failed");
+        }
+        if (!val_is_good(vn1_vec_y, vn1_buff_y[index])) {
+            std::cerr << "Interpolation of vn1_y failed at index " << index << "\n";
+            const auto mm = get_min_max(vn1_vec_y);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_y[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n1.yv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn1_y failed");
+        }
+        if (!val_is_good(vn1_vec_z, vn1_buff_z[index])) {
+            std::cerr << "Interpolation of vn1_z failed at index " << index << "\n";
+            const auto mm = get_min_max(vn1_vec_z);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_z[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << v_n1.zv.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of vn1_z failed");
+        }
+
+        if (!val_is_good(p_vec, p_buff[index])) {
+            std::cerr << "Interpolation of p failed at index " << index << "\n";
+            const auto mm = get_min_max(p_vec);
+            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << p_buff[index] << "\n";
+            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
+            std::cerr << "\tInterpolated with values : ";
+            for (unsigned int interp_indice : interp_indices) {
+                std::cerr << p.v[interp_indice] << " ";
+            }
+            std::cerr << "\n";
+            throw std::runtime_error("Interpolation of p failed");
+        }*/
 
         const auto end_solving = std::chrono::high_resolution_clock::now();
         time_solving += static_cast<std::chrono::duration<double>>(end_solving - start_solving).count();
