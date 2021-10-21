@@ -56,25 +56,17 @@ struct big_vec {
     }
 
 
-    virtual unsigned long size() const {
+    [[nodiscard]] virtual unsigned long size() const {
 #ifndef NDEBUG
         std::cerr << "virtual size function of big_vec called. This should never happen\n";
 #endif
         return -1;  //will overflow and give a stupid number
     }
-    virtual void clear() {
+    [[maybe_unused]] virtual void clear() {
 #ifndef NDEBUG
         std::cerr << "virtual clear function of big_vec called. This should never happen\n";
 #endif
     }
-
-
-
-    [[nodiscard]] inline T move(const unsigned ind, const vec3&v) const noexcept {
-        return move(ind, v.x(), v.y(), v.z());
-    }
-
-
 
     [[nodiscard]] auto get_move_ind(const unsigned ind, const int x, const int y, const int z) const noexcept {
         return g->get_move_ind(ind, x, y, z);
