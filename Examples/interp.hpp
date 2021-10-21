@@ -9,9 +9,6 @@
 #include "../MyMath/boundary.hpp"
 
 void interp_ex() {
-
-
-
     constexpr unsigned nx = 20;
     constexpr unsigned ny = 26;
     constexpr unsigned nz = 22;
@@ -93,17 +90,13 @@ void interp_ex() {
         inds.push_back(4*i+3);  //upper right
     }
 
-    //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
     mesh m(pos, inds, mass, norms, vec3(0.0,0,0), vec3(0,0,0));
-    //body b(m);
 
     std::cout << "testing to see if interpolation correct\n";
 
     boundary_conditions BC(&m, dx, dy, dz, nx*dx, ny*dy, nz*dz, ex, ey, ez);
     BC.global_grid.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
-    //BC.global_grid.DEBUG_write_boundary_points_at_x(3.007);
-    //BC.DEBUG_write_normal_vectors_at_x(3.007);
     big_vec_d v(BC);
 
     for (unsigned i = 0; i < v.size(); i++) {

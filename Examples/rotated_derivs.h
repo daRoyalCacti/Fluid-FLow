@@ -36,7 +36,6 @@ void rotated_derivs_ex() {
 
         v.g->move(vec3(1,2,3), vec3(ex, ey, ez), vec3(2,1.5,1), 1);
         for (unsigned i = 0; i < v.size(); i++) {
-            //std::cerr << i << "/" << v.size() << "\n";
             const auto x = BC.global_grid.x[i];
             const auto y = BC.global_grid.y[i];
             const auto z = BC.global_grid.z[i];
@@ -365,17 +364,13 @@ void rotated_derivs_ex() {
             inds.push_back(4*i+3);  //upper right
         }
 
-        //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
         mesh m(pos, inds, mass, norms, vec3(0.0,0,0), vec3(0,0,0));
-        //body b(m);
 
         std::cout << "testing to see if derivatives correct\n";
 
         boundary_conditions BC(&m, dx, dy, dz, nx*dx, ny*dy, nz*dz, ex, ey, ez);
         BC.global_grid.DEBUG_write_boundary_points();
         BC.DEBUG_write_normal_vectors();
-        //BC.global_grid.DEBUG_write_boundary_points_at_x(3.007);
-        //BC.DEBUG_write_normal_vectors_at_x(3.007);
         big_vec_v v(BC);
 
         v.g->move(vec3(1,2,3), vec3(ex, ey, ez), vec3(2,1.5,1), 1);

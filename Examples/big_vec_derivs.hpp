@@ -35,7 +35,6 @@ void big_veg_derivs_ex() {
 
 
     for (unsigned i = 0; i < v.size(); i++) {
-        //std::cerr << i << "/" << v.size() << "\n";
         const auto x = BC.global_grid.x[i];
         const auto y = BC.global_grid.y[i];
         const auto z = BC.global_grid.z[i];

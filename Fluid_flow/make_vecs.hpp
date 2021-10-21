@@ -7,7 +7,6 @@
 
 #include "../MyMath/calc.hpp"
 
-//TODO : test to see if gives right output
 void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n, const big_vec_v &v_n1, const big_vec_d &p, const boundary_conditions &bc) noexcept {
 #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
@@ -35,7 +34,6 @@ void make_b(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n
 
 }
 
-//TODO : test to see if gives right output
 //for the first timestep
 void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_v &v_n, const big_vec_d &p, const boundary_conditions &bc) noexcept {
 #pragma omp parallel for
@@ -60,7 +58,6 @@ void make_b_first(big_vec_v &b, const double Re, const double dt, const big_vec_
 
 }
 
-//TODO : test to see if gives right output
 void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n,
         const big_vec_v &v_n1, const big_vec_d &p) noexcept {
 #pragma omp parallel for
@@ -71,7 +68,6 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
             } else {
                 s(i) = 0-p(i);  //need to minus p(i) because solving for pressure correction
             }
-            //s(i) = p(i);
         } else {
 
             s(i) = divergence(v_n.g->axis, v_n, i) / dt - 3/2 * divergence_advection(v_n.g->axis, v_n, i) + 1/2 *
@@ -86,7 +82,6 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
 }
 
 
-//TODO : test to see if gives right output
 void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n, const big_vec_d &p) noexcept {
     #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
@@ -96,7 +91,6 @@ void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_
             } else {
                 s(i) = 0-p(i);  //need to minus p(i) because solving for pressure correction
             }
-            //s(i) = p(i);
         } else {
             s(i) = divergence(v_n.g->axis, v_n, i) / dt - divergence_advection(v_n.g->axis, v_n, i) + 1 / Re *
                     divergence_laplacian(v_n.g->axis, v_n, i) - laplacian(v_n.g->axis, p, i);

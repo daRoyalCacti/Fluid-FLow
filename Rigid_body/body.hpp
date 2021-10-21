@@ -150,11 +150,7 @@ struct body {
         }
 #endif
 
-        //updating all velocities
-        /*std::transform(model.velocities.begin(), model.velocities.end(), model.velocities.begin(),
-                       [&](const vec3& x)
-                       {return model.v + cross( model.w, (x-pos_cm));});*/ //velocity of cm plus rotational velocity (v=w x r)
-                                                //https://en.wikipedia.org/wiki/Angular_velocity
+
         for (unsigned i = 0; i < model.velocities.size(); i++) {
             model.velocities[i] = model.v + cross( model.w, (model.vertices[i]-model.pos_cm));
         }

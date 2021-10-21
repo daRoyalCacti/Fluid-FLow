@@ -100,8 +100,6 @@ void calc_derivs_ex() {
     boundary_conditions BC(&m, dx, dy, dz, nx*dx, ny*dy, nz*dz, ex, ey, ez);
     BC.global_grid.DEBUG_write_boundary_points();
     BC.DEBUG_write_normal_vectors();
-    //BC.global_grid.DEBUG_write_boundary_points_at_x(3.007);
-    //BC.DEBUG_write_normal_vectors_at_x(3.007);
     big_vec_v v(BC);
 
     for (unsigned i = 0; i < v.size(); i++) {

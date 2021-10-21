@@ -49,7 +49,6 @@ struct triangle_mesh {
         // - note that hits is stored in order of hit time
         std::map<double, d_vec3> hits; //stores hit time and hit pos
         double time;
-        //unsigned test_counter = 0;
         for (const triangle & t : tris) {
             if (t.hit_time(r, time)) {
                 //time, collision point, normal at collision point, velocity at collision point

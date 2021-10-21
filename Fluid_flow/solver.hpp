@@ -11,7 +11,6 @@
 //#define BICGSTAB
 
 #include <viennacl/vector.hpp>
-//#include <viennacl/matrix.hpp>
 #include <viennacl/compressed_matrix.hpp>
 
 #ifndef BICGSTAB
@@ -23,55 +22,6 @@
 #include "../MyMath/big_matrix.hpp"
 #include "../MyMath/big_vec.hpp"
 #include "update_vecs.hpp"
-
-/*
-template <unsigned N, unsigned M, unsigned P>
-struct solver {
-    viennacl::compressed_matrix<double>  vcl_sparse_matrix;
-    //viennacl::vector<double> vcl_rhs;
-    viennacl::linalg::gmres_tag my_gmres_tag;
-
-    solver() = delete;
-    explicit solver(const big_matrix<N,M,P> &A) {
-        vcl_sparse_matrix.resize( (N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1) );
-        //vcl_rhs.resize( (N+1)*(M+1)*(P+1) );
-        viennacl::copy(A.m, vcl_sparse_matrix);
-
-        //setting up the solver
-        //could probably mess with the parameters
-        my_gmres_tag = viennacl::linalg::gmres_tag(1e-5, 100, 20);// up to 100 iterations, restart after 20 iterations
-    }
-
-    void solve(const big_vec<N,M,P,double> &b, big_vec<N,M,P,double> &x) {
-        viennacl::vector<double> vcl_rhs( (N+1)*(M+1)*(P+1) );
-        viennacl::copy(b.v, vcl_rhs);   //upload vector to device
-
-        //solving
-        viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag);
-
-        //copy result into x
-        viennacl::copy(res, x.v);
-    }
-};
- */
-
-/*
-struct solver_vals {
-    unsigned max_iterations;
-    unsigned dim;
-};
-
-#ifdef VIENNACL_WITH_OPENCL
-constexpr solver_vals normal_solve{1000, 20};
-constexpr solver_vals detailed_solve{5000, 20};
-constexpr solver_vals very_detailed_solve{10000, 25};
-#endif
-
-#ifdef VIENNACL_WITH_OPENMP
-    constexpr solver_vals normal_solve{1000, 1000};
-    constexpr solver_vals detailed_solve{5000, 1000};
-    constexpr solver_vals very_detailed_solve{10000, 1000};
-#endif*/
 
 
 constexpr std::array<unsigned, 5> max_its_v = {300, 500, 1000, 5000, 10000,};
@@ -87,7 +37,6 @@ constexpr unsigned no_solver_choices_p = max_its_p.size();
 //template <unsigned it, unsigned dim>
 void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned it, const unsigned dim) noexcept {
     viennacl::compressed_matrix<double>  vcl_sparse_matrix( b.size(), b.size() );
-    //viennacl::coordinate_matrix<double>  vcl_sparse_matrix( (N+1)*(M+1)*(P+1), (N+1)*(M+1)*(P+1) );
     viennacl::vector<double> vcl_rhs( b.size() );
 
     //copying data into viennacl
@@ -96,7 +45,6 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
 
     //setting up the solver
     //could probably mess with the parameters
-    //viennacl::linalg::gmres_tag my_gmres_tag(1e-5, 100, 20); // up to 100 iterations, restart after 20 iterations
 #ifdef VIENNACL_WITH_OPENCL
 #ifndef BICGSTAB
     viennacl::linalg::gmres_tag my_gmres_tag(1e-100, it, dim);
@@ -113,18 +61,6 @@ void solve(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned
 #ifdef VIENNACL_WITH_OPENMP
     viennacl::linalg::gmres_tag my_gmres_tag(1e-5, it, dim);
 #endif
-
-    /*
-#ifdef ACCURATE_SOLVER
-    viennacl::linalg::gmres_tag my_gmres_tag(1e-100, 10000, 25); // up to 100 iterations, restart after 20 iterations
-#else
-    viennacl::linalg::gmres_tag my_gmres_tag(1e-100, 1000, 20);
-#endif
-     */
-
-    //viennacl::linalg::gmres_tag my_gmres_tag(1e-50, 1000, 20); // up to 100 iterations, restart after 20 iterations
-
-    //solving
 
 
     //copy result into x
@@ -156,43 +92,6 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
     update_pressure_BC<false>(BC, p_c, accuracy_percent);
     p += p_c;
     update_pressure_BC<false>(BC, p, accuracy_percent);
-
-    /*solve<normal_solve.max_iterations, normal_solve.dim>(Q, s, p_c);
-    //enforce_PBC(p_c, BC.norms);
-
-    bool accurate = update_pressure_BC(BC, p_c, accuracy_percent);     //TESTING
-     if (accurate) {
-         p += p_c;
-         const bool accurate2 = update_pressure_BC(BC, p, accuracy_percent);
-         if (accurate2) {
-             return;
-         } else {
-             p -= p_c;
-         }
-     }
-     solve<detailed_solve.max_iterations, detailed_solve.dim>(Q, s, p_c);
-     accurate = update_pressure_BC(BC, p_c, accuracy_percent);
-     if (accurate) {
-         p += p_c;
-         const bool accurate2 = update_pressure_BC(BC, p, accuracy_percent);
-         if (accurate2) {
-             return;
-         } else {
-             p -= p_c;
-         }
-     }
-     solve<very_detailed_solve.max_iterations, very_detailed_solve.dim>(Q, s, p_c);
-     accurate = update_pressure_BC(BC, p_c, accuracy_percent);
-     if (accurate) {
-         p += p_c;
-         const bool accurate2 = update_pressure_BC(BC, p, accuracy_percent);
-         if (accurate2) {
-             return;
-         } else {
-             std::cerr << "pressure is still not accurate even with most accurate solver\n";
-         }
-     }*/
-
 
 }
 
@@ -226,52 +125,6 @@ void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const bi
     enforce_velocity_correction_BC<false>(BC, vc, accuracy_percent);
     v_n += vc;
     enforce_velocity_BC<false>(BC, v_n, accuracy_percent);
-
-
-    /*solve<normal_solve.max_iterations, normal_solve.dim>(A, b.xv, vc.xv);
-    solve<normal_solve.max_iterations, normal_solve.dim>(A, b.yv, vc.yv);
-    solve<normal_solve.max_iterations, normal_solve.dim>(A, b.zv, vc.zv);
-    bool accurate = enforce_velocity_BC(BC, vc, accuracy_percent);
-    if (accurate) {
-        v_n += vc;
-        const bool accurate2 = enforce_velocity_BC(BC, v_n, accuracy_percent);
-        if (accurate2) {
-            return;
-        } else {
-            v_n -= vc;
-        }
-    }
-
-    solve<detailed_solve.max_iterations, detailed_solve.dim>(A, b.xv, vc.xv);
-    solve<detailed_solve.max_iterations, detailed_solve.dim>(A, b.yv, vc.yv);
-    solve<detailed_solve.max_iterations, detailed_solve.dim>(A, b.zv, vc.zv);
-    accurate = enforce_velocity_BC(BC, vc, accuracy_percent);
-    if (accurate) {
-        v_n += vc;
-        const bool accurate2 = enforce_velocity_BC(BC, v_n, accuracy_percent);
-        if (accurate2) {
-            return;
-        } else {
-            v_n -= vc;
-        }
-    }
-
-    solve<very_detailed_solve.max_iterations, very_detailed_solve.dim>(A, b.xv, vc.xv);
-    solve<very_detailed_solve.max_iterations, very_detailed_solve.dim>(A, b.yv, vc.yv);
-    solve<very_detailed_solve.max_iterations, very_detailed_solve.dim>(A, b.zv, vc.zv);
-    accurate = enforce_velocity_BC(BC, vc, accuracy_percent);
-    if (accurate) {
-        v_n += vc;
-        const bool accurate2 = enforce_velocity_BC(BC, v_n, accuracy_percent);
-        if (accurate2) {
-            return;
-        } else {
-            std::cerr << "velocity is still not accurate even with most accurate solver\n";
-        }
-    }*/
-
-
-
 
 
 }

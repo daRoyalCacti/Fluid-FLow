@@ -1,5 +1,5 @@
 % no_files = length(dirPlus('velocity_data'));
-no_files = 70;
+ no_files = 336;
 
 figure('units','normalized','outerposition',[0 0 1 1]);
 axis tight manual
@@ -7,7 +7,7 @@ axis tight manual
 hold on
 v = VideoWriter('test.avi', 'Motion JPEG AVI');
 v.Quality = 40; %lower quality to save on disk space
-v.FrameRate = 30;
+v.FrameRate = 60;
 open(v)
 
 for frame = 0:no_files-1

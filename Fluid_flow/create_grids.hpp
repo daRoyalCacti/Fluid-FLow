@@ -22,13 +22,8 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
 
     const vec3 mins = {minx,miny,minz};
     const vec3 maxs = {minx+Wx, miny+Wy, minz+Wz};
-    /*
-    g.dx = dx;
-    g.dy = dy;
-    g.dz = dz;*/
+
     g = grid(dx, dy, dz, mins, maxs);
-    //std::cerr << g.dx << " " << g.dy << " " << g.dz << "\n";
-    //std::cerr << dx << " " << dy << " " << dz << "\n";
 
     const auto s = static_cast<unsigned long>(sx*sy*sz);
     g.x.resize(s);
@@ -36,7 +31,6 @@ void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz
     g.z.resize(s);
     g.r.resize(s);
 
-    //g.create_no_points_unif();
 
     unsigned counter = 0;
     for (int k = 0; k < sz; k++) {
@@ -112,12 +106,8 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             const triangle* t2 = th->second.v4;
 
 
-            /*const auto inds1 = g.get_ind_unif(col1);
-            const auto inds2 = g.get_ind_unif(col2);*/
             const auto inds1 = vec3{floor( (col1.x()-g.edge1.x()) /g.dx), floor( (col1.y()-g.edge1.y()) /g.dy), floor( (col1.z()-g.edge1.z())/g.dz)};
             const auto inds2 = vec3{floor( (col2.x()-g.edge1.x()) /g.dx), floor( (col2.y()-g.edge1.y()) /g.dy), floor( (col2.z()-g.edge1.z())/g.dz)};
-            //std::cerr << inds1 << " " << inds2 << "\n";
-            //std::cerr << g.dx << " " << col1.x() << " " << g.edge1 << "\n";
 
 
             const auto ind1 = g.convert_indices_unif(inds1);
@@ -229,11 +219,8 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 #ifdef REMOVE_INSIDE_DLOG
     std::cerr << "rays from the z direction\n";
 #endif
-    //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
-        //for (double y = minp.y(); y <= maxp.y(); y += g.dy/test) {
     for (unsigned i = 0; i <= Nx; i++) {
         for (unsigned j = 0; j <= Ny; j++) {
-            //std::cerr << i << " " << j << "\n";
             const double x = minp.x() + i*dx/test;
             const double y = minp.y() + j*dy/test;
 
@@ -245,8 +232,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 #ifdef REMOVE_INSIDE_DLOG
     std::cerr << "rays from the y direction\n";
 #endif
-    //for (double x = minp.x(); x <= maxp.x(); x += g.dx/test) {
-     //   for (double z = minp.z(); z <= maxp.z(); z += g.dz/test) {
      for (unsigned i = 0; i <= Nx; i++) {
          for (unsigned k = 0; k <= Nz; k++) {
              const double x = minp.x() + i*dx/test;
@@ -279,7 +264,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     z.reserve(g.z.size());
     std::vector<grid_relation> r;
     r.reserve(g.r.size());
-    //std::map<unsigned, int> old_new;    //conversion between the old indices and the new (points removed) indices
 
     unsigned index_counter = 0;
 
@@ -396,20 +380,10 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     }
     t_inds = std::move(t_inds_c);
 
-    //std::cerr << t_inds.size() << " " << t_inds_c.size() << " " << v_points.size() << "\n";
-
 #ifndef NDEBUG
 #ifdef REMOVE_INSIDE_DLOG
         std::cerr << "checking results\n";
 #endif
-        //checking that all normals below to a boundary point
-        /*for (const auto & n : norms.m) {
-            if ( !g.is_boundary(n.first) ) {
-                std::cerr << "normal at index " << n.first << " is not on a boundary point\n";
-                std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
-            }
-        }*/
-
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
             if (g.is_boundary(i) && g.off_walls(i) && !norms.contains(i)) {
@@ -417,14 +391,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
-
-        /*for (const auto & n : v_points.m) {
-            if ( !g.is_boundary(n.first) ) {
-                std::cerr << "velocity at index " << n.first << " is not on a boundary point\n";
-                std::cerr << "\tThis is at (" << g.x[n.first] << " " << g.y[n.first] << " " << g.z[n.first] << ")\n";
-            }
-        }*/
-
+        
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
             if (g.is_boundary(i) && g.off_walls(i) && !v_points.contains(i)) {

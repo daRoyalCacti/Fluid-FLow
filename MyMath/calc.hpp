@@ -360,7 +360,7 @@ auto laplacian(const axes& a, const T& v, const unsigned ind) noexcept {
 }
 
 
-//TODO : Test
+
 vec3 gradient_old(const big_vec_d& v, const unsigned ind) noexcept {
     return {smart_deriv_old<1,0,0>(v, ind), smart_deriv_old<0,1,0>(v, ind), smart_deriv_old<0,0,1>(v, ind)};
 }

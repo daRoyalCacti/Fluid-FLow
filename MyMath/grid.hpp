@@ -157,10 +157,6 @@ struct grid {
 
     void update_pos(const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) noexcept {
         rbv.update(vel, c_o_m, omega, dt);
-        // const vec3 rot_angle_vec = model.w*dt;
-        //rotate(pos_cm_old, rot_angle_vec, x, rot_angle_vec.length()) + model.v*dt;}
-
-
 
         const auto rot_angle_vec = omega*dt;
         const auto trans_vec = vel*dt;
@@ -177,10 +173,8 @@ struct grid {
 
         edge1 = rotate(c_o_m, rot_angle_vec, edge1, rot_angle_vec.length() ) + trans_vec;
         edge2 = rotate(c_o_m, rot_angle_vec, edge2, rot_angle_vec.length() ) + trans_vec;
-        //edge3 = rotate(c_o_m, rot_angle_vec, edge3, rot_angle_vec.length() );
         edge4 = rotate(c_o_m, rot_angle_vec, edge4, rot_angle_vec.length() ) + trans_vec;
         edge5 = rotate(c_o_m, rot_angle_vec, edge5, rot_angle_vec.length() ) + trans_vec;
-        //edge6 = rotate(c_o_m, rot_angle_vec, edge6, rot_angle_vec.length() );
         edge7 = rotate(c_o_m, rot_angle_vec, edge7, rot_angle_vec.length() ) + trans_vec;
         edge8 = rotate(c_o_m, rot_angle_vec, edge8, rot_angle_vec.length() ) + trans_vec;
         middle = rotate(c_o_m, rot_angle_vec, middle, rot_angle_vec.length() ) + trans_vec;
@@ -189,27 +183,10 @@ struct grid {
         axis.y = rotate(vec3(0), -rot_angle_vec, axis.y, rot_angle_vec.length() );
         axis.z = rotate(vec3(0), -rot_angle_vec, axis.z, rot_angle_vec.length() );
 
-
-
-        /*for (auto & x_ : x) {
-            x_ += x_off;
-        }
-        for (auto & y_ : y) {
-            y_ += y_off;
-        }
-        for (auto & z_ : z) {
-            z_ += z_off;
-        }
-        const vec3 off(x_off, y_off, z_off);
-        mins+=off;  //might need to store positions of corners - should only actualy need to store 4 of them
-        maxs+=off;  //needed for off_wall*/
     }
 
     //check to see if an index is away from the walls
     [[nodiscard]] bool off_walls(const unsigned i) const {
-        /*const bool away_x = (x[i] > mins.x()+2*dx) && (x[i]<maxs.x()-2*dx);
-        const bool away_y = (y[i] > mins.y()+2*dy) && (y[i]<maxs.y()-2*dy);
-        const bool away_z = (z[i] > mins.z()+2*dz) && (z[i]<maxs.z()-2*dz);*/
         const vec3 v = {x[i], y[i], z[i]};
         //the distances to all the walls
         const auto dist_left = dist_to_plane( v, edge1, edge5, edge7 );
@@ -218,9 +195,6 @@ struct grid {
         const auto dist_up = dist_to_plane( v, edge4, edge8, edge7 );
         const auto dist_front = dist_to_plane( v, edge1, edge2, edge4 );
         const auto dist_back = dist_to_plane( v, edge5, edge7, edge8 );
-
-        //std::cerr << i << "\t" << v << "\n";
-        //std::cerr << "\t" << dist_left << " " << dist_right << " " << dist_down << " " << dist_up << " " << dist_front << " " << dist_back << "\n";
 
         const bool away_x = (dist_left > 2*dx) && (dist_right > 2*dx);
         const bool away_y = (dist_down > 2*dy) && (dist_up > 2*dx);
@@ -334,7 +308,7 @@ struct grid {
         ret_vec.reserve( static_cast<unsigned long>(no_points_unif.x() * no_points_unif.y()) );
         for (unsigned long i = 0; i < z.size(); i++) {
             //NOPE JUST GET INDS INITIALLY AND USE THAT FOR ALL WRITING
-            if ( z[i] <= middle_z && z[i] >= middle_z-dz ) {    //TODO : update this to used the max of dx,dy,dz (when the mesh rotates, dx could be in the z direction)
+            if ( z[i] <= middle_z && z[i] >= middle_z-dz ) {
                 ret_vec.push_back(i);
             }
         }
@@ -352,19 +326,9 @@ struct grid {
         return ret_vec;
     }
 
-    /*inline void create_no_points_unif() {
-        no_points_unif = round( (maxs - mins) / vec3(dx, dy, dz) );
-    }*/
-
     [[nodiscard]] auto convert_indices_unif(const vec3 &inds) const {
         return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
     }
-
-    /*[[nodiscard]] inline vec3 get_ind_unif(vec3 p) const noexcept {
-        p -= mins;
-        return {floor(p.x()/dx), floor(p.y()/dy),floor(p.z()/dz)};
-    }*/
-
 
     [[nodiscard]] inline bool has_left(const unsigned ind) const noexcept {return r[ind].left != -1;} //returns true if it has a left
     [[nodiscard]] inline bool has_right(const unsigned ind) const noexcept {return r[ind].right != -1;}
@@ -418,50 +382,6 @@ struct grid {
         if (r[ind].front== -1) {return true;}
         if (r[ind].back== -1) {return true;}
 
-
-        /*if ( r[r[ind].left].up== -1) {return true;}
-        if ( r[r[ind].left].down== -1) {return true;}
-        if ( r[r[ind].left].front== -1) {return true;}
-        if ( r[r[ind].left].back== -1) {return true;}
-
-        if ( r[r[ind].right].up== -1) {return true;}
-        if ( r[r[ind].right].down== -1) {return true;}
-        if ( r[r[ind].right].front== -1) {return true;}
-        if ( r[r[ind].right].back== -1) {return true;}
-
-        if ( r[r[r[ind].left].up].front == -1 ) {return true;}
-        if ( r[r[r[ind].left].up].back == -1 ) {return true;}
-        if ( r[r[r[ind].left].down].front == -1 ) {return true;}
-        if ( r[r[r[ind].left].down].back == -1 ) {return true;}
-
-        if ( r[r[r[ind].right].up].front == -1 ) {return true;}
-        if ( r[r[r[ind].right].up].back == -1 ) {return true;}
-        if ( r[r[r[ind].right].down].front == -1 ) {return true;}
-        if ( r[r[r[ind].right].down].back == -1 ) {return true;}
-
-        if ( r[r[ind].up].front== -1) {return true;}
-        if ( r[r[ind].up].back== -1) {return true;}
-        if ( r[r[ind].down].front== -1) {return true;}
-        if ( r[r[ind].down].back== -1) {return true;}*/
-
-
-        /*const bool ends = !has_left(ind) || !has_right(ind) || !has_down(ind) || !has_up(ind) || !has_front(ind) || !has_back(ind);
-        if (ends) {
-            return true;
-        }
-
-        const auto ind_d1 = r[ind].left;
-        const auto ind_d2 = r[ind].right;
-
-        const std::array<int, 4> inds_ddiag = { r[r[ind].left].up, r[r[ind].left].down, r[r[ind].right].up, r[r[ind].right].down };
-        for (const auto i : inds_ddiag) {
-            const bool ddiags = !has_front(i) || !has_back(i);
-            if (ddiags) {
-                return true;
-            }
-        }*/
-
-        //return end_x || end_y || end_z;
         return false;
     }
 

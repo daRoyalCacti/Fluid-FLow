@@ -111,39 +111,6 @@ struct interp_solvers {
             unsigned interp_indices[is::no_points];
             get_interp_inds(interp_indices, g, index);
 
-            //include the point itself
-            /*interp_indices[0] = index;
-
-            for (const auto x : {1,-1}) {
-                for (const auto y : {1,-1}) {
-                    for (const auto z : {1, -1}) {
-                        const bool is_good = g.can_move(index, x,0,0) &&g.can_move(index, 0,y,0) && g.can_move(index, 0,0,z) &&
-                                g.can_move(index, x,y,0) && g.can_move(index, x,0,z) && g.can_move(index, 0,y,z)
-                                && g.can_move(index, x,y,z);
-                        if (is_good) {
-                            interp_indices[1] = g.get_move_ind(index, x, 0, 0);
-                            interp_indices[2] = g.get_move_ind(index, 0, y, 0);
-                            interp_indices[3] = g.get_move_ind(index, 0, 0, z);
-                            interp_indices[4] = g.get_move_ind(index, x, y, 0);
-                            interp_indices[5] = g.get_move_ind(index, x, 0, z);
-                            interp_indices[6] = g.get_move_ind(index, 0, y, z);
-                            interp_indices[7] = g.get_move_ind(index, x, y, z);
-                            goto outside_loop;
-                        }
-
-                    }
-                }
-            }
-            outside_loop:*/
-
-
-
-            /*const auto fff = g.can_move(index, 1,0,0) &&g.can_move(index, 0,1,0) && g.can_move(index, 0,0,1) &&
-                    g.can_move(index, 1,1,0) && g.can_move(index, 1,0,1) && g.can_move(index, 0,1,1)
-                    && g.can_move(index, 1,1,1);*/
-
-
-
             //finding the constants in y = a0 + a1x+ a2y + a3z + a4xy + a5xz + a6yz + a7xyz
             //setting the matrix
 #ifdef STORE_MATS
@@ -225,12 +192,6 @@ struct interp_solvers {
 #endif
             }
 
-
-
-
-            //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
-            //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
-            //const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
 #ifdef STORE_SOLVERS
 #ifdef STORE_MATS
 solvers.solvers[index] = Eigen::FullPivHouseholderQR<Eigen::Matrix<double, is::no_points, is::no_points> >(solvers.mats[index]);
@@ -278,7 +239,6 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     std::vector<vec3> forces, points;
     const auto& g = *v_n.g;
 
-    //forces.resize( bc.norms.size() - bc.no_wall_points() - bc.no_inside_mesh );
     forces.resize( bc.size() );
     points.resize( forces.size() );
 
@@ -289,7 +249,6 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 
         //could be done more efficiently using a range base for loop through bc.m_points
         for (unsigned i = 0; i < p.size(); i++) {
-            //std::cerr << i << "\n";
             if (g.off_walls(i)) {  //if off the boundary
                 if (g.is_boundary(i)) {    //if boundary point
                     points[forces_counter] = bc.m_points.get_point(i);    //forces applied at the mesh boundary
@@ -318,30 +277,8 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
     const auto old_c_o_m = b->model.pos_cm;
     b->update_pos(forces, points, dt);
 
-    //extrapolate must be called before update_mesh_boundary because this requires to old values for the normals
-    /*bc.extrapolate(v_n);
-    bc.extrapolate(v_n1);
-    bc.extrapolate(p);*/
-
-    //bc.enforce_velocity_BC(v_n1);
-    /*bc.update_mesh_boundary();*/
-
-    /*std::cout << "\tUpdating v_n\n";
-    v_n.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
-    std::cout << "\tUpdating v_n1\n";
-    v_n1.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
-    std::cout << "\tUpdating p\n";
-    p.move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);
-    std::cout << "\tUpdating g\n";
-    v_n.g->move(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt);   //only need to update g for one of the vectors since they all point to the same place*/
-    //std::cerr << vec3(b->model.v.x()*dt, b->model.v.y()*dt, b->model.v.z()*dt) << "\n";
-
-    /*const auto x_off = b->model.v.x()*dt;
-    const auto y_off = b->model.v.y()*dt;
-    const auto z_off = b->model.v.z()*dt;*/
-    //const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
 #ifdef STORE_SOLVERS
-interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt, isolver, init_grid, init_com);
+    interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt, isolver, init_grid, init_com);
 #else
 interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 #endif
@@ -351,24 +288,15 @@ interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
     bc.update(b->model.w, b->model.v, old_c_o_m, dt);
 
 
-    //std::cout << "\tenforcing boundary conditions\n";
     if (!update_pressure_BC<false>(bc, p)) {
         throw std::runtime_error("enforcing pressure boundary condition failed");
     }
-
-    //updating pressure and wall velocity points
-    // - non-wall velocity points and normals have already been updated
-    //bc.update_velocity_wall_BC();
-    //bc.update_pressure_BC(p);
-
-    //update_wall_velocity(bc, v_n);
 
 
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
     if (!enforce_velocity_BC<false>(bc, v_n)) {
         throw std::runtime_error("enforcing velocity boundary condition failed");
     }
-    //bc.enforce_pressure_BC(p);
 
     std::cerr << "writing i files\n";
     std::string file_name;
@@ -400,67 +328,11 @@ double update_buffer(const T& a, const double x, const double y, const double z)
 }
 
 
-
-/*
-bool val_is_good(const Eigen::Matrix<double, is::no_points, 1> &v, double a) {
-    constexpr double tol = 0.01;    //tolerance to take value as good enough
-    constexpr double tol2 = 1e-3;   //tol1 is percentage error, tol2 is absolute error
-    if (std::abs(a) < 1e-10) {  //interpolation will not be accurate here
-        return true;
-    }
-
-    double min = v[0], max = v[0];
-
-    for (unsigned i = 1; i < is::no_points; i++) {
-        if (v[i] > max) {
-            max = v[i];
-        } else if (v[i] < min) {
-            min = v[i];
-        }
-
-    }
-
-    bool max_good, min_good;
-    if (min==0) {
-        min_good = a-min > -tol2;
-    } else {
-        min_good = (a-min)/std::abs(min)>-tol;
-    }
-
-    if (max==0) {
-        max_good = a-max <tol2;
-    } else {
-        max_good = (a-max)/std::abs(max)<tol;
-    }
-
-    return  max_good && min_good;
-}
-
-std::pair<double, double> get_min_max(const Eigen::Matrix<double, is::no_points, 1> &v) {
-    double min = v[0], max = v[0];
-
-    for (unsigned i = 1; i < is::no_points; i++) {
-        if (v[i] > max) {
-            max = v[i];
-        } else if (v[i] < min) {
-            min = v[i];
-        }
-
-    }
-
-    return {min, max};
-}*/
-
-
-
-//const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt
 #ifdef STORE_SOLVERS
 void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt, interp_solvers & isolver, const grid &init_grid, const vec3& init_com) {
 #else
 void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const vec3& vel, const vec3& c_o_m, const vec3& omega, const double dt) {
 #endif
-
-
 
     const auto rot_angle_vec = omega*dt;
     const auto trans_vec = vel*dt;
@@ -532,7 +404,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 
         const auto start_indices = std::chrono::high_resolution_clock::now();
 
-        //get_interp_inds(interp_indices, *v_n.g, index);
         get_interp_inds(interp_indices, *v_n.g, i_index);
 
         const auto end_indices = std::chrono::high_resolution_clock::now();
@@ -550,10 +421,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #else
         Eigen::Matrix<double, is::no_points, is::no_points> mat;
 #endif
-        /*Eigen::BiCGSTAB<Eigen::Matrix<double, no_points, no_points> > solver;
-        solver.setTolerance(1e-4);*/
-
-
 
         Eigen::Matrix<double, is::no_points, 1> vn_vec_x, vn_vec_y, vn_vec_z,
                                     vn1_vec_x, vn1_vec_y, vn1_vec_z, p_vec;
@@ -617,9 +484,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #else
         const auto start_solver = std::chrono::high_resolution_clock::now();
 #endif
-        //const Eigen::LDLT<Eigen::Matrix<double, no_points, no_points> > solver(mat);  //bad
-        //const Eigen::FullPivLU<Eigen::Matrix<double, no_points, no_points> > solver(mat); //maybe bad
-        //const Eigen::FullPivHouseholderQR<Eigen::Matrix<double, no_points, no_points> > solver(mat);
+
 #ifdef STORE_SOLVERS
 
 #else
@@ -653,39 +518,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         const decltype(p_vec) a_p = solver.solve(p_vec);
 #endif
 
-        /*const decltype(vn_vec_x) a_vn_x = mat.lu().solve(vn_vec_x);
-        const decltype(vn_vec_y) a_vn_y = matindex.lu().solve(vn_vec_y);
-        const decltype(vn_vec_z) a_vn_z = mat.lu().solve(vn_vec_z);
-        const decltype(vn1_vec_x) a_vn1_x = mat.lu().solve(vn_vec_x);
-        const decltype(vn1_vec_y) a_vn1_y = mat.lu().solve(vn1_vec_y);
-        const decltype(vn1_vec_z) a_vn1_z = mat.lu().solve(vn1_vec_z);
-        const decltype(p_vec) a_p = mat.lu().solve(p_vec);*/
-
-
-        /*const decltype(mat) mat_inv = mat.inverse();
-        const decltype(vn_vec_x) a_vn_x = mat_inv*(vn_vec_x);
-        const decltype(vn_vec_y) a_vn_y = mat_inv*(vn_vec_y);
-        const decltype(vn_vec_z) a_vn_z = mat_inv*(vn_vec_z);
-        const decltype(vn1_vec_x) a_vn1_x = mat_inv*(vn_vec_x);
-        const decltype(vn1_vec_y) a_vn1_y = mat_inv*(vn1_vec_y);
-        const decltype(vn1_vec_z) a_vn1_z = mat_inv*(vn1_vec_z);
-        const decltype(p_vec) a_p = mat_inv*(p_vec);*/
-
-        /*const auto rot_angle_vec = omega*dt;
-        const auto trans_vec = vel*dt;
-
-        for (unsigned i = 0; i < x.size(); i++) {
-            const auto rot = rotate(c_o_m, rot_angle_vec, vec3(x[i], y[i], z[i]), rot_angle_vec.length() );
-            x[i] = rot.x()+trans_vec.x();
-            y[i] = rot.y()+trans_vec.y();
-            z[i] = rot.z()+trans_vec.z();
-        }*/
-
-        /*const auto x = g.x[index] + x_off;
-        const auto y = g.y[index] + y_off;
-        const auto z = g.z[index] + z_off;*/
-
-
 
 #ifndef NDEBUG
         if ( std::abs(x-v_n.g->x[index]) > v_n.g->dx) {
@@ -699,10 +531,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         }
 #endif
 
-
-        /*buffer[index] = a(0) + a(1)*x + a(2)*y + a(3)*z + a(4)*x*y + a(5)*x*z + a(6)*y*z + a(7)*x*y*z +
-                a(8)*x*x + a(9)*y*y + a(10)*z*z +  a(11)*x*x*y + a(12)*x*x*z + a(13)*y*y*x +
-                a(14)*y*y*z + a(15)*x*z*z + a(16)*y*z*z + a(17)*x*x*y*z + a(18)*x*y*y*z + a(19)*x*y*z*x ;*/
         vn_buff_x[index] = update_buffer(a_vn_x, x,y,z);
         vn_buff_y[index] = update_buffer(a_vn_y, x,y,z);
         vn_buff_z[index] = update_buffer(a_vn_z, x,y,z);
@@ -710,93 +538,6 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
         vn1_buff_y[index] = update_buffer(a_vn1_y, x,y,z);
         vn1_buff_z[index] = update_buffer(a_vn1_z, x,y,z);
         p_buff[index] = update_buffer(a_p, x,y,z);
-
-        /*if (!val_is_good(vn_vec_x, vn_buff_x[index])) {
-            std::cerr << "Interpolation of vn_x failed at index " << index << "\n";
-            const auto mm = get_min_max(vn_vec_x);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_x[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n.xv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn_x failed");
-        }
-        if (!val_is_good(vn_vec_y, vn_buff_y[index])) {
-            std::cerr << "Interpolation of vn_y failed at index " << index << "\n";
-            const auto mm = get_min_max(vn_vec_y);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_y[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n.yv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn_y failed");
-        }
-        if (!val_is_good(vn_vec_z, vn_buff_z[index])) {
-            std::cerr << "Interpolation of vn_z failed at index  " << index << "\n";
-            const auto mm = get_min_max(vn_vec_z);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn_buff_z[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n.zv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn_z failed");
-        }
-
-        if (!val_is_good(vn1_vec_x, vn1_buff_x[index])) {
-            std::cerr << "Interpolation of vn1_x failed at index " << index << "\n";
-            const auto mm = get_min_max(vn1_vec_x);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_x[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n1.xv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn1_x failed");
-        }
-        if (!val_is_good(vn1_vec_y, vn1_buff_y[index])) {
-            std::cerr << "Interpolation of vn1_y failed at index " << index << "\n";
-            const auto mm = get_min_max(vn1_vec_y);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_y[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n1.yv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn1_y failed");
-        }
-        if (!val_is_good(vn1_vec_z, vn1_buff_z[index])) {
-            std::cerr << "Interpolation of vn1_z failed at index " << index << "\n";
-            const auto mm = get_min_max(vn1_vec_z);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << vn1_buff_z[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << v_n1.zv.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of vn1_z failed");
-        }
-
-        if (!val_is_good(p_vec, p_buff[index])) {
-            std::cerr << "Interpolation of p failed at index " << index << "\n";
-            const auto mm = get_min_max(p_vec);
-            std::cerr << "\t min:" << mm.first << " max: " << mm.second << " value: " << p_buff[index] << "\n";
-            std::cerr << "\tleft: " << v_n.g->has_left(index) << " right: " << v_n.g->has_right(index) << " up: " << v_n.g->has_up(index) << " down: " << v_n.g->has_down(index) << " front: " << v_n.g->has_front(index) << " back: " << v_n.g->has_back(index) << "\n";
-            std::cerr << "\tInterpolated with values : ";
-            for (unsigned int interp_indice : interp_indices) {
-                std::cerr << p.v[interp_indice] << " ";
-            }
-            std::cerr << "\n";
-            throw std::runtime_error("Interpolation of p failed");
-        }*/
 
         const auto end_solving = std::chrono::high_resolution_clock::now();
         time_solving += static_cast<std::chrono::duration<double>>(end_solving - start_solving).count();

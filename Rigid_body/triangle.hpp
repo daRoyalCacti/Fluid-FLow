@@ -48,8 +48,6 @@ struct triangle {
         const double d20 = dot(v2, v0);
         const double d21 = dot(v2, v1);
 
-        //Bary0 = (d11 * d20 - d01 * d21) * invDenom;
-        //Bary1 = (d00 * d21 - d01 * d20) * invDenom;
         Bary0 = (d11 * d20 - d01 * d21);    //invDenom now integrated into the definitions of d11, d01 and d00
         Bary1 = (d00 * d21 - d01 * d20);
         Bary2 = 1.0 - Bary0 - Bary1;
@@ -68,12 +66,6 @@ struct triangle {
     }
 
     [[nodiscard]] vec3 get_velocity(const vec3& point) const {
-         //double Bary0, Bary1, Bary2;
-         //barycentric_coords(point, Bary0, Bary1, Bary2);
-         //std::cerr << *vel0 << "\t" << *vel1 << "\t" << *vel2 << "\n";
-         //return barycentric_interp(*vel0, *vel1, *vel2, Bary0, Bary1, Bary2);
-
-         /*model.v + cross( model.w, (model.vertices[i]-pos_cm)) */
          return *v + cross( *w, (point-*c_o_m));
 
      }
