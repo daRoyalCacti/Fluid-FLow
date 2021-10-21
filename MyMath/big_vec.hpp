@@ -69,32 +69,12 @@ struct big_vec {
     }
 
 
-    [[nodiscard]] virtual inline T move(const unsigned ind, const int x, const int y, const int z) const noexcept {
-#ifndef NDEBUG
-        std::cerr << "virtual move function of big_vec called. This should never happen\n";
-#endif
-        return T{};
-    }
 
-
-    [[nodiscard]] virtual inline T move(const unsigned ind, const vec3&v) const noexcept {
+    [[nodiscard]] inline T move(const unsigned ind, const vec3&v) const noexcept {
         return move(ind, v.x(), v.y(), v.z());
     }
 
-    [[nodiscard]] virtual T operator()(const unsigned ind) const noexcept {
-#ifndef NDEBUG
-        std::cerr << "virtual () overload of big_vec called. This should never happen\n";
-#endif
-        T a{};
-        return a;
-    }
-    [[nodiscard]] virtual T& operator()(const unsigned ind) noexcept {
-#ifndef NDEBUG
-        std::cerr << "virtual () overload of big_vec called. This should never happen\n";
-#endif
-        T a{};
-        return a;
-    }
+
 
     [[nodiscard]] auto get_move_ind(const unsigned ind, const int x, const int y, const int z) const noexcept {
         return g->get_move_ind(ind, x, y, z);
@@ -155,20 +135,20 @@ struct big_vec_d final : public big_vec<double> {
 
 
 
-    [[nodiscard]] inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
+    [[nodiscard]] inline double move(const unsigned ind, const int x, const int y, const int z) const noexcept {
         const auto new_ind = get_move_ind(ind, x, y, z);
 
         return v[new_ind];
     }
 
-    [[nodiscard]] inline double move(const unsigned ind, const vec3& v) const noexcept override {
+    [[nodiscard]] inline double move(const unsigned ind, const vec3& v) const noexcept {
         const auto new_ind = get_move_ind(ind, v);
 
         return v[new_ind];
     }
 
-    [[nodiscard]] double& operator()(const unsigned ind) noexcept override { return v(ind); }
-    [[nodiscard]] double operator()(const unsigned ind) const noexcept override { return v(ind); }
+    [[nodiscard]] double& operator()(const unsigned ind) noexcept { return v(ind); }
+    [[nodiscard]] double operator()(const unsigned ind) const noexcept { return v(ind); }
 
 };
 
@@ -202,13 +182,13 @@ struct big_vec_v final : public big_vec<vec3> {
     }
 
 
-    [[nodiscard]] inline vec3 move(const unsigned ind, const int x, const int y, const int z) const noexcept override {
+    [[nodiscard]] inline vec3 move(const unsigned ind, const int x, const int y, const int z) const noexcept {
         const auto new_ind = get_move_ind(ind, x, y, z);
 
         return {xv.v[new_ind], yv.v[new_ind], zv.v[new_ind]};
     }
 
-    [[nodiscard]] inline vec3 move(const unsigned ind, const vec3& v) const noexcept override {
+    [[nodiscard]] inline vec3 move(const unsigned ind, const vec3& v) const noexcept {
         const auto new_ind = get_move_ind(ind, v);
 
         return {xv.v[new_ind], yv.v[new_ind], zv.v[new_ind]};
@@ -227,7 +207,7 @@ struct big_vec_v final : public big_vec<vec3> {
         zv(ind) = ez;
     }
 
-    [[nodiscard]] vec3 operator()(const unsigned ind) const noexcept override {
+    [[nodiscard]] vec3 operator()(const unsigned ind) const noexcept {
         return {xv.v[ind], yv.v[ind], zv.v[ind]};
     }
 
