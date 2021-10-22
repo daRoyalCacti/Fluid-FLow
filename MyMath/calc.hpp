@@ -405,7 +405,8 @@ inline double divergence_old(const big_vec_v& v, const unsigned ind) noexcept  {
 __attribute__((always_inline))
 #endif
 inline double divergence(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
-    return smart_deriv<1,0,0>(a, v.xv, ind) + smart_deriv<0,1,0>(a, v.yv, ind) + smart_deriv<0,0,1>(a, v.zv, ind);
+    return divergence_old(v, ind);
+    //return smart_deriv<1,0,0>(a, v.xv, ind) + smart_deriv<0,1,0>(a, v.yv, ind) + smart_deriv<0,0,1>(a, v.zv, ind);
 }
 
 
@@ -530,7 +531,7 @@ inline double divergence_laplacian_old(const big_vec_v& v, const unsigned ind) n
 __attribute__((always_inline))
 #endif
 inline double divergence_laplacian(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
-    const auto vxxx = smart_deriv<3,0,0>(a, v.xv,ind);
+    /*const auto vxxx = smart_deriv<3,0,0>(a, v.xv,ind);
     const auto vxyy = smart_deriv<1,2,0>(a, v.xv,ind);
     const auto vxzz = smart_deriv<1,0,2>(a, v.xv,ind);
 
@@ -542,7 +543,8 @@ inline double divergence_laplacian(const axes&a, const big_vec_v& v, const unsig
     const auto vzyy = smart_deriv<0,2,1>(a, v.zv,ind);
     const auto vzzz = smart_deriv<0,0,3>(a, v.zv,ind);
 
-    return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;
+    return vxxx+ vxyy + vxzz + vyxx + vyyy + vyzz + vzxx + vzyy + vzzz;*/
+    return divergence_laplacian_old(v, ind);
 }
 
 
