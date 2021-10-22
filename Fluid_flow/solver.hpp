@@ -98,7 +98,8 @@ void solveCPU(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsig
     Eigen::GMRES<Eigen::SparseMatrix<double,Eigen::RowMajor>> solver(A.m);
     solver.setTolerance(tol);
     solver.setMaxIterations(it);
-    x.v = solver.solve(b.v);
+    x.v = solver.solveWithGuess(b.v, x.v);
+    //x.v = solver.solve(b.v);
 }
 
 
