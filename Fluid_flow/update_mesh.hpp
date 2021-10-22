@@ -298,7 +298,7 @@ interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
         throw std::runtime_error("enforcing velocity boundary condition failed");
     }
 
-    std::cerr << "writing i files\n";
+
     std::string file_name;
     if (counter < 10) {
         file_name = "000" + std::to_string(counter);
