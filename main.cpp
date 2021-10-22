@@ -1,5 +1,6 @@
-#define UPDATE_VECS_CHECK_RESULTS_LOG
+//#define UPDATE_VECS_CHECK_RESULTS_LOG
 #define LOG_FORCES
+//#define ALWAYS_INLINE_DERIVS
 
 #include "Fluid_flow/create_flow.hpp"
 

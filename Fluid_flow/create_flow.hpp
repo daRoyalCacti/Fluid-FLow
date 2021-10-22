@@ -40,7 +40,7 @@ constexpr unsigned no_repeats = 3;
 #include "update_mesh.hpp"
 
 
-constexpr double accuracy_percent_v = 0.01;
+constexpr double accuracy_percent_v = 0.0001;
 constexpr double accuracy_percent_p = 0.01;
 
 struct output_settings {
@@ -275,7 +275,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
                  make_s(s, Re, dt, v_n, v_n1, p);
 
                  timer.set_end(std::chrono::high_resolution_clock::now());
-                 timer.save_s_create_time();
+                 std::cerr << timer.s_create_time << "\n";
 
 
                  timer.set_start(std::chrono::high_resolution_clock::now());

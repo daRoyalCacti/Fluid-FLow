@@ -13,7 +13,10 @@
 //nx,ny,nz denote the derivative. e.g. <1,1,0> corresponds to d^2/dxdy
 //ind corresponds to where the derivative is to take place
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+        inline auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
@@ -282,7 +285,10 @@ auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
 
 
 template<unsigned nx, unsigned ny, unsigned nz, typename T>
-auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+        inline auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
@@ -338,43 +344,67 @@ auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
 
 
 //H(v_{ind})
-vec3 advection_old(const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline vec3 advection_old(const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small v
     return s_v.x() * smart_deriv_old<1,0,0>(v, ind) + s_v.y() * smart_deriv_old<0,1,0>(v, ind) + s_v.z() * smart_deriv_old<0,0,1>(v, ind) ;
 }
 
-vec3 advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+_attribute__((always_inline))
+#endif
+inline vec3 advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small v
     return s_v.x() * smart_deriv<1,0,0>(a, v, ind) + s_v.y() * smart_deriv<0,1,0>(a, v, ind) + s_v.z() * smart_deriv<0,0,1>(a, v, ind) ;
 }
 
 //L(v_{ind})
 template <typename T>
-auto laplacian_old(const T& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline auto laplacian_old(const T& v, const unsigned ind) noexcept {
     return smart_deriv_old<2,0,0>(v, ind) + smart_deriv_old<0,2,0>(v, ind) +smart_deriv_old<0,0,2>(v, ind);
 }
 
 template <typename T>
-auto laplacian(const axes& a, const T& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline auto laplacian(const axes& a, const T& v, const unsigned ind) noexcept {
     return laplacian_old(v,ind);
 }
 
 
 
-vec3 gradient_old(const big_vec_d& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline vec3 gradient_old(const big_vec_d& v, const unsigned ind) noexcept {
     return {smart_deriv_old<1,0,0>(v, ind), smart_deriv_old<0,1,0>(v, ind), smart_deriv_old<0,0,1>(v, ind)};
 }
 
-vec3 gradient(const axes& a, const big_vec_d& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline vec3 gradient(const axes& a, const big_vec_d& v, const unsigned ind) noexcept {
     return {smart_deriv<1,0,0>(a, v, ind), smart_deriv<0,1,0>(a, v, ind), smart_deriv<0,0,1>(a, v, ind)};
 }
 
 //D(v_{ind})
-double divergence_old(const big_vec_v& v, const unsigned ind) noexcept  {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence_old(const big_vec_v& v, const unsigned ind) noexcept  {
     return smart_deriv_old<1,0,0>(v.xv, ind) + smart_deriv_old<0,1,0>(v.yv, ind) + smart_deriv_old<0,0,1>(v.zv, ind);
 }
 
-double divergence(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence(const axes& a, const big_vec_v& v, const unsigned ind) noexcept  {
     return smart_deriv<1,0,0>(a, v.xv, ind) + smart_deriv<0,1,0>(a, v.yv, ind) + smart_deriv<0,0,1>(a, v.zv, ind);
 }
 
@@ -382,7 +412,10 @@ double divergence(const axes& a, const big_vec_v& v, const unsigned ind) noexcep
 
 
 //D(H(v_{ind}))
-double divergence_advection_old(const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence_advection_old(const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small vec
 
     const auto vx_x = smart_deriv_old<1,0,0>(v.xv,ind);
@@ -424,7 +457,10 @@ double divergence_advection_old(const big_vec_v& v, const unsigned ind) noexcept
 }
 
 
-double divergence_advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence_advection(const axes& a, const big_vec_v& v, const unsigned ind) noexcept {
     const auto s_v = v(ind);  //small vec
 
     const auto vx_x = smart_deriv<1,0,0>(a, v.xv,ind);
@@ -470,7 +506,10 @@ double divergence_advection(const axes& a, const big_vec_v& v, const unsigned in
 
 
 //D(L(v_{ind}))
-double divergence_laplacian_old(const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence_laplacian_old(const big_vec_v& v, const unsigned ind) noexcept {
     const auto vxxx = smart_deriv_old<3,0,0>(v.xv,ind);
     const auto vxyy = smart_deriv_old<1,2,0>(v.xv,ind);
     const auto vxzz = smart_deriv_old<1,0,2>(v.xv,ind);
@@ -487,7 +526,10 @@ double divergence_laplacian_old(const big_vec_v& v, const unsigned ind) noexcept
 }
 
 
-double divergence_laplacian(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
+inline double divergence_laplacian(const axes&a, const big_vec_v& v, const unsigned ind) noexcept {
     const auto vxxx = smart_deriv<3,0,0>(a, v.xv,ind);
     const auto vxyy = smart_deriv<1,2,0>(a, v.xv,ind);
     const auto vxzz = smart_deriv<1,0,2>(a, v.xv,ind);

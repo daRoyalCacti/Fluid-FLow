@@ -12,6 +12,9 @@
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_difference_1st(const T& data, const size_t index) noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -24,6 +27,9 @@ inline constexpr auto central_difference_1st(const T& data, const size_t index) 
 }
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_difference_1st(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -37,6 +43,9 @@ inline constexpr auto forward_difference_1st(const T& data, const size_t index)n
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_difference_1st(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -50,6 +59,9 @@ inline constexpr auto backward_difference_1st(const T& data, const size_t index)
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_difference_2nd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -63,6 +75,9 @@ inline constexpr auto central_difference_2nd(const T& data, const size_t index)n
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_difference_2nd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -76,6 +91,9 @@ inline constexpr auto forward_difference_2nd(const T& data, const size_t index)n
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_difference_2nd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -88,6 +106,9 @@ inline constexpr auto backward_difference_2nd(const T& data, const size_t index)
 }
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -105,6 +126,9 @@ inline constexpr auto central_difference_2nd_mixed(const T& data, const size_t i
 }
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -125,6 +149,9 @@ inline constexpr auto forward_difference_2nd_mixed(const T& data, const size_t i
 
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -146,6 +173,9 @@ inline constexpr auto backward_difference_2nd_mixed(const T& data, const size_t 
 
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_forward_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -168,6 +198,9 @@ inline constexpr auto central_forward_difference_2nd_mixed(const T& data, const 
 
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_backward_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -190,6 +223,9 @@ inline constexpr auto central_backward_difference_2nd_mixed(const T& data, const
 
 
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_backward_difference_2nd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -219,6 +255,9 @@ inline constexpr auto forward_backward_difference_2nd_mixed(const T& data, const
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_difference_3rd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -232,6 +271,9 @@ inline constexpr auto central_difference_3rd(const T& data, const size_t index)n
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_difference_3rd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -245,6 +287,9 @@ inline constexpr auto forward_difference_3rd(const T& data, const size_t index)n
 
 
 template <unsigned axis, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_difference_3rd(const T& data, const size_t index)noexcept  {
     static_assert(axis < 3, "Axis should be 0,1,2");
     if constexpr (axis == 0) {
@@ -258,6 +303,9 @@ inline constexpr auto backward_difference_3rd(const T& data, const size_t index)
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -281,6 +329,9 @@ inline constexpr auto central_difference_3rd_mixed(const T& data, const size_t i
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -317,6 +368,9 @@ inline constexpr auto forward_difference_3rd_mixed(const T& data, const size_t i
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -353,6 +407,9 @@ inline constexpr auto backward_difference_3rd_mixed(const T& data, const size_t 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_forward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -381,6 +438,9 @@ inline constexpr auto central_forward_difference_3rd_mixed(const T& data, const 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto central_backward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -409,6 +469,9 @@ inline constexpr auto central_backward_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_central_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -438,6 +501,9 @@ inline constexpr auto forward_central_difference_3rd_mixed(const T& data, const 
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto forward_backward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -473,6 +539,9 @@ inline constexpr auto forward_backward_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_central_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
@@ -501,6 +570,9 @@ inline constexpr auto backward_central_difference_3rd_mixed(const T& data, const
 
 //first axis is squared
 template <unsigned axis1, unsigned axis2, typename T>
+#ifdef ALWAYS_INLINE_DERIVS
+__attribute__((always_inline))
+#endif
 inline constexpr auto backward_forward_difference_3rd_mixed(const T& data, const size_t index)noexcept  {
     static_assert(axis1 < 3, "Axis should be 0,1,2");
     static_assert(axis2 < 3, "Axis should be 0,1,2");
