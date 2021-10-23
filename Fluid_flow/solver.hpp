@@ -47,14 +47,13 @@ constexpr unsigned no_solver_choices_v = max_its_v.size();*/
 // - was no faster than with normal variables --- think all the time is spent uploading to device
 constexpr std::array<double, 5> tols_v = {1e-3,1e-4, 1e-5, 1e-6, 1e-7};
 constexpr std::array<unsigned, 5> max_its_v = {300, 500, 1000, 5000, 10000};
-constexpr std::array<unsigned, 5>  dims_v = {20, 20, 20, 20, 25};
 constexpr unsigned no_solver_choices_v = max_its_v.size();
 
-
+constexpr unsigned krylov_dim = 20;
 constexpr std::array<double, 4> tols_p = { 5e-10, 2e-10, 1e-10, 1e-20};
 //constexpr std::array<unsigned, 4> max_its_p = {5000, 5000, 5000, 10000};
 constexpr std::array<unsigned, 4> max_its_p = {50000, 50000, 50000, 100000};
-constexpr std::array<unsigned, 4> dims_p    = {20, 20, 20, 20};
+constexpr std::array<unsigned, 4> dims_p    = {krylov_dim, krylov_dim, krylov_dim, krylov_dim};
 constexpr unsigned no_solver_choices_p = max_its_p.size();
 
 /*constexpr std::array<double, 10> tols_p = { 1e-1, 1e-2, 1e-3,1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10};
@@ -129,7 +128,7 @@ viennacl::linalg::gmres_tag my_gmres_tag(1e-5, it, dim);
 viennacl::copy(res, x.v);
 }
 
-void solveCPU(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned it, const unsigned dim, const double tol = 1e-100) noexcept {
+void solveCPU(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsigned it, const double tol = 1e-100) noexcept {
     Eigen::GMRES<Eigen::SparseMatrix<double,Eigen::RowMajor>> solver(A.m);
     solver.setTolerance(tol);
     solver.setMaxIterations(it);
@@ -173,9 +172,9 @@ void solve_pressure(const boundary_conditions& BC, const big_matrix &Q, const bi
 void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const big_vec_v &b, big_vec_v &vc, big_vec_v &v_n, const double accuracy_percent) {
     for (unsigned i; i < no_solver_choices_v; i++) {
         auto v_n_cpy = v_n;
-        solveCPU(A, b.xv, vc.xv, max_its_v[i], dims_v[i], tols_v[i]);
-        solveCPU(A, b.yv, vc.yv, max_its_v[i], dims_v[i], tols_v[i]);
-        solveCPU(A, b.zv, vc.zv, max_its_v[i], dims_v[i], tols_v[i]);
+        solveCPU(A, b.xv, vc.xv, max_its_v[i], tols_v[i]);
+        solveCPU(A, b.yv, vc.yv, max_its_v[i], tols_v[i]);
+        solveCPU(A, b.zv, vc.zv, max_its_v[i], tols_v[i]);
         bool accurate = enforce_velocity_correction_BC<true>(BC, vc, accuracy_percent);
         if (accurate) {
             v_n_cpy += vc;
@@ -183,15 +182,15 @@ void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const bi
             if (accurate2) {
                 v_n = v_n_cpy;
                 std::cerr << "velocity solved using solver " << i << "\n";
-                std::cerr << "\tits:" << max_its_v[i] << " dim:" << dims_v[i] << " tol:" << tols_v[i] << "\n";
+                std::cerr << "\tits:" << max_its_v[i]  << " tol:" << tols_v[i] << "\n";
                 return;
             } else {
                 std::cerr << "solver " << i << " failed\n";
-                std::cerr << "\tits:" << max_its_v[i] << " dim:" << dims_v[i] << " tol:" << tols_v[i] << "\n";
+                std::cerr << "\tits:" << max_its_v[i] << " tol:" << tols_v[i] << "\n";
             }
         } else {
             std::cerr << "solver " << i << " failed\n";
-            std::cerr << "\tits:" << max_its_v[i] << " dim:" << dims_v[i] << " tol:" << tols_v[i] << "\n";
+            std::cerr << "\tits:" << max_its_v[i]  << " tol:" << tols_v[i] << "\n";
         }
     }
 
@@ -199,9 +198,9 @@ void solve_velocity(const boundary_conditions& BC, const big_matrix &A, const bi
     std::cerr << "velocity is still not accurate even with most accurate solver\n";
     const auto i = no_solver_choices_v-1;
 
-    solveCPU(A, b.xv, vc.xv, max_its_v[i], dims_v[i]);
-    solveCPU(A, b.yv, vc.yv, max_its_v[i], dims_v[i]);
-    solveCPU(A, b.zv, vc.zv, max_its_v[i], dims_v[i]);
+    solveCPU(A, b.xv, vc.xv, max_its_v[i]);
+    solveCPU(A, b.yv, vc.yv, max_its_v[i]);
+    solveCPU(A, b.zv, vc.zv, max_its_v[i]);
     enforce_velocity_correction_BC<false>(BC, vc, accuracy_percent);
     v_n += vc;
     enforce_velocity_BC<false>(BC, v_n, accuracy_percent);
