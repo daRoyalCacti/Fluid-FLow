@@ -198,6 +198,18 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
 
                 if (!BC.global_grid.off_walls(i)) {
                     p(i) = 0;
+#ifdef UPDATE_VECS_CHECK_RESULTS_LOG
+                    if constexpr (err) {
+                        if (old > 1e-4 && std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
+                            std::cerr << "solution to pressure is not accurate\n";
+
+                            std::cerr << "\tcorrection : " << std::abs(old-p(i))/std::abs(p(i))*100 << "%\n";
+                            std::cerr << "\tat index " << i << "\n";
+                            std::cerr << "\told pressure = " << old << "\t new pressure = " << p(i) << "\n";
+                            std::cerr << "\tbad at edge point\n";
+                        }
+                    }
+#endif
                 } else {
 
 #ifndef NDEBUG
@@ -327,13 +339,12 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     } else {
                         std::cerr << "enforcing pressure boundary conditions is not possible.\n";
                     }
-
 #ifdef UPDATE_VECS_CHECK_RESULTS_LOG
                     if (!std::isfinite(p(i))) {
                         std::cerr << "pressure boundary condition returned an infinite value\n";
                     }
                     if constexpr (err) {
-                        if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
+                        if (old > 1e-4 && std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
                             std::cerr << "solution to pressure is not accurate\n";
 
                             std::cerr << "\tcorrection : " << std::abs(old-p(i))/std::abs(p(i))*100 << "%\n";
@@ -345,10 +356,10 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                         }
                     }
 #endif
-
                 }
+
                 if constexpr (err) {
-                    if (std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
+                    if (old > 1e-4 && std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
                         return false;
                     }
                 }

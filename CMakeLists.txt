@@ -26,7 +26,8 @@ set(warning_flags -Werror -Wpedantic -Wall -Wextra -Wfloat-equal -Wundef -Wcast-
 add_compile_options("$<$<CONFIG:Debug>: ${warning_flags}")
 add_compile_options("$<$<CONFIG:Release>: ${warning_flags} -Ofast -fno-math-errno -funsafe-math-optimizations -ffinite-math-only -march=native -mfma")
 
-add_definitions(-DVIENNACL_WITH_OPENCL -DEIGEN_NO_AUTOMATIC_RESIZING)
+#add_definitions(-DVIENNACL_WITH_OPENCL -DVIENNACL_WITH_OPENMP -DEIGEN_NO_AUTOMATIC_RESIZING)
+add_definitions(-DVIENNACL_WITH_OPENCL -DVIENNACL_WITH_OPENMP -DEIGEN_NO_AUTOMATIC_RESIZING)
 #add_definitions(-DVIENNACL_WITH_OPENMP -DEIGEN_NO_AUTOMATIC_RESIZING)
 
 

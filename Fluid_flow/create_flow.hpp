@@ -275,7 +275,7 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
                  make_s(s, Re, dt, v_n, v_n1, p);
 
                  timer.set_end(std::chrono::high_resolution_clock::now());
-                 std::cerr << timer.s_create_time << "\n";
+                 timer.save_s_create_time();
 
 
                  timer.set_start(std::chrono::high_resolution_clock::now());
