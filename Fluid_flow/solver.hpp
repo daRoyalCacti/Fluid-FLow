@@ -10,6 +10,9 @@
 
 //#define BICGSTAB
 
+//#define IHU0
+//#define JACOBI
+
 #include <viennacl/vector.hpp>
 #include <viennacl/compressed_matrix.hpp>
 #include <eigen3/unsupported/Eigen/IterativeSolvers>
@@ -19,10 +22,16 @@
 #else
 #include <viennacl/linalg/bicgstab.hpp>
 #endif
+
+#ifdef IHU0
 #include <viennacl/linalg/detail/ilu/ilu0.hpp>
+#endif
+
 //#include <viennacl/linalg/ichol.hpp>
-#include <viennacl/linalg/detail/ilu/block_ilu.hpp>
+//#include <viennacl/linalg/detail/ilu/block_ilu.hpp>
+#ifdef JACOBI
 #include <viennacl/linalg/jacobi_precond.hpp>
+#endif
 
 #include "../MyMath/big_matrix.hpp"
 #include "../MyMath/big_vec.hpp"
@@ -42,7 +51,7 @@ constexpr std::array<unsigned, 5>  dims_v = {20, 20, 20, 20, 25};
 constexpr unsigned no_solver_choices_v = max_its_v.size();
 
 
-constexpr std::array<double, 4> tols_p = { 2e-9, 5e-9, 1e-10, 1e-20};
+constexpr std::array<double, 4> tols_p = { 5e-10, 2e-10, 1e-10, 1e-20};
 //constexpr std::array<unsigned, 4> max_its_p = {5000, 5000, 5000, 10000};
 constexpr std::array<unsigned, 4> max_its_p = {50000, 50000, 50000, 100000};
 constexpr std::array<unsigned, 4> dims_p    = {20, 20, 20, 20};
@@ -73,15 +82,29 @@ void solve_GPU(const big_matrix &A, const big_vec_d &b, big_vec_d &x, const unsi
     //could probably mess with the parameters
 #ifdef VIENNACL_WITH_OPENCL
 #ifndef BICGSTAB
+
+viennacl::linalg::gmres_tag my_gmres_tag(tol, it, dim);
+
+#ifdef IHU0
 viennacl::linalg::ilu0_tag ilu0_config;
 ilu0_config.use_level_scheduling(true);
 viennacl::linalg::ilu0_precond< viennacl::compressed_matrix<double> > vcl_ilut(vcl_sparse_matrix, ilu0_config);
+viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag, vcl_ilut);
+#else
+#ifdef JACOBI
+viennacl::linalg::jacobi_precond< viennacl::compressed_matrix<double> > vcl_jacobi(vcl_sparse_matrix, viennacl::linalg::jacobi_tag());
+viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag, vcl_jacobi);
+#else
+viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag);
+#endif
+#endif
 //viennacl::linalg::block_ilu_precond< viennacl::compressed_matrix<double>, viennacl::linalg::ilu0_tag> vcl_block_ilu0(vcl_sparse_matrix, viennacl::linalg::ilu0_tag());
-//viennacl::linalg::jacobi_precond< viennacl::compressed_matrix<double> > vcl_jacobi(vcl_sparse_matrix, viennacl::linalg::jacobi_tag());
 //viennacl::linalg::row_scaling< viennacl::compressed_matrix<double> > vcl_row_scaling(vcl_sparse_matrix, viennacl::linalg::row_scaling_tag());
 
-viennacl::linalg::gmres_tag my_gmres_tag(tol, it, dim);
-viennacl::vector<double> res = viennacl::linalg::solve(vcl_sparse_matrix, vcl_rhs, my_gmres_tag, vcl_ilut);
+
+
+
+
 /*viennacl::vector<double> x_guess( x.size() );
 viennacl::copy(x.v, x_guess);
 viennacl::linalg::gmres_tag my_gmres_tag(1e-100, it, dim);
