@@ -1,5 +1,5 @@
 % no_files = length(dirPlus('velocity_data'));
- no_files = 336;
+no_files = 132;
 
 figure('units','normalized','outerposition',[0 0 1 1]);
 axis tight manual
