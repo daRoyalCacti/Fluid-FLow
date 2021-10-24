@@ -13,19 +13,24 @@
 #include <unordered_set>
 
 
-//#define REMOVE_INSIDE_DLOG
+#define REMOVE_INSIDE_DLOG
+#define CHECK_GRID_RESULTS
 
-void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz, const double dx, const double dy, const double dz, const double minx = 0, const double miny = 0, const double minz = 0) {
-    const auto sx = static_cast<unsigned long>(Wx/dx);
+#ifndef NDEBUG
+#define CHECK_GRID_RESULTS
+#endif
+
+void make_entire_grid(grid &g, const double Wx, const double Wy, const double Wz, const double dx, const double dy, const double dz, const unsigned sx, const unsigned sy, unsigned sz, const double minx = 0, const double miny = 0, const double minz = 0) {
+    /*const auto sx = static_cast<unsigned long>(Wx/dx);
     const auto sy = static_cast<unsigned long>(Wy/dy);
-    const auto sz = static_cast<unsigned long>(Wz/dz);
+    const auto sz = static_cast<unsigned long>(Wz/dz);*/
 
     const vec3 mins = {minx,miny,minz};
     const vec3 maxs = {minx+Wx, miny+Wy, minz+Wz};
 
-    g = grid(dx, dy, dz, mins, maxs);
+    g = grid(dx, dy, dz, mins, maxs, sx, sy, sz);
 
-    const auto s = static_cast<unsigned long>(sx*sy*sz);
+    const auto s = sx*sy*sz;
     g.x.resize(s);
     g.y.resize(s);
     g.z.resize(s);
@@ -92,20 +97,45 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
                              tri_inds& t_inds) noexcept {
     const auto hits = tm.get_collision_points(r);
     if (!hits.empty()) { //there was a collision
+        if (hits.size() % 2 != 0) {
+            std::cerr << "Ray hit mesh an odd number of times\n";
+            std::cerr << "\t" << hits.size() << "\n";
+            return;
+        }
         for (auto h = hits.begin(); h != hits.end(); ++(++h)) {
             auto th = h;
-            const auto col1 = th->second.v1;
+            /*const auto col1 = th->second.v1;
             const auto norm1 = th->second.v2;
-            const auto vel1 = th->second.v3;
-            const triangle* t1 = th->second.v4;
+            const auto vel1 = th->second.v3;*/
+            const triangle* t1 = th->second;
+            const auto col1 = r.at(th->first);
+            const auto norm1 = t1->get_normal(col1);
+            const auto vel1 = t1->get_velocity(col1);
+
+            /*if ( std::abs(norm1.length() - 1) < 0.001) {
+                std::cerr << "norm1 is not unit\n";
+            }*/
 
             ++th;
-            const auto col2 = th->second.v1;
+            /*const auto col2 = th->second.v1;
             const auto norm2 = th->second.v2;
-            const auto vel2 = th->second.v3;
-            const triangle* t2 = th->second.v4;
+            const auto vel2 = th->second.v3;*/
+            const triangle* t2 = th->second;
+            const auto col2 = r.at(th->first);
+            const auto norm2 = t2->get_normal(col1);
+            const auto vel2 = t2->get_velocity(col1);
+
+            /*if ( std::abs(norm2.length() - 1) < 0.001) {
+                std::cerr << "norm2 is not unit\n";
+            }*/
 
 
+            /*if (col1.z() == 1 || col2.z() == 1) {
+                std::cerr << "\tthe hit\n";
+            }*/
+
+
+            //edge 1 is lower left corner
             const auto inds1 = vec3{floor( (col1.x()-g.edge1.x()) /g.dx), floor( (col1.y()-g.edge1.y()) /g.dy), floor( (col1.z()-g.edge1.z())/g.dz)};
             const auto inds2 = vec3{floor( (col2.x()-g.edge1.x()) /g.dx), floor( (col2.y()-g.edge1.y()) /g.dy), floor( (col2.z()-g.edge1.z())/g.dz)};
 
@@ -154,17 +184,17 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             //if 2 rays collide with the mesh at the same point, take the average of the normals
             // - if more than 2 rays hits, the averaging weights the earlier hits weaker than the later hits (not desirable)
             // - doesn't seem to be working correctly
-            if (norms.contains(ind1)) {
+            /*if (norms.contains(ind1)) {
                 norms.add_point(ind1, (norms.normal(ind1) + norm1)/2 );
-            } else {
+            } else {*/
                 norms.add_point(ind1, norm1);
-            }
+            //}
 
-            if (norms.contains(ind2)) {
+            /*if (norms.contains(ind2)) {
                 norms.add_point(ind2, (norms.normal(ind2) + norm2)/2 );
-            } else {
+            } else {*/
                 norms.add_point(ind2, norm2);
-            }
+            //}
 
 
 
@@ -173,17 +203,17 @@ void get_mesh_collision_unif(const triangle_mesh &tm, const grid &g, const ray &
             m_points.add_point(ind1, col1);
             m_points.add_point(ind2, col2);
 
-            if (v_points.contains(ind1)) {
+             /*if (v_points.contains(ind1)) {
                 v_points.add_point(ind1, (v_points.get_vel(ind1) + vel1)/2 );
-            } else {
+            } else {*/
                 v_points.add_point(ind1, vel1);
-            }
+            //}
 
-            if (v_points.contains(ind2)) {
+            /*if (v_points.contains(ind2)) {
                 v_points.add_point(ind2, (v_points.get_vel(ind2) + vel2)/2 );
-            } else {
+            } else {*/
                 v_points.add_point(ind2, vel2);
-            }
+            //}
 
             boundary_indices.insert(ind1);
             boundary_indices.insert(ind2);
@@ -220,6 +250,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     std::cerr << "rays from the z direction\n";
 #endif
     for (unsigned i = 0; i <= Nx; i++) {
+        std::cerr << i << "/" << Nx << "\n";
         for (unsigned j = 0; j <= Ny; j++) {
             const double x = minp.x() + i*dx/test;
             const double y = minp.y() + j*dy/test;
@@ -253,6 +284,8 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
         }
     }
 
+
+
     //removing points
     //======================================================
 #ifdef REMOVE_INSIDE_DLOG
@@ -267,8 +300,150 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
 
     unsigned index_counter = 0;
 
+    //making singleton points boundary points (singleton as in you can't take a derivative there --- they are isolted)
+    // not this is not guaranteed to fix the problem - making some points boundary could then mean that move points becomes singleton
+    //  - try interating through 30 times to fix this
+    for (unsigned j = 0; j < 30; j++) {
+        for (unsigned i = 0; i < g.x.size(); i++) {
+            if (boundary_indices.contains(i)) {
+
+                const bool will_left = (g.r[i].left != -1) && ( !inside_indices.contains(g.r[i].left) || boundary_indices.contains(g.r[i].left) );
+                const bool will_right = (g.r[i].right != -1) && ( !inside_indices.contains(g.r[i].right) || boundary_indices.contains(g.r[i].right) );
+                const bool will_down = (g.r[i].down != -1) && ( !inside_indices.contains(g.r[i].down) || boundary_indices.contains(g.r[i].down) );
+                const bool will_up = (g.r[i].up != -1) && ( !inside_indices.contains(g.r[i].up) || boundary_indices.contains(g.r[i].up) );
+                const bool will_front = (g.r[i].front != -1) && ( !inside_indices.contains(g.r[i].front) || boundary_indices.contains(g.r[i].front) );
+                const bool will_back = (g.r[i].back != -1) && ( !inside_indices.contains(g.r[i].back) || boundary_indices.contains(g.r[i].back) );
+
+                bool will_2left, will_2right, will_2down, will_2up, will_2front, will_2back;
+                if (g.has_left(i)) {
+                    will_2left = (g.r[g.r[i].left].left != -1) && ( !inside_indices.contains(g.r[g.r[i].left].left) || boundary_indices.contains(g.r[g.r[i].left].left) );
+                } else {
+                    will_2left = false;
+                }
+
+                if (g.has_right(i)) {
+                    will_2right = (g.r[g.r[i].right].right != -1) && ( !inside_indices.contains(g.r[g.r[i].right].right) || boundary_indices.contains(g.r[g.r[i].right].right) );
+                }else {
+                    will_2right = false;
+                }
+
+                if (g.has_down(i)) {
+                    will_2down = (g.r[g.r[i].down].down != -1) && ( !inside_indices.contains(g.r[g.r[i].down].down) || boundary_indices.contains(g.r[g.r[i].down].down) );
+                }else {
+                    will_2down = false;
+                }
+
+                if (g.has_up(i)) {
+                    will_2up = (g.r[g.r[i].up].up != -1) && ( !inside_indices.contains(g.r[g.r[i].up].up) || boundary_indices.contains(g.r[g.r[i].up].up) );
+                }else {
+                    will_2up = false;
+                }
+
+                if (g.has_front(i)) {
+                    will_2front = (g.r[g.r[i].front].front != -1) && ( !inside_indices.contains(g.r[g.r[i].front].front) || boundary_indices.contains(g.r[g.r[i].front].front) );
+                }else {
+                    will_2front = false;
+                }
+
+                if (g.has_back(i)) {
+                    will_2back = (g.r[g.r[i].back].back != -1) && ( !inside_indices.contains(g.r[g.r[i].back].back) || boundary_indices.contains(g.r[g.r[i].back].back) );
+                }else {
+                    will_2back = false;
+                }
+
+                const bool can_cx = will_right && will_left;
+                const bool can_fx = will_2right && will_right;
+                const bool can_bx = will_2left && will_left;
+
+                const bool can_cy = will_up && will_back;
+                const bool can_fy = will_2up && will_up;
+                const bool can_by = will_2down && will_down;
+
+                const bool can_cz = will_front && will_back;
+                const bool can_fz = will_2back && will_back;
+                const bool can_bz = will_2front && will_front;
+
+                //const bool can_cx
+                const bool can_x = can_cx || can_fx || can_bx;
+                const bool can_y = can_cy || can_fy || can_by;
+                const bool can_z = can_cz || can_fz || can_bz;
+
+                const bool can_deriv = can_x && can_y && can_z;
+
+                if (!can_deriv) {
+                    if (inside_indices.contains(g.r[i].left) && g.r[i].right != -1 && !inside_indices.contains(g.r[i].right)) {
+                        boundary_indices.insert( g.r[i].right );
+                        inside_indices.insert( g.r[i].right );
+
+                        norms.add_point(g.r[i].right, norms.normal(i));
+                        t_inds.add_point(g.r[i].right, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].right, m_points.get_point(i));
+                        v_points.add_point(g.r[i].right, v_points.get_vel(i));
+
+                    } else if (g.r[i].left != -1 && !inside_indices.contains(g.r[i].left) && inside_indices.contains(g.r[i].right)) {
+                        boundary_indices.insert( g.r[i].left );
+                        inside_indices.insert( g.r[i].left );
+
+                        norms.add_point(g.r[i].left, norms.normal(i));
+                        t_inds.add_point(g.r[i].left, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].left, m_points.get_point(i));
+                        v_points.add_point(g.r[i].left, v_points.get_vel(i));
+                    }
+
+
+                    if (inside_indices.contains(g.r[i].up) && g.r[i].down != -1 && !inside_indices.contains(g.r[i].down)) {
+                        boundary_indices.insert( g.r[i].down );
+                        inside_indices.insert( g.r[i].down );
+
+                        norms.add_point(g.r[i].down, norms.normal(i));
+                        t_inds.add_point(g.r[i].down, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].down, m_points.get_point(i));
+                        v_points.add_point(g.r[i].down, v_points.get_vel(i));
+                    } else if (g.r[i].up != -1 && !inside_indices.contains(g.r[i].up) && inside_indices.contains(g.r[i].down)) {
+                        boundary_indices.insert( g.r[i].up );
+                        inside_indices.insert( g.r[i].up );
+
+                        norms.add_point(g.r[i].up, norms.normal(i));
+                        t_inds.add_point(g.r[i].up, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].up, m_points.get_point(i));
+                        v_points.add_point(g.r[i].up, v_points.get_vel(i));
+                    }
+
+                    if (inside_indices.contains(g.r[i].front)&& g.r[i].back != -1  && !inside_indices.contains(g.r[i].back)) {
+                        boundary_indices.insert( g.r[i].back );
+                        inside_indices.insert( g.r[i].back );
+
+                        norms.add_point(g.r[i].back, norms.normal(i));
+                        t_inds.add_point(g.r[i].back, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].back, m_points.get_point(i));
+                        v_points.add_point(g.r[i].back, v_points.get_vel(i));
+                    } else if (g.r[i].front != -1 && !inside_indices.contains(g.r[i].front) && inside_indices.contains(g.r[i].back)) {
+                        boundary_indices.insert( g.r[i].front );
+                        inside_indices.insert( g.r[i].front );
+
+                        norms.add_point(g.r[i].front, norms.normal(i));
+                        t_inds.add_point(g.r[i].front, t_inds.get_index(i));
+                        m_points.add_point(g.r[i].front, m_points.get_point(i));
+                        v_points.add_point(g.r[i].front, v_points.get_vel(i));
+                    }
+
+                    inside_indices.insert(i);
+                    boundary_indices.erase(i);
+                    norms.erase(i);
+                    t_inds.erase(i);
+                    m_points.erase(i);
+                    v_points.erase(i);
+
+
+                }
+            }
+
+        }
+    }
+
     for (unsigned i = 0; i < g.x.size(); i++) {
-        if (inside_indices.contains(i) && !boundary_indices.contains(i) || g.r[i].is_edge()) {
+
+        if (inside_indices.contains(i) && !boundary_indices.contains(i) || g.r[i].is_edge() ) { //is_edge is for removing edge points at walls
             old_new.insert({i, -1});
         } else {
             x.push_back(g.x[i]);
@@ -284,6 +459,7 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
             if (inside_indices.contains(r[index_counter].back) && !boundary_indices.contains(r[index_counter].back)) { r[index_counter].back = -1; }
             old_new.insert({i, index_counter});
             index_counter++;    //only gets incremented if not inside boundary
+
         }
 
     }
@@ -380,7 +556,11 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
     }
     t_inds = std::move(t_inds_c);
 
-#ifndef NDEBUG
+#ifdef REMOVE_INSIDE_DLOG
+    std::cerr << "done\n";
+#endif
+
+#ifdef CHECK_GRID_RESULTS
 #ifdef REMOVE_INSIDE_DLOG
         std::cerr << "checking results\n";
 #endif
@@ -391,7 +571,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
-        
         //checking that all boundary points have a normal
         for (unsigned i = 0; i < g.r.size(); i++) {
             if (g.is_boundary(i) && g.off_walls(i) && !v_points.contains(i)) {
@@ -399,7 +578,25 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
             }
         }
+        //checking that all boundary points are off wall
+        for (const auto &v : v_points.m) {
+            if (!g.off_walls(v.first)) {
+                const auto i = v.first;
+                std::cerr << "boundary point " << i << " is not off walls\n";
+                std::cerr << "\tThis is at (" << g.x[i] << " " << g.y[i] << " " << g.z[i] << ")\n";
 
+                const auto dist_left = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge1, g.edge5, g.edge7 );
+                const auto dist_right = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge2, g.edge4, g.edge8 );
+                const auto dist_down = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge1, g.edge2, g.edge5 );
+                const auto dist_up = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge4, g.edge8, g.edge7 );
+                const auto dist_front = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge1, g.edge2, g.edge4 );
+                const auto dist_back = dist_to_plane( {g.x[i], g.y[i], g.z[i]}, g.edge5, g.edge7, g.edge8 );
+
+                std::cerr << "\tl:" << dist_left << " r:" << dist_right << " d:" << dist_down << " u:" << dist_up << " f:" << dist_front << " b:" << dist_back << "\n";
+                std::cerr << "\tdx: "<< g.dx << " dy: " << g.dy << " dz:" << g.dz << "\n";
+
+            }
+        }
         //checking norms, vels, points, and inds all have the same points
         for (const auto &v : v_points.m) {
             if (!m_points.contains(v.first)) {
@@ -412,7 +609,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "t_inds does not contain " << v.first << " where v_points does\n";
             }
         }
-
         for (const auto &v : m_points.m) {
             if (!v_points.contains(v.first)) {
                 std::cerr << "v_points does not contain " << v.first << " where m_points does\n";
@@ -424,7 +620,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "t_inds does not contain " << v.first << " where m_points does\n";
             }
         }
-
         for (const auto &v : norms.m) {
             if (!v_points.contains(v.first)) {
                 std::cerr << "v_points does not contain " << v.first << " where norms does\n";
@@ -436,7 +631,6 @@ void remove_inside_boundary_unif(grid &g, const triangle_mesh &tm, const mesh& m
                 std::cerr << "t_inds does not contain " << v.first << " where norms does\n";
             }
         }
-
         for (const auto &v : t_inds.m) {
             if (!m_points.contains(v.first)) {
                 std::cerr << "m_points does not contain " << v.first << " where t_inds does\n";

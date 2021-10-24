@@ -39,53 +39,92 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
 
     #pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
+        //std::cerr << i << "/" << p.size() << "\n";
+       // std::cerr << "\t" << p.is_boundary(i) << "\t" << p.g->off_walls(i) << "\n";
 
         if (p.is_boundary(i)) {
             if (p.g->off_walls(i)) {
+               // std::cerr << "\t\t" << bc.norms.contains(i) << "\n";
                 const auto &n =  bc.norms.normal(i);
                 double mid = 0;
 
                 //x
                 if (p.can_move(i, -1,0,0) && p.can_move(i, 1,0,0)) {    //central difference
+                    //std::cerr << "\t\tcentral x" << "\n";
                     Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*1/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*1/(2*dx) );
                 } else if (p.can_move(i, 2,0,0)) {  //forward
+                    //std::cerr << "\t\tforward x" << "\n";
                     mid += -n.x()*3/(2*dx);
                     Q.add_elm(i, p.get_move_ind(i, 2,0,0), -n.x()*1/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()*4/(2*dx) );
-                } else {    //backward
+                } else if (p.can_move(i, -2,0,0)){    //backward
+                    //std::cerr << "\t\tbackward x" << "\n";
                     mid += n.x()*3/(2*dx);
                     Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*4/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, -2,0,0), n.x()*1/(2*dx) );
+                } else if (p.can_move(i, 1, 0, 0)) {
+                    mid += -n.x() / dx;
+                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()/dx );
+                } else if (p.can_move(i, -1, 0, 0)) {
+                    mid += n.x() / dx;
+                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()/dx );
+                } else {
+                    throw std::runtime_error("cannot compute a derivative in x");
                 }
+                //std::cerr << "\t\tend x\n";
 
                 //y
                 if (p.can_move(i, 0,-1,0) && p.can_move(i, 0,1,0)) {    //central difference
+                    //std::cerr << "\t\tcentral y" << "\n";
                     Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*1/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*1/(2*dy) );
                 } else if (p.can_move(i, 0,2,0)) {  //forward
+                    //std::cerr << "\t\tforward y" << "\n";
                     mid += -n.y()*3/(2*dy);
                     Q.add_elm(i, p.get_move_ind(i, 0,2,0), -n.y()*1/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()*4/(2*dy) );
-                } else {    //backward
+                } else if (p.can_move(i, 0,-2,0)){    //backward
+                    //std::cerr << "\t\tbackward y" << "\n";
                     mid += n.y()*3/(2*dy);
                     Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
+                }else if (p.can_move(i, 0, 1, 0)) {
+                    mid += -n.y() / dy;
+                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()/dy );
+                } else if (p.can_move(i, 0, -1, 0)) {
+                    mid += n.y() / dy;
+                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()/dy );
+                } else {
+                    throw std::runtime_error("cannot compute a derivative in y");
                 }
+                //std::cerr << "\t\tend y\n";
 
                 //z
                 if (p.can_move(i, 0,0,-1) && p.can_move(i, 0,0,1)) {    //central difference
+                    //std::cerr << "\t\tcentral z" << "\n";
                     Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*1/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*1/(2*dz) );
                 } else if (p.can_move(i, 0,0,2)) {  //forward
+                    //std::cerr << "\t\tforward z" << "\n";
                     mid += -n.z()*3/(2*dz);
                     Q.add_elm(i, p.get_move_ind(i, 0,0,2), -n.z()*1/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()*4/(2*dz) );
-                } else {    //backward
+                } else if (p.can_move(i, 0,0,-2)){    //backward
+                    //std::cerr << "\t\tbackward z" << "\n";
                     mid += n.z()*3/(2*dz);
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*4/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
+                }else if (p.can_move(i, 0, 0, 1)) {
+                    mid += -n.z() / dz;
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()/dz );
+                } else if (p.can_move(i, 0, 0, -1)) {
+                    mid += n.x() / dx;
+                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()/dz );
+                } else {
+                    throw std::runtime_error("cannot compute a derivative in z");
                 }
+                //std::cerr << "\t\tend z\n";
 
 
                 Q.add_elm(i,i, mid);
@@ -126,24 +165,29 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
 
 void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re, const boundary_conditions &bc) noexcept {
 
-#ifndef NDEBUG
-    if (dx == 0) {
-        std::cerr << "Make A has dx=0\n";
-    }
-    if (dy == 0) {
-        std::cerr << "Make A has dy=0\n";
-    }
-    if (dz == 0) {
-        std::cerr << "Make A has dz=0\n";
-    }
-#endif
 
     #pragma omp parallel for
     for (unsigned i = 0; i < v.g->size(); i++) {
+
+#ifndef NDEBUG
+        if (v.dx(i) == 0) {
+            std::cerr << "Make A has dx=0\n";
+        }
+        if (v.dy(i) == 0) {
+            std::cerr << "Make A has dy=0\n";
+        }
+        if (v.dz(i) == 0) {
+            std::cerr << "Make A has dz=0\n";
+        }
+#endif
+
+        //std::cerr << "\t" << i << "\n";
+        //std::cerr << "\t\t" << v.is_boundary(i) << "\n";
         if (v.is_boundary(i)) {
             if (v.g->off_walls(i)) {
                 A.add_elm(i,i, 1);
             } else {
+                //std::cerr << "\t\t" << bc.norms.contains(i) << "\n";
 
                 const auto &n =  bc.norms.normal(i);
 #ifndef NDEBUG

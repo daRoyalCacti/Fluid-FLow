@@ -1,4 +1,4 @@
-    file_loc = "boundary_points.txt";
+    file_loc = "boundary_points_x.txt";
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f');
     fclose(fileID);
@@ -13,7 +13,7 @@
     plot(ys, zs, 'o')
     
 %plots the flow for a give time
-    file_loc = "normal_vectors.txt";
+    file_loc = "normal_vectors_x.txt";
     fileID = fopen(file_loc, 'r');
     data = fscanf(fileID, '%f %f %f %f %f');
     fclose(fileID);
@@ -25,7 +25,8 @@
     vz = data(5:5:end);
     
     hold on
-    quiver(y,z,vy,vz)
+    div = (max(z) - min(z) ) / (max(y) - min(y));
+    quiver(y,z,vy/div,vz, 'ShowArrowHead', 'off')
     
     has_x = vx~=0;
     plot(y(has_x), z(has_x), '.')

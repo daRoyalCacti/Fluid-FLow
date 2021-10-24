@@ -26,6 +26,15 @@ struct triangle {
 
     triangle(const vec3 *vec0, const vec3 *vec1, const vec3 *vec2, const vec3 *n0, const vec3 *n1, const vec3 *n2, const vec3 *v0, const vec3 *v1, const vec3 *v2, const vec3* v_, const vec3 *w_, const vec3* c_o_m_)
     : vertex0(vec0), vertex1(vec1), vertex2(vec2),  normal0(n0), normal1(n1), normal2(n2), vel0(v0), vel1(v1), vel2(v2), v(v_), w(w_), c_o_m(c_o_m_) {
+        /*if (std::abs(normal0->length() - 1) > 0.001) {
+            std::cerr << "norm0 is no unit\n";
+        }
+        if (std::abs(normal1->length() - 1) > 0.001) {
+            std::cerr << "norm1 is no unit\n";
+        }
+        if (std::abs(normal2->length() - 1) > 0.001) {
+            std::cerr << "norm2 is no unit\n";
+        }*/
          update();
      }
 

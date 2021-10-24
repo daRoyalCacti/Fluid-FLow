@@ -31,12 +31,12 @@ struct boundary_conditions {
 
 
     boundary_conditions() = delete;
-    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
+    boundary_conditions(const mesh *m, const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const unsigned sx, const unsigned sy, const unsigned sz, const double minx = 0, const double miny = 0, const double minz = 0)
         : tm(m), norms(mesh_norms, wall_norms) {
 #ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "making entire grid\n";
 #endif
-        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, sx, sy, sz, minx, miny, minz);
 
 
 #ifdef BOUNDARY_CONDITIONS_DLOG
@@ -55,9 +55,9 @@ struct boundary_conditions {
     }
 
     //should never be used in real flow, only used for testing derivatives
-    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const double minx = 0, const double miny = 0, const double minz = 0)
+    boundary_conditions(const double dx, const double dy, const double dz, const double Wx, const double Wy, const double Wz, const unsigned sx, const unsigned sy, const unsigned sz, const double minx = 0, const double miny = 0, const double minz = 0)
         : tm{}, norms(mesh_norms, wall_norms) {
-        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, minx, miny, minz);
+        make_entire_grid(global_grid, Wx, Wy, Wz, dx, dy, dz, sx, sy, sz, minx, miny, minz);
 
         wall_norms = wall_normals(no_wall_points());
         create_wall_normals();
@@ -120,7 +120,7 @@ struct boundary_conditions {
     }
 
     void DEBUG_write_normal_vectors_at_x(const double xp) const {
-        std::ofstream output("../DEBUG/normal_vectors.txt");
+        std::ofstream output("../DEBUG/normal_vectors_x.txt");
         if (output.is_open()) {
             const auto inds = global_grid.get_some_x_inds(xp);
             for (const auto ind : inds) {

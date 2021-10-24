@@ -21,6 +21,10 @@ struct vec3 final {
     [[nodiscard]] constexpr  double y() const noexcept { return e[1]; }
     [[nodiscard]] constexpr  double z() const noexcept { return e[2]; }
 
+    [[nodiscard]] double& x() noexcept { return e[0]; }
+    [[nodiscard]] double& y() noexcept { return e[1]; }
+    [[nodiscard]] double& z() noexcept { return e[2]; }
+
     constexpr vec3 operator-() const noexcept { return {-e[0], -e[1], -e[2]}; }
     constexpr double operator[](unsigned i) const noexcept { return e[i]; }
     constexpr double &operator[](unsigned i) noexcept { return e[i]; }
@@ -162,16 +166,24 @@ constexpr vec3 sqrt(const vec3& v) noexcept {
     return {pow(v.x(), p), pow(v.y(), p), pow(v.z(),p)};
 }
 
+[[maybe_unused]] constexpr vec3 abs(const vec3& v)noexcept  {
+    return { std::abs(v.x()), std::abs(v.y()), std::abs(v.z()) };
+}
+
 [[maybe_unused]] constexpr vec3 abs2(const vec3& v)noexcept  {
     return { v.x()*v.x(), v.y()*v.y(), v.z()*v.z()};
 }
 
-constexpr vec3 round(const vec3 &v) noexcept {
+[[maybe_unused]] constexpr vec3 round(const vec3 &v) noexcept {
     return {round(v.x()), round(v.y()), round(v.z())};
 }
 
-constexpr vec3 ceil(const vec3 &v) noexcept {
+[[maybe_unused]] constexpr vec3 ceil(const vec3 &v) noexcept {
     return {ceil(v.x()), ceil(v.y()), ceil(v.z())};
+}
+
+[[maybe_unused]] constexpr vec3 floor(const vec3 &v) noexcept {
+    return {floor(v.x()), floor(v.y()), floor(v.z())};
 }
 
 //used in smart derivative

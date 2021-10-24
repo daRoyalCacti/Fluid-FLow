@@ -10,7 +10,7 @@
 
 //#define BICGSTAB
 
-//#define IHU0
+#define IHU0
 //#define JACOBI
 
 #include <viennacl/vector.hpp>
@@ -49,7 +49,7 @@ constexpr std::array<double, 5> tols_v = {1e-3,1e-4, 1e-5, 1e-6, 1e-7};
 constexpr std::array<unsigned, 5> max_its_v = {300, 500, 1000, 5000, 10000};
 constexpr unsigned no_solver_choices_v = max_its_v.size();
 
-constexpr unsigned krylov_dim = 20;
+constexpr unsigned krylov_dim = 10;
 constexpr std::array<double, 4> tols_p = { 5e-10, 2e-10, 1e-10, 1e-20};
 //constexpr std::array<unsigned, 4> max_its_p = {5000, 5000, 5000, 10000};
 constexpr std::array<unsigned, 4> max_its_p = {50000, 50000, 50000, 100000};

@@ -96,15 +96,16 @@ struct grid {
     vec3 operator[](unsigned i) const noexcept { return { x[i], y[i], z[i] }; }
 
     grid() : dx{}, dy{}, dz{} {};
-    grid(const double dx_, const double dy_, const double dz_, const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
+    grid(const double dx_, const double dy_, const double dz_, const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz, const double sx, const double sy, const double sz)
         : dx(dx_), dy(dy_), dz(dz_), //mins(minx, miny, minz), maxs(maxx, maxy, maxz) {
         middle( (minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2 ),
         edge1(minx, miny, minz), edge2(maxx, miny, minz), /*edge3(minx, maxy, minz),*/ edge4(maxx, maxy, minz),
         edge5(minz, miny, maxz), /*edge6(maxx, miny, maxz),*/ edge7(minx, maxy, maxz), edge8(maxx, maxy, maxz),
-        no_points_unif(round( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {}
+        //no_points_unif(ceil( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {}
+        no_points_unif(sx, sy, sz) {}
 
-    grid(const double dx_, const double dy_, const double dz_, const vec3& minv, const vec3& maxv)
-        : grid(dx_, dy_, dz_, minv.x(), minv.y(), minv.z(), maxv.x(), maxv.y(), maxv.z()) {}
+        grid(const double dx_, const double dy_, const double dz_, const vec3& minv, const vec3& maxv, const double sx, const double sy, const double sz)
+        : grid(dx_, dy_, dz_, minv.x(), minv.y(), minv.z(), maxv.x(), maxv.y(), maxv.z(), sx, sy, sz) {}
 
     grid(const std::vector<double> &x_, const std::vector<double> &y_, const std::vector<double> &z_, const double dx_, const double dy_, const double dz_,
          const double minx, const double miny, const double minz, const double maxx, const double maxy, const double maxz)
@@ -112,7 +113,7 @@ struct grid {
         middle( (minx+maxx)/2, (miny+maxy)/2, (minz+maxz)/2 ),
         edge1(minx, miny, minz), edge2(maxx, miny, minz), /*edge3(minx, maxy, minz),*/ edge4(maxx, maxy, minz),
         edge5(minx, miny, maxz), /*edge6(maxx, miny, maxz),*/ edge7(minx, maxy, maxz), edge8(maxx, maxy, maxz),
-        no_points_unif(round( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {
+        no_points_unif(ceil( ( vec3(maxx-minx, maxy-miny, maxz-minz) ) / vec3(dx, dy, dz) ) ) {
 #ifndef NDEBUG
         bool err = false;
         if (x_.size() != y_.size()) {

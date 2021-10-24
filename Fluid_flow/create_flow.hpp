@@ -57,14 +57,27 @@ struct output_settings {
 
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
-template<unsigned no_timesteps, unsigned N, unsigned M, unsigned P, bool write_all_times = true>
-void solve_flow(body *rb, const output_settings &os, const double max_t = 1, const double Re = 150, const double Wx = 3, const double Wy = 4, const double Wz = 5) {
+template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
+[[noreturn]] void solve_flow(body *rb, const output_settings &os, const double dt, const double Re) {
+    const auto widths =rb->model.get_domain();
+    //const auto bb_min = rb->model.bounds.min;
+    //const auto bb_max = rb->model.bounds.max;
+    //const auto lengths = bb_max - bb_min;
+
+    const auto Wx = widths.x();
+    const auto Wy = widths.y();
+    const auto Wz = widths.z();
+
+    /*const auto LLx = lengths.x();
+    const auto LLy = lengths.y();
+    const auto LLz = lengths.z();*/
+
     //size of grid
     double dx = Wx / static_cast<double>(N+1);
     double dy = Wy / static_cast<double>(M+1);
     double dz = Wz / static_cast<double>(P+1);
 
-    double dt = max_t / (double)no_timesteps;
+    //double dt = max_t / (double)no_timesteps;
 
     //creating timer
     flow_timer timer(os.time_file_name.data() );
@@ -74,9 +87,16 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 #ifdef DLOG
     std::cout << "setting boundary conditions\n";
 #endif
-    boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz);
+    boundary_conditions BC(&rb->model, dx, dy, dz, Wx, Wy, Wz, N+1, M+1, P+1);
+#ifdef DLOG
+    std::cout << "writing boundary data\n";
+#endif
     BC.global_grid.DEBUG_write_boundary_points(false);
+    BC.global_grid.DEBUG_write_boundary_points_at_x(Wx/2);
     BC.DEBUG_write_normal_vectors();
+    BC.DEBUG_write_normal_vectors_at_x(Wx/2);
+    rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
+    //return;
 
 
 
@@ -228,12 +248,16 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
 
      unsigned counter = 1;
 
-     for (double t = dt; t < max_t; t+=dt) {
+     //for (double t = dt; t < max_t; t+=dt) {
+     double t = 0;
+     while (true) {
+         t+=dt;
          const auto start_loop = std::chrono::high_resolution_clock::now();
          const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
          char time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
          if (std::strftime(time_human, sizeof(time_human), "%T", std::localtime(&start_time))) {
-             std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
+             //std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
+             std::cout << "t: " << t << " at " << time_human << std::flush;
          } else {
              std::cerr << "Timing error\n";
          }
@@ -345,10 +369,10 @@ void solve_flow(body *rb, const output_settings &os, const double max_t = 1, con
          timer.write_times(t);
      }
 
-     if constexpr (!write_all_times) {
+     /*if constexpr (!write_all_times) {
          write_vec(v_n, os.final_vel_name.data());
          write_vec(p, os.final_pres_name.data());
-     }
+     }*/
 
 
 

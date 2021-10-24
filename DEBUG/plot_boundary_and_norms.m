@@ -24,8 +24,10 @@
     vy = data(4:5:end);
     vz = data(5:5:end);
     
+    div = (max(x) - min(x) ) / (max(y) - min(y));
+     
     hold on
-    quiver(x,y,vx,vy)
+    quiver(x,y,vx,vy/div, 'ShowArrowHead', 'off')
     
     has_z = vz~=0;
     plot(x(has_z), y(has_z), '.')

@@ -9,18 +9,19 @@
 //#include "Examples/interp.hpp"
 //#include "Examples/rotated_derivs.h"
 
-//#define HORIZONTAL
+#define HORIZONTAL
 #define ROTATE
-
+/*
 #ifdef HORIZONTAL
-constexpr double wx = 7;
-constexpr double wy = 6;
-constexpr double wz = 5;
+constexpr double wx = 2;//7;
+constexpr double wy = 2;//6;
+constexpr double wz = .3;//5;
 #else
 constexpr double wx = 6;
 constexpr double wy = 7;
 constexpr double wz = 5;
 #endif
+ */
 //constexpr double max_t = 1;
 constexpr double dt = 0.001;
 constexpr double Re = 7069; //150;  //https://www.grc.nasa.gov/WWW/k-12/airplane/reynolds.html
@@ -54,12 +55,12 @@ int main() {
     constexpr vec3 w = vec3(0,0,0);
 #endif
 
-    const double z_mid = wz/2;
-    const double y_mid = wy/2;
-    const double x_mid = wx/2;
+    /*constexpr double z_mid = wz/2;
+    constexpr double y_mid = wy/2;
+    constexpr double x_mid = wx/2;*/
 
 
-    constexpr double box_x = 1;
+    /*constexpr double box_x = 1;
     constexpr double box_y = 1;
     constexpr double box_z = 1;
 
@@ -104,15 +105,22 @@ int main() {
         inds.push_back(4*i+1);  //lower right
         inds.push_back(4*i+2);  //upper left
         inds.push_back(4*i+3);  //upper right
-    }
+    }*/
 
     //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
-    mesh m(pos, std::move(inds), std::move(mass), std::move(norms), vel_cm, w);
+    //mesh m(pos, std::move(inds), std::move(mass), std::move(norms), vel_cm, w);
+    mesh m("../models/boomerang1.obj", vel_cm, w);
+    //mesh m("../models/cup.obj", vel_cm, w);
+
+    /*for (const auto &v : m.vertices) {
+        std::cerr << v << "\n";
+    }*/
+
     body b(m);
 #ifdef NDEBUG
-    solve_flow<128, 128, 128>(&b, o, dt, Re, wx, wy, wz);
+    solve_flow<128, 128, 128>(&b, o, dt, Re);
 #else
-    solve_flow<1000, 30, 30, 30>(&b, o, max_t, Re, wx, wy, wz);
+    solve_flow<30, 30, 30>(&b, o, dt, Re, wx, wy, wz);
 #endif
 //*/
 

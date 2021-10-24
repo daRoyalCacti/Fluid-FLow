@@ -21,6 +21,9 @@ target_link_libraries(Code PUBLIC Eigen3::Eigen)
 find_package(OpenCL REQUIRED)
 target_link_libraries(Code PUBLIC OpenCL::OpenCL)
 
+find_package(ASSIMP REQUIRED)
+target_link_libraries(Code PUBLIC assimp)
+
 
 set(warning_flags -Werror -Wpedantic -Wall -Wextra -Wfloat-equal -Wundef -Wcast-align -Wwrite-strings -Wlogical-op -Wmissing-declarations -Wredundant-decls -Wshadow -Woverloaded-virtual -Wmissing-include-dirs -Wunknown-pragmas -Wduplicated-cond -Wfloat-equal -Wshadow -Wunsafe-loop-optimizations -Wpacked -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn -Wmissing-noreturn -Wsuggest-attribute=malloc -Wsuggest-attribute=format -Wmissing-format-attribute -Wsuggest-attribute=cold>)
 add_compile_options("$<$<CONFIG:Debug>: ${warning_flags}")

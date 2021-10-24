@@ -32,6 +32,10 @@ struct tri_inds final {
         m.clear();
     }
 
+    void erase(const unsigned i) {
+        m.erase(i);
+    }
+
     [[nodiscard]] bool contains(const unsigned index) const noexcept {
         return m.contains(index);
     }
@@ -63,6 +67,9 @@ struct mesh_points final {
 
     void clear() {
         m.clear();
+    }
+    void erase(const unsigned i) {
+        m.erase(i);
     }
 
     [[nodiscard]] bool contains(const unsigned index) const noexcept {
@@ -107,6 +114,9 @@ struct boundary_normals final {
     void clear() {
         m.clear();
     }
+    void erase(const unsigned i) {
+        m.erase(i);
+    }
 
     [[nodiscard]] bool contains(const unsigned index) const noexcept {
         return m.contains(index);
@@ -138,6 +148,9 @@ struct wall_normals final {
 
     void clear() {
         m.clear();
+    }
+    void erase(const unsigned i) {
+        m.erase(i);
     }
 
     [[nodiscard]] bool contains(const unsigned index) const noexcept {
@@ -195,6 +208,9 @@ struct vel_points final {
 
     void clear() {
         m.clear();
+    }
+    void erase(const unsigned i) {
+        m.erase(i);
     }
 
     [[nodiscard]] bool contains(const unsigned index) const noexcept {

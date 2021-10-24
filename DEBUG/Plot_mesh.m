@@ -17,9 +17,9 @@ function Plot_mesh(file_loc)
     
 %     figure
     plot3(x,y,z, 'o')
-    hold on
-    quiver3(x,y,z, vx, vy, vz, 'r')
-    quiver3(x,y,z, nx, ny, nz, 'm')
+    %hold on
+    %quiver3(x,y,z, vx, vy, vz, 'r')
+    %quiver3(x,y,z, nx, ny, nz, 'm')
     
     xlabel('x')
     ylabel('y')
