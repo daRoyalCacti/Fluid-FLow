@@ -197,7 +197,7 @@ struct grid {
         const auto dist_back = dist_to_plane( v, edge5, edge7, edge8 );
 
         const bool away_x = (dist_left > 2*dx) && (dist_right > 2*dx);
-        const bool away_y = (dist_down > 2*dy) && (dist_up > 2*dx);
+        const bool away_y = (dist_down > 2*dy) && (dist_up > 2*dy);
         const bool away_z = (dist_front > 2*dz) && (dist_back > 2*dz);
 
 
@@ -307,11 +307,11 @@ struct grid {
         std::vector<unsigned long> ret_vec;
         ret_vec.reserve( static_cast<unsigned long>(no_points_unif.x() * no_points_unif.y()) );
         for (unsigned long i = 0; i < z.size(); i++) {
-            //NOPE JUST GET INDS INITIALLY AND USE THAT FOR ALL WRITING
             if ( z[i] <= middle_z && z[i] >= middle_z-dz ) {
                 ret_vec.push_back(i);
             }
         }
+        ret_vec.shrink_to_fit();
         return ret_vec;
     }
 
@@ -323,6 +323,7 @@ struct grid {
                 ret_vec.push_back(i);
             }
         }
+        ret_vec.shrink_to_fit();
         return ret_vec;
     }
 
@@ -413,7 +414,7 @@ struct grid {
     }
 
     [[maybe_unused]] void DEBUG_write_boundary_points_at_x(const double xp) const {
-        std::ofstream output("../DEBUG/boundary_points.txt");
+        std::ofstream output("../DEBUG/boundary_points_x.txt");
         if (output.is_open()) {
             const auto inds = get_some_x_inds(xp);
             for (const auto ind : inds) {
