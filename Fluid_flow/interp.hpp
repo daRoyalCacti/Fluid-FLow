@@ -246,6 +246,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 #ifdef STORE_SOLVERS
                 const auto rot = rotate(init_com, rot_angle_vec, vec3(init_grid.x[index], init_grid.y[index], init_grid.z[index]), rot_angle_vec.length() );
 #else
+                const auto &g = *(v_n.g);
                 const auto rot = rotate(c_o_m, rot_angle_vec, vec3(g.x[index], g.y[index], g.z[index]), rot_angle_vec.length() );
 #endif
 
@@ -254,7 +255,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
                 const auto z = rot.z()+trans_vec.z();
 
                 vec3 move_vec = {0,0,0};
-
+#ifdef STORE_SOLVERS
                 if (x < init_grid.x[index]) {
                     if (v_n.g->can_move(index, move_vec + vec3(-1,0,0)  )) {
                         move_vec += vec3(-1,0,0);
@@ -270,7 +271,23 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
                         move_vec += vec3(0,0,-1);;
                     }
                 }
-
+#else
+                if (x < g.x[index]) {
+                    if (v_n.g->can_move(index, move_vec + vec3(-1,0,0)  )) {
+                        move_vec += vec3(-1,0,0);
+                    }
+                }
+                if (y < g.y[index]) {
+                    if (v_n.g->can_move(index, move_vec + vec3(0,-1,0)  )) {
+                        move_vec +=vec3(0,-1,0);
+                    }
+                }
+                if (z < g.z[index]) {
+                    if (v_n.g->can_move(index, move_vec + vec3(0,0,-1)  )) {
+                        move_vec += vec3(0,0,-1);;
+                    }
+                }
+#endif
                 const auto i_index = v_n.g->get_move_ind(index, move_vec);
 
 #ifdef LOG_INTERP_TIMES
@@ -335,7 +352,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
                     mat(j, 6) = y*z;
                     mat(j, 7) = x*y*z;
 
-                    mat(j, 8) = x*x;
+                    /*mat(j, 8) = x*x;
                     mat(j, 9) = y*y;
                     mat(j, 10) = z*z;
                     mat(j, 11) = x*x*y;
@@ -350,7 +367,7 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
                     mat(j, 20) = x*x* y*y* z;
                     mat(j, 21) = x*x *y *z*z;
                     mat(j, 22) = x *y*y* z*z;
-                    mat(j,23) = x*x* y*y* z*z;
+                    mat(j,23) = x*x* y*y* z*z;*/
 #endif
                 }
 #ifdef LOG_INTERP_TIMES
@@ -372,8 +389,10 @@ void interpolate_vectors( big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const v
 
 #ifdef STORE_SOLVERS
 #else
+        #ifdef LOG_INTERP_TIMES
                 const auto end_solver = std::chrono::high_resolution_clock::now();
                 time_solver += static_cast<std::chrono::duration<double>>(end_solver - start_solver).count();
+        #endif
 #endif
 
                 const auto start_solving = std::chrono::high_resolution_clock::now();

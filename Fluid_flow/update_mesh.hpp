@@ -10,6 +10,8 @@
 #include "update_vecs.hpp"
 #include "interp.hpp"
 
+//#define UPDATE_MESH_DLOG
+
 #ifdef FLUID_MOVES_MESH
 bool fluid_moves(const double t) {
     return t>0.01; //0.01
@@ -48,15 +50,18 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
 #else
 void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_n1, big_vec_d &p, const double dt, const double t, const unsigned counter = 0) {
 #endif
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tenforce velocity1\n";
+#endif
     if (!enforce_velocity_BC<false>(bc, v_n)) {
         throw std::runtime_error("enforcing velocity boundary condition failed");
     }
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tenforce pressure1\n";
+#endif
     if (!update_pressure_BC<false>(bc, p) ) {
         throw std::runtime_error("enforcing pressure boundary condition failed");
     }
-    std::cerr << "\tend enforce pressure1\n";
 
     std::vector<vec3> forces, points;
     const auto& g = *v_n.g;
@@ -68,7 +73,9 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
         const auto forces_is = forces.size();
 #endif
         unsigned forces_counter = 0;
+#ifdef UPDATE_MESH_DLOG
         std::cerr << "\tcalculating forces\n";
+#endif
         //could be done more efficiently using a range base for loop through bc.m_points
         for (unsigned i = 0; i < p.size(); i++) {
             if (g.off_walls(i)) {  //if off the boundary
@@ -95,39 +102,49 @@ void update_mesh(boundary_conditions &bc, body *b, big_vec_v &v_n, big_vec_v &v_
             std::cerr << "size of forces : " << forces_is << ". Number of boundary points : " << forces_counter << "\n";
         }
 #endif
-
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tupdating pos\n";
+#endif
     const auto old_c_o_m = b->model.pos_cm;
     b->update_pos(forces, points, dt);
 
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tinterpolating\n";
+#endif
 #ifdef STORE_SOLVERS
     interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt, isolver, init_grid, init_com);
 #else
 interpolate_vectors(v_n, v_n1, p, b->model.v, old_c_o_m, b->model.w, dt);
 #endif
 
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tupdating grid\n";
+#endif
     v_n.g->update_pos(b->model.v, old_c_o_m, b->model.w, dt);
 
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tupdating BC\n";
+#endif
     bc.update(b->model.w, b->model.v, old_c_o_m, dt);
 
-
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tupdating pressure2\n";
+#endif
     if (!update_pressure_BC<false>(bc, p)) {
         throw std::runtime_error("enforcing pressure boundary condition failed");
     }
 
-
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\tupdating velocity2\n";
+#endif
     //can't think of a better way to make sure that the extrapolation does not affect points that need to have BC enforced
     if (!enforce_velocity_BC<false>(bc, v_n)) {
         throw std::runtime_error("enforcing velocity boundary condition failed");
     }
 
-
+#ifdef UPDATE_MESH_DLOG
     std::cerr << "\twriting interpolated files\n";
+#endif
     std::string file_name;
     if (counter < 10) {
         file_name = "000" + std::to_string(counter);

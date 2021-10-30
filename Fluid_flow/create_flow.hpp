@@ -58,7 +58,18 @@ struct output_settings {
 //for choice of Reynolds number see //http://www.airfoiltools.com/calculator/reynoldsnumber?MReNumForm%5Bvel%5D=10&MReNumForm%5Bchord%5D=0.2&MReNumForm%5Bkvisc%5D=1.3324E-5&yt0=Calculate
 //Wx,Wy,Wz represent the width of the box
 template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
-[[noreturn]] void solve_flow(body *rb, const output_settings &os, const double dt, const double Re) {
+/*[[noreturn]]*/ void solve_flow(body *rb, const output_settings &os, const double dt, const double Re) {
+    const auto start_program = std::chrono::high_resolution_clock::now();
+    const std::time_t start_program_time = std::chrono::system_clock::to_time_t(start_program);
+    char start_time_human[9]; //9 characters for HH:MM:SS (8char) plus termination \0
+    if (std::strftime(start_time_human, sizeof(start_time_human), "%T", std::localtime(&start_program_time))) {
+        //std::cout << "t: " << t << " / " << max_t << " at " << time_human << std::flush;
+        std::cout <<  "computation started at " << start_time_human << "\n";
+    } else {
+        std::cerr << "Timing error\n";
+    }
+
+
     const auto widths =rb->model.get_domain();
     //const auto bb_min = rb->model.bounds.min;
     //const auto bb_max = rb->model.bounds.max;
@@ -91,11 +102,15 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
 #ifdef DLOG
     std::cout << "writing boundary data\n";
 #endif
-    BC.global_grid.DEBUG_write_boundary_points(false);
-    BC.global_grid.DEBUG_write_boundary_points_at_x(Wx/2);
-    BC.DEBUG_write_normal_vectors();
-    BC.DEBUG_write_normal_vectors_at_x(Wx/2);
+    const double x_writing_pos = Wx/2;
+    const double z_writing_pos = Wz/2;
+    BC.global_grid.DEBUG_write_boundary_points_at_z(z_writing_pos);
+    BC.global_grid.DEBUG_write_boundary_points_at_x(x_writing_pos);
+    BC.DEBUG_write_normal_vectors_at_z(z_writing_pos);
+    BC.DEBUG_write_normal_vectors_at_x(x_writing_pos);
     rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
+    rb->model.dump_data();
+
     //return;
 
 
@@ -120,6 +135,7 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
 
      big_matrix Q(BC, 16);
      big_matrix A(BC, 7);
+     //big_matrix A(BC, 16);
      //return;
  #ifdef DLOG
      std::cout << "creating A\n";
@@ -132,6 +148,7 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
  #endif
      //making Q
      make_Q(Q, p, BC);
+     //Q.m.makeCompressed();
 
  #ifdef DLOG
      std::cout << "setting velocity IC\n";
@@ -171,6 +188,12 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
  #endif
          rb->write_pos((std::string(os.body_file_loc) + "0000.txt").data());
      }
+#ifdef DUMP_DATA
+    write_entire_vec(v_n, "../DEBUG/velocity_dump/0000.txt");
+     write_entire_vec(p, "../DEBUG/pressure_dump/0000.txt");
+#endif
+
+
 #ifdef DLOG
     std::cout << "copying vector\n";
 #endif
@@ -245,12 +268,17 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
          rb->write_pos((std::string(os.body_file_loc) + "0001.txt").data());
      }
 
+#ifdef DUMP_DATA
+     write_entire_vec(v_n, "../DEBUG/velocity_dump/0001.txt");
+     write_entire_vec(p, "../DEBUG/pressure_dump/0001.txt");
+#endif
+
 
      unsigned counter = 1;
 
      //for (double t = dt; t < max_t; t+=dt) {
      double t = 0;
-     while (true) {
+     //while (true) {
          t+=dt;
          const auto start_loop = std::chrono::high_resolution_clock::now();
          const std::time_t start_time = std::chrono::system_clock::to_time_t(start_loop);
@@ -352,6 +380,12 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
              write_vec(v_n,inds, (std::string(os.vel_file_loc) + file_name + ".txt").data());
              write_vec(p,inds, (std::string(os.pres_file_loc) + file_name + ".txt").data());
              rb->write_pos((std::string(os.body_file_loc) + file_name + ".txt").data());
+
+#ifdef DUMP_DATA
+             write_entire_vec(v_n, ("../DEBUG/velocity_dump/" + file_name + ".txt").data() );
+             write_entire_vec(p, ("../DEBUG/pressure_dump/" + file_name + ".txt").data() );
+#endif
+
          }
 
          const auto end_loop = std::chrono::high_resolution_clock::now();
@@ -367,7 +401,7 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
          }
 
          timer.write_times(t);
-     }
+     //}
 
      /*if constexpr (!write_all_times) {
          write_vec(v_n, os.final_vel_name.data());

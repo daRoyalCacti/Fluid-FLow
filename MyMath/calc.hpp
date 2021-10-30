@@ -16,7 +16,7 @@ template<unsigned nx, unsigned ny, unsigned nz, typename T>
 #ifdef ALWAYS_INLINE_DERIVS
 __attribute__((always_inline))
 #endif
-        inline auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
+inline auto smart_deriv_old(const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );
@@ -288,7 +288,7 @@ template<unsigned nx, unsigned ny, unsigned nz, typename T>
 #ifdef ALWAYS_INLINE_DERIVS
 __attribute__((always_inline))
 #endif
-        inline auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
+inline auto smart_deriv(const axes& a, const T& v, const unsigned ind) noexcept  {
     static_assert( (nx < 4) && (ny < 4) && (nz < 4), "Forth derivatives and higher are not supported");
     static_assert( (nx+ny+nz) < 4, "Mixed derivatives higher than third order are not supported" );
     static_assert( (nx+ny+nz) > 0, "Need at least 1 dimension for a derivative" );

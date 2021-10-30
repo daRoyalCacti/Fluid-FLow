@@ -40,6 +40,32 @@ struct mesh final{
     bounding_box bounds;
     vec3 pos_cm;  //the position of the center of mass
 
+
+    void dump_data() {
+        std::ofstream output_vert("../DEBUG/vert_data.txt");
+        if (output_vert.is_open()) {
+            for (const auto & vert : vertices) {
+                output_vert << vert << "\n";
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output_vert.close();
+
+
+        std::ofstream output_ind("../DEBUG/ind_data.txt");
+        if (output_ind.is_open()) {
+            for (unsigned i = 0; i < indices.size(); i+=3) {
+                output_ind << indices[i] << " "  << indices[i+1] << " " << indices[i+2] << "\n";
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output_ind.close();
+    }
+
     mesh() = delete;
 
     mesh(const std::vector<vec3> &vertices_, std::vector<unsigned> indices_, std::vector<double> mass_, std::vector<vec3> normals_, vec3 v_, vec3 w_) noexcept :
@@ -177,7 +203,20 @@ struct mesh final{
         const double ly = bounds.max.y() - bounds.min.y();
         const double lz = bounds.max.z() - bounds.min.z();
 
-        return {2*lx, 2*ly, 2*lz};
+        double multx = 2, multy = 2, multz = 2;
+        //const auto bigl = std::max({lx, ly, lz});
+
+        /*if (lx < bigl/2) {
+            multx = 4;
+        }
+        if (ly < bigl/2) {
+            multy = 4;
+        }
+        if (lz < bigl/2) {
+            multz = 4;
+        }*/
+
+        return {multx*lx, multy*ly, multz*lz};
     }
 
 

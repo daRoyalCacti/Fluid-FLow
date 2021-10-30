@@ -1,6 +1,7 @@
 #define UPDATE_VECS_CHECK_RESULTS_LOG
 #define LOG_FORCES
 //#define ALWAYS_INLINE_DERIVS
+#define DUMP_DATA
 
 #include "Fluid_flow/create_flow.hpp"
 
@@ -45,12 +46,12 @@ int main() {
 
     constexpr double mass1 = 0.01;
 #ifdef HORIZONTAL
-    constexpr vec3 vel_cm = vec3(0.75, 0, 0);
+    constexpr vec3 vel_cm = vec3(0.75, 0.2, 0);
 #else
     constexpr vec3 vel_cm = vec3(0, 0.75, 0);//vec3(0.1, 0, 0);//vec3(0, 0, 0);
 #endif
 #ifdef ROTATE
-    constexpr vec3 w = vec3(0,0,0.5);
+    constexpr vec3 w = vec3(0,0,1);
 #else
     constexpr vec3 w = vec3(0,0,0);
 #endif
@@ -109,8 +110,12 @@ int main() {
 
     //mesh m(pos, inds, mass, norms, vec3(0.75,0,0), vec3(0,0,0));
     //mesh m(pos, std::move(inds), std::move(mass), std::move(norms), vel_cm, w);
-    mesh m("../models/boomerang1.obj", vel_cm, w);
-    //mesh m("../models/cup.obj", vel_cm, w);
+    //mesh m("../models/boomerang1.obj", vel_cm, w);
+    mesh m("../models/boomerang3.obj", vel_cm, w);
+    //mesh m("../models/boomerang4.obj", vel_cm, w);
+    //mesh m("../models/cube.obj", vel_cm, w);
+    //mesh m("../models/frisbee_ts01.obj", vel_cm, w);
+    //mesh m("../models/test.obj", vel_cm, w);
 
     /*for (const auto &v : m.vertices) {
         std::cerr << v << "\n";

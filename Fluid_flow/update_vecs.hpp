@@ -163,6 +163,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 
                     }
                 }
+
 #endif
 
             }
@@ -192,6 +193,7 @@ bool enforce_velocity_BC(const boundary_conditions &BC,  big_vec_v &v, const dou
 
 template <bool err>
 bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const double accuracy_percent = 1.0) {
+    return true;
         for (unsigned i = 0; i < p.size(); i++) {
             if (p.is_boundary(i)) {
                 const auto old = p(i);
@@ -211,6 +213,7 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     }
 #endif
                 } else {
+                    continue;
 
 #ifndef NDEBUG
                     if (!BC.norms.contains(i)) {
@@ -249,6 +252,8 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     const bool bz = p.can_move(i, 0,0,-2);
 
                     std::string_view err_code;
+
+                    const auto old_deriv = nx * smart_deriv_old<1,0,0>(p, i) + ny * smart_deriv_old<0,1,0>(p,i) + nz *smart_deriv_old<0,0,1>(p, i);
 
                     //cc not possible because have boundary point
                     if (cx & cy & fz) { //ccf
@@ -302,20 +307,20 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
 
                     } else if (cx & by & bz) {  //cbb
                         err_code = "cbb";
-                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nz/(2*nz) )  *  (  -nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,-2,0))/(2*dy) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
+                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nz/(2*dz) )  *  (  -nx * (p.move(i,1,0,0) - p.move(i,-1,0,0))/(2*dx) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,-2,0))/(2*dy) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
                     } else if (bx & cy & bz) {  //bcb
                         err_code = "bcb";
-                        p(i) = 1 / ( 3*nx/(2*dx) + 3*nz/(2*nz) )*  (  -ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy) - nx * (-4*p.move(i,-1,0,0) + p.move(i,-2,0,0))/(2*dx) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
+                        p(i) = 1 / ( 3*nx/(2*dx) + 3*nz/(2*dz) )*  (  -ny * (p.move(i,0,1,0) - p.move(i,0,-1,0))/(2*dy) - nx * (-4*p.move(i,-1,0,0) + p.move(i,-2,0,0))/(2*dx) - nz*(-4*p.move(i,0,0,-1)+p.move(i,0,0,-2))/(2*dz) );
                     } else if (bx & by & cz) {  //bbc
                         err_code = "bbc";
-                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nx/(2*nx) )*  (  -nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,-2,0))/(2*dy) - nx*(-4*p.move(i,-1,0,0)+p.move(i,-2,0,0))/(2*dx) );
+                        p(i) = 1 / ( 3*ny/(2*dy) + 3*nx/(2*dx) )*  (  -nz * (p.move(i,0,0,1) - p.move(i,0,0,-1))/(2*dz) - ny * (-4*p.move(i,0,-1,0) + p.move(i,0,-2,0))/(2*dy) - nx*(-4*p.move(i,-1,0,0)+p.move(i,-2,0,0))/(2*dx) );
 
                     } else if (fx & fy & fz) {  //fff
                         err_code = "fff";
-                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*ny) + 3*nz/(2*nz) ) * (  nx*(-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx)  +  ny*(-p.move(i,0,2,0)+4*p.move(i,0,1,0))/(2*dy)  +  nz*(-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz)  );
+                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*dy) + 3*nz/(2*dz) ) * (  nx*(-p.move(i,2,0,0)+4*p.move(i,1,0,0))/(2*dx)  +  ny*(-p.move(i,0,2,0)+4*p.move(i,0,1,0))/(2*dy)  +  nz*(-p.move(i,0,0,2)+4*p.move(i,0,0,1))/(2*dz)  );
                     } else if (bx & by & bz) {  //bbb
                         err_code = "bbb";
-                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*ny) + 3*nz/(2*nz) ) * (  nx*(-p.move(i,-2,0,0)+4*p.move(i,-1,0,0))/(2*dx)  +  ny*(-p.move(i,0,-2,0)+4*p.move(i,0,-1,0))/(2*dy)  +  nz*(-p.move(i,0,0,-2)+4*p.move(i,0,0,-1))/(2*dz)  );
+                        p(i) = 1/ ( 3*nx/(2*dx) + 3*ny/(2*dy) + 3*nz/(2*dz) ) * (  nx*(-p.move(i,-2,0,0)+4*p.move(i,-1,0,0))/(2*dx)  +  ny*(-p.move(i,0,-2,0)+4*p.move(i,0,-1,0))/(2*dy)  +  nz*(-p.move(i,0,0,-2)+4*p.move(i,0,0,-1))/(2*dz)  );
 
                     } else if (fx & fy & bz) {  //ffb
                         err_code = "ffb";
@@ -343,6 +348,9 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                     if (!std::isfinite(p(i))) {
                         std::cerr << "pressure boundary condition returned an infinite value\n";
                     }
+
+                    const auto new_deriv = nx * smart_deriv_old<1,0,0>(p, i) + ny * smart_deriv_old<0,1,0>(p,i) + nz *smart_deriv_old<0,0,1>(p, i);
+
                     if constexpr (err) {
                         if (old > 1e-4 && std::abs(old-p(i))/std::abs(p(i))*100 > accuracy_percent) {
                             std::cerr << "solution to pressure is not accurate\n";
@@ -350,11 +358,20 @@ bool update_pressure_BC(const boundary_conditions &BC, big_vec_d &p, const doubl
                             std::cerr << "\tcorrection : " << std::abs(old-p(i))/std::abs(p(i))*100 << "%\n";
                             std::cerr << "\tat index " << i << "\n";
                             std::cerr << "\told pressure = " << old << "\t new pressure = " << p(i) << "\n";
+                            std::cerr << "\told deriv = " << old_deriv << "\t new deriv = " << new_deriv << "\n";
                             std::cerr << "\tnormal vector = (" << norm << ")\n";
 
                             std::cerr << "\tThis was done using : " << err_code << "\n";
                         }
+                   }
+
+
+                    if (new_deriv > 1) {
+                        std::cerr << err_code << " gave stupid value for deriviative\n";
+                        std::cerr << "\tvalue : " << new_deriv << "\n";
+                        std::cerr << "\told pressure = " << old << "\t new pressure = " << p(i) << "\n";
                     }
+
 #endif
                 }
 

@@ -71,7 +71,7 @@ struct triangle {
     [[nodiscard]] vec3 get_normal(const vec3& point) const {
         double Bary0, Bary1, Bary2;
         barycentric_coords(point, Bary0, Bary1, Bary2);
-        return barycentric_interp(*normal0, *normal1, *normal2, Bary0, Bary1, Bary2);
+        return unit_vector(barycentric_interp(*normal0, *normal1, *normal2, Bary0, Bary1, Bary2));
     }
 
     [[nodiscard]] vec3 get_velocity(const vec3& point) const {
@@ -85,9 +85,9 @@ bool triangle::hit_time(const ray& r, double& hit_time) const {
     //using the Moller-Trumbore intersection algorithm
     //https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 
-    constexpr double epsilon = 0.0000001;
+    constexpr double epsilon = 0.0000000001;//0.0000001;
     vec3 h, s, q;
-    double a, f, u, v;
+    double a, f, u, v2;
 
 
     h = cross(r.dir, v1);
@@ -105,9 +105,9 @@ bool triangle::hit_time(const ray& r, double& hit_time) const {
         return false;
 
     q = cross(s, v0);
-    v = f * dot(r.dir, q);
+    v2 = f * dot(r.dir, q);
 
-    if (v < 0.0f | u + v > 1.0f)
+    if (v2 < 0.0f | u + v2 > 1.0f)
         return false;
 
     //computing the time of intersection

@@ -9,6 +9,7 @@
 #include <limits>
 #include <set>
 #include <fstream>
+#include <unordered_set>
 #include "../MyMath/vec3.hpp"
 #include "../MyMath/dist_to_plane.hpp"
 
@@ -88,6 +89,7 @@ struct grid {
     vec3 edge1, edge2, /*edge3,*/ edge4, edge5, /*edge6,*/ edge7, edge8;
     vec3 middle;
     vec3 no_points_unif;    //the total number of points across each axis assuming the grid is boring
+    std::unordered_set<unsigned> boundary_indices;
 
     axes axis{ vec3(1,0,0), vec3(0,1,0), vec3(0,0,1) };
     rigid_body_vals rbv;
@@ -328,6 +330,18 @@ struct grid {
         return ret_vec;
     }
 
+    [[nodiscard]] inline auto get_some_z_inds(const double zp) const noexcept {
+            std::vector<unsigned long> ret_vec;
+            ret_vec.reserve( static_cast<unsigned long>(no_points_unif.z() * no_points_unif.y()) );
+            for (unsigned long i = 0; i < z.size(); i++) {
+                if ( z[i] <= zp && z[i]+dz > zp ) {
+                    ret_vec.push_back(i);
+                }
+            }
+            ret_vec.shrink_to_fit();
+            return ret_vec;
+        }
+
     [[nodiscard]] auto convert_indices_unif(const vec3 &inds) const {
         return static_cast<unsigned long>( inds.x() + inds.y()*no_points_unif.x() + inds.z()*no_points_unif.x()*no_points_unif.y() );
     }
@@ -340,27 +354,27 @@ struct grid {
     [[nodiscard]] inline bool has_back(const unsigned ind) const noexcept {return r[ind].back != -1;}
 
     [[nodiscard]] inline bool has_2left(const unsigned ind) const noexcept {
-        if (r[ind].left == -1) return false;
+        if (!has_left(ind)) return false;
         return r[r[ind].left].left != -1;
     }
     [[nodiscard]] inline bool has_2right(const unsigned ind) const noexcept {
-        if (r[ind].right == -1) return false;
+        if (!has_right(ind)) return false;
         return r[r[ind].right].right != -1;
     }
     [[nodiscard]] inline bool has_2down(const unsigned ind) const noexcept {
-        if (r[ind].down == -1) return false;
+        if (!has_down(ind)) return false;
         return r[r[ind].down].down != -1;
     }
     [[nodiscard]] inline bool has_2up(const unsigned ind) const noexcept {
-        if (r[ind].up == -1) return false;
+        if (!has_up(ind)) return false;
         return r[r[ind].up].up != -1;
     }
     [[nodiscard]] inline bool has_2front(const unsigned ind) const noexcept {
-        if (r[ind].front == -1) return false;
+        if (!has_up(ind)) return false;
         return r[r[ind].front].front != -1;
     }
     [[nodiscard]] inline bool has_2back(const unsigned ind) const noexcept {
-        if (r[ind].back == -1) return false;
+        if (!has_back(ind)) return false;
         return r[r[ind].back].back != -1;
     }
 
@@ -377,22 +391,24 @@ struct grid {
             return true;
         }
 #endif
-        if (r[ind].left== -1) {return true;}
+        /*if (r[ind].left== -1) {return true;}
         if (r[ind].right== -1) {return true;}
         if (r[ind].down== -1) {return true;}
         if (r[ind].up== -1) {return true;}
         if (r[ind].front== -1) {return true;}
         if (r[ind].back== -1) {return true;}
 
-        return false;
+        return false;*/
+
+        return boundary_indices.contains(ind);
     }
 
-    [[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept {
+    /*[[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept {
         const auto end_x = !has_left(ind) && !has_right(ind);
         const auto end_y = !has_down(ind) && !has_up(ind);
         const auto end_z = !has_front(ind) && !has_back(ind);
         return end_x && end_y && end_z;
-    }
+    }*/
 
 
     void DEBUG_write_boundary_points(const bool print_off_wall = false) const {
@@ -420,6 +436,21 @@ struct grid {
             const auto inds = get_some_x_inds(xp);
             for (const auto ind : inds) {
                 output << y[ind] << " " << z[ind] << " " << is_boundary(ind) << "\n";
+            }
+
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
+    [[maybe_unused]] void DEBUG_write_boundary_points_at_z(const double zp) const {
+        std::ofstream output("../DEBUG/boundary_points.txt");
+        if (output.is_open()) {
+            const auto inds = get_some_z_inds(zp);
+            for (const auto ind : inds) {
+                output << x[ind] << " " << y[ind] << " " << is_boundary(ind) << "\n";
             }
 
         } else {

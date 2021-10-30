@@ -30,4 +30,8 @@
     
     has_x = vx~=0;
     plot(y(has_x), z(has_x), '.')
+    daspect([1 1 1])
+% daspect([1 40 1])
+    xlabel('y')
+    ylabel('z')
     

@@ -63,13 +63,9 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                     mid += n.x()*3/(2*dx);
                     Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()*4/(2*dx) );
                     Q.add_elm(i, p.get_move_ind(i, -2,0,0), n.x()*1/(2*dx) );
-                } else if (p.can_move(i, 1, 0, 0)) {
-                    mid += -n.x() / dx;
-                    Q.add_elm(i, p.get_move_ind(i, 1,0,0), n.x()/dx );
-                } else if (p.can_move(i, -1, 0, 0)) {
-                    mid += n.x() / dx;
-                    Q.add_elm(i, p.get_move_ind(i, -1,0,0), -n.x()/dx );
                 } else {
+                    std::cerr << "throwing for i = " << i << "\n";
+                    std::cerr << "\tthis is at (" << vec3(p.g->x[i], p.g->y[i], p.g->z[i]) << ")\n";
                     throw std::runtime_error("cannot compute a derivative in x");
                 }
                 //std::cerr << "\t\tend x\n";
@@ -89,13 +85,9 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                     mid += n.y()*3/(2*dy);
                     Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()*4/(2*dy) );
                     Q.add_elm(i, p.get_move_ind(i, 0,-2,0), n.y()*1/(2*dy) );
-                }else if (p.can_move(i, 0, 1, 0)) {
-                    mid += -n.y() / dy;
-                    Q.add_elm(i, p.get_move_ind(i, 0,1,0), n.y()/dy );
-                } else if (p.can_move(i, 0, -1, 0)) {
-                    mid += n.y() / dy;
-                    Q.add_elm(i, p.get_move_ind(i, 0,-1,0), -n.y()/dy );
-                } else {
+                }else {
+                    std::cerr << "throwing for i = " << i << "\n";
+                    std::cerr << "\tthis is at (" << vec3(p.g->x[i], p.g->y[i], p.g->z[i]) << ")\n";
                     throw std::runtime_error("cannot compute a derivative in y");
                 }
                 //std::cerr << "\t\tend y\n";
@@ -115,13 +107,9 @@ void make_Q(big_matrix &Q, const big_vec_d &p, const boundary_conditions &bc) no
                     mid += n.z()*3/(2*dz);
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()*4/(2*dz) );
                     Q.add_elm(i, p.get_move_ind(i, 0,0,-2), n.z()*1/(2*dz) );
-                }else if (p.can_move(i, 0, 0, 1)) {
-                    mid += -n.z() / dz;
-                    Q.add_elm(i, p.get_move_ind(i, 0,0,1), n.z()/dz );
-                } else if (p.can_move(i, 0, 0, -1)) {
-                    mid += n.x() / dx;
-                    Q.add_elm(i, p.get_move_ind(i, 0,0,-1), -n.z()/dz );
-                } else {
+                }else {
+                    std::cerr << "throwing for i = " << i << "\n";
+                    std::cerr << "\tthis is at (" << vec3(p.g->x[i], p.g->y[i], p.g->z[i]) << ")\n";
                     throw std::runtime_error("cannot compute a derivative in z");
                 }
                 //std::cerr << "\t\tend z\n";
@@ -181,7 +169,7 @@ void make_A(big_matrix &A,  const big_vec_v &v, const double dt, const double Re
         }
 #endif
 
-        //std::cerr << "\t" << i << "\n";
+        //std::cerr << "\t" << i << "/" << v.g->size() << "\n";
         //std::cerr << "\t\t" << v.is_boundary(i) << "\n";
         if (v.is_boundary(i)) {
             if (v.g->off_walls(i)) {

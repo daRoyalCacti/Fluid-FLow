@@ -83,15 +83,26 @@ void make_s(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n
 
 
 void make_s_first(big_vec_d &s, const double Re, const double dt, const big_vec_v &v_n, const big_vec_d &p) noexcept {
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (unsigned i = 0; i < p.size(); i++) {
+        //std::cerr << i << "/" << p.size() << "\n";
+        //std::cerr << "x: " << p.g->x[i] << " y: " << p.g->y[i] << " z: " << p.g->z[i] << "\n";
         if (p.is_boundary(i)) {
+            //std::cerr << "\tboundary\n";
             if (p.g->off_walls(i)) {
                 s(i) = 0;
             } else {
+                //std::cerr << "\t\ton walls\n";
                 s(i) = 0-p(i);  //need to minus p(i) because solving for pressure correction
             }
         } else {
+            /*std::cerr << "\tnot on boundary\n";
+            std::cerr << "\t" << divergence(v_n.g->axis, v_n, i) / dt << "\n";
+            std::cerr << "\t" << divergence_advection(v_n.g->axis, v_n, i) << "\n";
+            std::cerr << "\t" << laplacian(v_n.g->axis, p, i) << "\n";
+            std::cerr << "\t" << 1 / Re * divergence_laplacian(v_n.g->axis, v_n, i) << "\n";*/
+
+
             s(i) = divergence(v_n.g->axis, v_n, i) / dt - divergence_advection(v_n.g->axis, v_n, i) + 1 / Re *
                     divergence_laplacian(v_n.g->axis, v_n, i) - laplacian(v_n.g->axis, p, i);
         }

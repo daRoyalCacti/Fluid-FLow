@@ -45,7 +45,7 @@ struct big_vec {
     [[nodiscard]] inline bool has_2back(const unsigned ind) const noexcept {return g->has_2back(ind);}
 
     [[nodiscard]] inline bool is_boundary(const unsigned ind) const noexcept { return g->is_boundary(ind); }
-    [[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept { return g->is_inside_boundary(ind); }
+    //[[nodiscard]] inline bool is_inside_boundary(const unsigned ind) const noexcept { return g->is_inside_boundary(ind); }
 
     [[nodiscard]] constexpr inline double dx(const unsigned ind) const noexcept {return g->dx;}
     [[nodiscard]] constexpr inline double dy(const unsigned ind) const noexcept {return g->dy;}
@@ -223,6 +223,21 @@ struct big_vec_v final : public big_vec<vec3> {
 
 
 
+template<typename T>
+void write_entire_vec(const T& v, const char* file_loc) noexcept {
+    std::ofstream output(file_loc);
+    if (output.is_open()) {
+        const auto &g = *v.g;
+        for (unsigned ind = 0; ind < g.size(); ind++) {
+            output << g[ind].x() << " " << g[ind].y() << " " << g[ind].z() << " " << v(ind) << "\n";
+        }
+    } else {
+        std::cerr << "failed to open file\n";
+    }
+
+    output.close();
+}
+
 
 template<typename T>
 void write_vec(const T& v, const char* file_loc) noexcept {
@@ -230,7 +245,7 @@ void write_vec(const T& v, const char* file_loc) noexcept {
     if (output.is_open()) {
         const auto inds = v.g->get_middle_inds();
         for (const auto ind : inds) {
-            const auto g = *v.g;
+            const auto &g = *v.g;
             output << g[ind].x() << " " << g[ind].y() << " " << v(ind) << "\n";
         }
     } else {

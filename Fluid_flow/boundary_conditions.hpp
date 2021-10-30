@@ -51,7 +51,7 @@ struct boundary_conditions {
 #ifdef BOUNDARY_CONDITIONS_DLOG
         std::cerr << "creating wall normals\n";
 #endif
-        create_wall_normals();
+         create_wall_normals();
     }
 
     //should never be used in real flow, only used for testing derivatives
@@ -139,6 +139,26 @@ struct boundary_conditions {
         output.close();
     }
 
+    void DEBUG_write_normal_vectors_at_z(const double zp) const {
+        std::ofstream output("../DEBUG/normal_vectors.txt");
+        if (output.is_open()) {
+            const auto inds = global_grid.get_some_z_inds(zp);
+            for (const auto ind : inds) {
+                output << global_grid[ind].x() << " " << global_grid[ind].y() << " ";
+                if (norms.contains(ind)) {
+                    output << norms.normal(ind);
+                } else {
+                    output << vec3(0);
+                }
+                output << "\n";
+            }
+        } else {
+            std::cerr << "failed to open file\n";
+        }
+
+        output.close();
+    }
+
 
 
     //void update_velocity_wall_BC();
@@ -157,24 +177,30 @@ void boundary_conditions::create_wall_normals() {
         for (unsigned k = 1; k < P; k++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,0,k) )];
             wall_norms.add_point(ind1, vec3(0,1,0));
+            global_grid.boundary_indices.insert(ind1);
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,M,k) ) ];
             wall_norms.add_point(ind2, vec3(0,-1,0));
+            global_grid.boundary_indices.insert(ind2);
         }
     }
     for (unsigned i = 1; i < N; i++) {
         for (unsigned j = 1; j < M; j++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(i,j,0) )];
             wall_norms.add_point(ind1, vec3(0,0,1));
+            global_grid.boundary_indices.insert(ind1);
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(i,j,P) )];
             wall_norms.add_point(ind2, vec3(0,0,-1));
+            global_grid.boundary_indices.insert(ind2);
         }
     }
     for (unsigned j = 1; j < M; j++) {
         for (unsigned k = 1; k < P; k++) {
             const auto ind1 = old_new[global_grid.convert_indices_unif(vec3(0,j,k) )];
             wall_norms.add_point(ind1,vec3(1,0,0));
+            global_grid.boundary_indices.insert(ind1);
             const auto ind2 = old_new[global_grid.convert_indices_unif(vec3(N,j,k) )];
             wall_norms.add_point(ind2,vec3(-1,0,0));
+            global_grid.boundary_indices.insert(ind2);
         }
     }
 

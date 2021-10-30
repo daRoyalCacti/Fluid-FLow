@@ -12,4 +12,7 @@ DEBUG/times.txt
 /MyMath/finite_difference_old.hpp
 /DEBUG/pressure_interpolated/
 /DEBUG/velocity_interpolated/
+/DEBUG/pressure_dump/
+/DEBUG/velocity_dump/
 models/
+/DEBUG/Overnight/

@@ -12,13 +12,11 @@
 
 struct big_matrix{
     Eigen::SparseMatrix<double,Eigen::RowMajor> m;
-    unsigned long temp_size;
 
     big_matrix() = delete;
     big_matrix(const boundary_conditions &b, const unsigned no_data) noexcept {
         m.resize(static_cast<long>(b.global_grid.size()), static_cast<long>(b.global_grid.size())  );
         m.reserve(Eigen::VectorXi::Constant(static_cast<long>(b.global_grid.size() ), static_cast<int>(no_data) ) );
-        temp_size = b.global_grid.size();
     };
 
     void add_elm(const unsigned index1, const unsigned index2, const double elm) noexcept {
