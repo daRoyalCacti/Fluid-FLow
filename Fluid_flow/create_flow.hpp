@@ -304,9 +304,9 @@ template<unsigned N, unsigned M, unsigned P, bool write_all_times = true>
              // - repeat
 
 #ifdef STORE_SOLVERS
-            update_mesh(BC, rb, v_n, v_n1, p, dt, t, interps, init_grid, init_com);
+    update_mesh(BC, rb, v_n, v_n1, p, dt, t, interps, init_grid, init_com, counter);
 #else
-             update_mesh(BC, rb, v_n, v_n1, p, dt, t);
+    update_mesh(BC, rb, v_n, v_n1, p, dt, t, counter);
 #endif
 
 
