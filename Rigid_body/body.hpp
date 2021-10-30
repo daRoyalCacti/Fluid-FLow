@@ -20,7 +20,7 @@
 struct body {
     mesh model; //positions and velocities global
 
-    const double M;   //the mass of the system
+    double M;   //the mass of the system
 
     body() = delete;
 

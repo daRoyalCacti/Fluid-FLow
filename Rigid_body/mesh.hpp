@@ -163,10 +163,16 @@ struct mesh final{
         const double lz = bounds.max.z() - bounds.min.z();
 
         const double div = std::max({lx, ly, lz});
+
+        const double lx2 = lx > div/2 ? lx : div/2;
+        const double ly2 = ly > div/2 ? ly : div/2;
+        const double lz2 = lz > div/2 ? lz : div/2;
+
+
         const auto mid = vec3(bounds.max.x() + bounds.min.x(), bounds.max.y() + bounds.min.y(), bounds.max.z() + bounds.min.z()  )/2;
 
         //constexpr vec3 middle_pos = {0,0,0};
-        const vec3 middle_pos = vec3(lx, ly, lz)/div;
+        const vec3 middle_pos = vec3(lx2, ly2, lz2)/div;
 
         //dividing the vertex positions by div in order to make the longest dimension 1
         // and shifting it so the middle aligns with middle_pos
@@ -203,7 +209,13 @@ struct mesh final{
         const double ly = bounds.max.y() - bounds.min.y();
         const double lz = bounds.max.z() - bounds.min.z();
 
-        double multx = 2, multy = 2, multz = 2;
+        const double div = std::max({lx, ly, lz});
+
+        const double lx2 = lx > div/2 ? lx : div/2;
+        const double ly2 = ly > div/2 ? ly : div/2;
+        const double lz2 = lz > div/2 ? lz : div/2;
+
+        constexpr double multx = 2, multy = 2, multz = 2;
         //const auto bigl = std::max({lx, ly, lz});
 
         /*if (lx < bigl/2) {
@@ -216,7 +228,7 @@ struct mesh final{
             multz = 4;
         }*/
 
-        return {multx*lx, multy*ly, multz*lz};
+        return {multx*lx2, multy*ly2, multz*lz2};
     }
 
 

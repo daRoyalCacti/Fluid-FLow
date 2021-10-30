@@ -31,7 +31,7 @@
     
     has_z = vz~=0;
     plot(x(has_z), y(has_z), '.')
-%     daspect([1 1 1])
-    daspect([1 .04 1])
+    daspect([1 1 1])
+%     daspect([1 .04 1])
     xlabel('x')
     ylabel('y')
